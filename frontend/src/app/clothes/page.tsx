@@ -13,7 +13,7 @@ const Clothes = () => {
   const { user } = useContext(UserContext);
   const { clothes, categories } = useContext(ClothContext);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [isAdding, setIsAdding] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -28,7 +28,7 @@ const Clothes = () => {
   };
 
   const handleAddClothesClick = () => {
-    setIsAdding(true);
+    setIsLoading(true);
     router.push("/addClothes");
   };
 
@@ -85,7 +85,7 @@ const Clothes = () => {
             type="button"
             className=""
             onClick={handleAddClothesClick}
-            isLoading={isAdding}
+            isLoading={isLoading}
           >
             Add Clothes
           </Button>
@@ -125,7 +125,12 @@ const Clothes = () => {
         ))}
         {filteredClothes.length > 0 && (
           <div className="flex justify-center">
-            <Button type="button" className="" onClick={handleAddClothesClick}>
+            <Button
+              type="button"
+              className=""
+              onClick={handleAddClothesClick}
+              isLoading={isLoading}
+            >
               Add Clothes
             </Button>
           </div>
