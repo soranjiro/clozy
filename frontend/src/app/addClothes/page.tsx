@@ -2,15 +2,13 @@
 
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { fetchClothes, addClothes, fetchCategories } from "@/api/clothes";
 import { formValid } from "@/utils/formValid";
 import ClothForm from "@/components/clothForm";
-import { UserContext } from "@/context/UserContext";
-import { ClothContext } from "@/context/ClothContext";
 import Header from "@/components/header";
 import { Button } from "@/components/ui/button";
-
+import { UserContext } from "@/context/UserContext";
+import { ClothContext } from "@/context/ClothContext";
 
 const AddClothes = () => {
   const { user } = useContext(UserContext);
@@ -80,7 +78,7 @@ const AddClothes = () => {
       setIsAdding(false);
       return;
     }
-    let error = await formValid(
+    const error = await formValid(
       formData.name,
       formData.category,
       formData.size,

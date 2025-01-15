@@ -3,16 +3,16 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Calendar, { CalendarProps } from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import { UserContext } from "@/context/UserContext";
+import { ClothContext } from "@/context/ClothContext";
+import { ClothType, ClothesType } from "@/types/clothes";
 import {
   fetchClothesByDate,
   addWearHistory,
   removeWearHistory,
 } from "@/api/wearHistory";
-import { UserContext } from "@/context/UserContext";
-import Calendar, { CalendarProps } from "react-calendar";
-import "react-calendar/dist/Calendar.css";
-import { ClothType, ClothesType } from "@/types/clothes";
-import { ClothContext } from "@/context/ClothContext";
 import ClothesModal from "@/app/calendar/ClothesModal";
 import Header from "@/components/header";
 import { Button } from "@/components/ui/button";

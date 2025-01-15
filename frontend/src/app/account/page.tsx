@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useContext, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { changePassword, signOut } from "@/api/user";
 import { UserContext } from "@/context/UserContext";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
 import Header from "@/components/header";
 import { Button } from "@/components/ui/button";
 

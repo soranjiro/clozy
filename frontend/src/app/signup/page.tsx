@@ -1,12 +1,12 @@
 "use client";
 
+// import { useContext } from "react";
 // import { useRouter } from "next/navigation";
 import Link from "next/link";
 // import AuthForm from "@/components/AuthForm";
-// import { signup } from "@/api/user";
-// import { useContext } from "react";
-// import { UserContext } from "@/context/UserContext";
 import Header from "@/components/header";
+// import { UserContext } from "@/context/UserContext";
+// import { signup } from "@/api/user";
 
 export default function SignupPage() {
   // const router = useRouter();

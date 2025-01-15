@@ -5,9 +5,9 @@ import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import { fetchClothes, updateClothes, deleteClothes } from "@/api/clothes";
 import { UserContext } from "@/context/UserContext";
+import { ClothContext } from "@/context/ClothContext";
 import { formValid } from "@/utils/formValid";
 import type { ClothType } from "@/types/clothes";
-import { ClothContext } from "@/context/ClothContext";
 import Header from "@/components/header";
 import ClothesDetailEdit from "./ClothesDetailEdit";
 import { Button } from "@/components/ui/button";
@@ -41,7 +41,6 @@ const ClothesDetail = () => {
     imageURL: "",
     imageFile: null as File | null,
   });
-  const [setImageFile] = useState<File | null>(null);
   const [useImageURL, setUseImageURL] = useState(true);
 
   useEffect(() => {
@@ -109,7 +108,7 @@ const ClothesDetail = () => {
     setIsSaving(true);
     setIsEditing(true);
 
-    let error = await formValid(
+    const error = await formValid(
       formData.name,
       formData.category,
       formData.size,

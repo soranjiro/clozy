@@ -4,9 +4,9 @@ import { useContext, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthForm from "@/components/AuthForm";
+import Header from "@/components/header";
 import { login } from "@/api/user";
 import { UserContext } from "@/context/UserContext";
-import Header from "@/components/header";
 
 export default function LoginPage() {
   const router = useRouter();

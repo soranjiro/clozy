@@ -4,10 +4,10 @@ import { useEffect, useState, useContext } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/header";
-import type { ClothType } from "@/types/clothes";
+import { Button } from "@/components/ui/button";
 import { UserContext } from "@/context/UserContext";
 import { ClothContext } from "@/context/ClothContext";
-import { Button } from "@/components/ui/button";
+import type { ClothType } from "@/types/clothes";
 
 const Clothes = () => {
   const { user } = useContext(UserContext);
