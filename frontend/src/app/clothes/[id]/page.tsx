@@ -5,11 +5,13 @@ import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import { fetchClothes, updateClothes, deleteClothes } from "@/api/clothes";
 import { UserContext } from "@/context/UserContext";
+import { formValid } from "@/utils/formValid";
 import type { ClothType } from "@/types/clothes";
 import { ClothContext } from "@/context/ClothContext";
 import Header from "@/components/header";
 import ClothesDetailEdit from "./ClothesDetailEdit";
 import { Button } from "@/components/ui/button";
+import { ERRORS } from "@/errors/errors";
 
 const ClothesDetail = () => {
   const { user } = useContext(UserContext);
@@ -29,6 +31,7 @@ const ClothesDetail = () => {
   const { clothes, setClothes, categories } = useContext(ClothContext);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     category: "",
@@ -38,6 +41,7 @@ const ClothesDetail = () => {
     imageURL: "",
     imageFile: null as File | null,
   });
+  const [setImageFile] = useState<File | null>(null);
   const [useImageURL, setUseImageURL] = useState(true);
 
   useEffect(() => {
@@ -93,8 +97,40 @@ const ClothesDetail = () => {
     }
   };
 
+  // change image file when file is resized
+  const handleFileUpdate = (file: File) => {
+    setFormData({
+      ...formData,
+      imageFile: file,
+    });
+  };
+
   const handleEdit = async () => {
+    setIsSaving(true);
     setIsEditing(true);
+
+    let error = await formValid(
+      formData.name,
+      formData.category,
+      formData.size,
+      formData.color,
+      formData.brand,
+      useImageURL,
+      formData.imageURL,
+      formData.imageFile,
+      handleFileUpdate
+    );
+    if (error) {
+      alert(error);
+      if (error === ERRORS.IMAGE_COMPRESSED) {
+        setIsSaving(false);
+        return;
+      }
+      setIsEditing(false);
+      setIsSaving(false);
+      return;
+    }
+
     const form = new FormData();
     form.append("name", formData.name);
     form.append("category", formData.category);
@@ -116,10 +152,12 @@ const ClothesDetail = () => {
       const newClothes = await fetchClothes(user.email);
       setClothes(newClothes);
       setIsEditing(false);
+      setIsSaving(false);
       // router.push("/clothes");
     } catch (error) {
       console.error("Error updating clothes:", error);
       setIsEditing(false);
+      setIsSaving(false);
     }
   };
 
@@ -178,6 +216,7 @@ const ClothesDetail = () => {
                 handleFileChange={handleFileChange}
                 handleEdit={handleEdit}
                 setIsEditing={setIsEditing}
+                isSaving={isSaving}
                 getImageSrc={getImageSrc}
                 selectedCloth={selectedCloth}
                 categories={categories}
@@ -215,7 +254,7 @@ const ClothesDetail = () => {
                     type="button"
                     className="bg-brown text-cream px-4 py-3 rounded hover:bg-brown-dark"
                     onClick={() => setIsEditing(true)}
-                    isLoading={isEditing}
+                    isLoading={false}
                   >
                     Edit
                   </Button>

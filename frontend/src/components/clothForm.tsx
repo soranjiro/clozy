@@ -5,7 +5,7 @@ import Image from "next/image";
 import type { ClothType } from "@/types/clothes";
 import { Button } from "@/components/ui/button";
 
-interface ClothesDetailEditProps {
+interface ClothFormProps {
   formData: {
     name: string;
     category: string;
@@ -33,23 +33,17 @@ interface ClothesDetailEditProps {
   ) => void;
   handleImageOptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleEdit: () => void;
-  setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
-  isSaving: boolean;
-  getImageSrc: (cloth: ClothType) => string | null;
-  selectedCloth: ClothType;
+  getImageSrc: (cloth: ClothType | null) => string | null;
+  selectedCloth: ClothType | null;
   categories: string[];
 }
 
-const ClothesDetailEdit: React.FC<ClothesDetailEditProps> = ({
+const ClothForm: React.FC<ClothFormProps> = ({
   formData,
   useImageURL,
   handleInputChange,
   handleImageOptionChange,
   handleFileChange,
-  handleEdit,
-  setIsEditing,
-  isSaving,
   getImageSrc,
   selectedCloth,
   categories,
@@ -63,6 +57,7 @@ const ClothesDetailEdit: React.FC<ClothesDetailEditProps> = ({
         <input
           id="name"
           type="text"
+          name="name"
           value={formData.name}
           onChange={handleInputChange}
           className="border border-brown rounded px-4 py-2 w-full"
@@ -203,23 +198,8 @@ const ClothesDetailEdit: React.FC<ClothesDetailEditProps> = ({
           <div>No Image</div>
         )}
       </div>
-      <Button
-        type="button"
-        onClick={handleEdit}
-        className="bg-blue-500 text-cream px-4 py-2 rounded hover:bg-blue-700 mr-2"
-        isLoading={isSaving}
-      >
-        Save
-      </Button>
-      <Button
-        type="button"
-        onClick={() => setIsEditing(false)}
-        className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-700"
-      >
-        Cancel
-      </Button>
     </div>
   );
 };
 
-export default ClothesDetailEdit;
+export default ClothForm;
