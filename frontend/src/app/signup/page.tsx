@@ -1,0 +1,51 @@
+"use client";
+
+// import { useRouter } from "next/navigation";
+import Link from "next/link";
+// import AuthForm from "@/components/AuthForm";
+// import { signup } from "@/api/user";
+// import { useContext } from "react";
+// import { UserContext } from "@/context/UserContext";
+import Header from "@/components/header";
+
+export default function SignupPage() {
+  // const router = useRouter();
+  // const { setUser } = useContext(UserContext);
+
+  // const handleSignup = async (email: string, password: string, username?: string) => {
+  //   if (!username) {
+  //     console.error("Username is required");
+  //     return;
+  //   }
+  //   try {
+  //     const response = await signup(email, username, password);
+  //     setUser({ username: response.username, email });
+  //     router.push('/home');
+  //   } catch (error) {
+  //     console.error("Signup failed", error);
+  //   }
+  // };
+
+  return (
+    <>
+      <Header title="Signup" />
+      <div className="space-y-4">
+        {/* <AuthForm type="signup" onSubmit={handleSignup} /> */}
+        <p className="justify-center text-center text-white font-bold mt-10 text-lg">
+          Account registration is currently suspended.
+          <br />
+          If you wish to use the service, please contact the administrator.
+        </p>
+        <p className="justify-center text-center text-white text-lg">
+          If you already have an account,
+          <Link
+            href="/login"
+            className="flex justify-center items-center text-amber-500 font-bold hover:underline"
+          >
+            log in here
+          </Link>
+        </p>
+      </div>
+    </>
+  );
+}

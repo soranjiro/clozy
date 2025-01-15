@@ -1,0 +1,29 @@
+name = "backend"
+main = "src/index.ts"
+compatibility_date = ""
+
+compatibility_flags = [ "nodejs_compat" ]
+
+[vars]
+NODE_ENV = "production"
+REMOTE_ORIGIN = "https://xxxxxxxxxxxxxxx"
+
+# [[kv_namespaces]]
+# binding = "MY_KV_NAMESPACE"
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "xxxxxxxxxxxxxxxxxxxxxxxxx"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "xxxxxxxxxxxxxxxxxxxxxxx"
+database_id = "xxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# [ai]
+# binding = "AI"
+
+[observability]
+enabled = true
+head_sampling_rate = 1

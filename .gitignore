@@ -1,0 +1,33 @@
+# macOS system files
+.DS_Store
+
+# Environment variables
+**/.env
+
+# Logs
+*.log
+
+
+# front-end
+
+## Node.js dependencies
+node_modules
+
+## Next.js build output
+.next
+
+## vercel
+.vercel
+
+## Build outputs
+dist/
+build/
+
+# back-end
+
+## Cloudflare
+.wrangler
+**/wrangler.toml
+
+# docs
+docs/*
