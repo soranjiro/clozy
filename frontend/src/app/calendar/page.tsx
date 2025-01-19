@@ -28,9 +28,16 @@ const CalendarPage = () => {
   const [message, setMessage] = useState("");
   const [selectedClothes, setSelectedClothes] = useState<ClothesType>([]);
   const [isClient, setIsClient] = useState(false);
+  const [isFetchingClothesByDate, setIsFetchingClothesByDate] = useState(false);
+  const [isRegisteringCloth, setIsRegisteringCloth] = useState(false);
+  const [isRemovingCloth, setIsRemovingCloth] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
+
+    const today = new Date();
+    setDate(today);
+    fetchUserClothesByDate(today);
   }, []);
 
   useEffect(() => {
@@ -46,6 +53,8 @@ const CalendarPage = () => {
       return;
     }
 
+    setIsFetchingClothesByDate(true);
+    console.log("fetching clothes by date...", isFetchingClothesByDate);
     const filteredClothesIDs: string[] = await fetchClothesByDate(
       selectedDate,
       user.email
@@ -57,12 +66,11 @@ const CalendarPage = () => {
       setMessage("");
       setClothesByDate(
         clothes
-          .filter((item) =>
-            filteredClothesIDs.some((id) => id === item.id)
-          )
+          .filter((item) => filteredClothesIDs.some((id) => id === item.id))
           .sort((a, b) => a.category.localeCompare(b.category)) // カテゴリー順に並び替え
       );
     }
+    setIsFetchingClothesByDate(false);
   };
 
   const onDateChange: CalendarProps["onChange"] = (value) => {
@@ -98,6 +106,7 @@ const CalendarPage = () => {
       console.error("User is not logged in");
       return;
     }
+    setIsRegisteringCloth(true);
 
     try {
       await addWearHistory(
@@ -113,16 +122,19 @@ const CalendarPage = () => {
     } finally {
       setShowClothesList(false); // モーダルを閉じる
     }
+    setIsRegisteringCloth(false);
   };
 
-  const handleRemoveClothes = async (clothesID: string) => {
+  const handleRemoveCloth = async (clothesID: string) => {
     if (!user) {
       console.error("User is not logged in");
       return;
     }
+    setIsRemovingCloth(true);
 
     await removeWearHistory(clothesID, date, user.email);
     fetchUserClothesByDate(date);
+    setIsRemovingCloth(false);
   };
 
   const handleImageClick = (id: string) => {
@@ -141,76 +153,82 @@ const CalendarPage = () => {
     }
   };
 
-    return (
-      <>
-        <Header title="Calendar" />
-        <div className="p-4 bg-wood min-h-screen flex flex-col justify-center items-center">
-          <div className="w-full mx-auto">
-            {/* <h1 className="text-3xl font-bold text-brown mb-4">カレンダー</h1> */}
-            <div className="bg-white p-4 rounded-lg shadow-md mb-4 flex justify-center">
-              {isClient && (
-                <Calendar onChange={onDateChange} value={date} locale="en-US" />
-              )}
-            </div>
-            <Button type="button" className="" onClick={handleAddClothes}>
-              {showClothesList ? "Close" : "Register Clothes"}
-            </Button>
-            {showClothesList && (
-              <ClothesModal
-                categories={categories}
-                clothes={clothes}
-                clothesByDate={clothesByDate}
-                getImageSrc={getImageSrc}
-                handleClothSelect={handleClothSelect}
-                handleConfirmSelection={handleConfirmSelection}
-                isFetchingClothes={isFetchingClothes}
-                isOpen={showClothesList}
-                LoadingScreen={LoadingScreen}
-                onRequestClose={() => setShowClothesList(false)}
-                selectedClothes={selectedClothes}
-              />
+  return (
+    <>
+      <Header title="Calendar" />
+      <div className="p-4 bg-wood min-h-screen flex flex-col justify-center items-center">
+        <div className="w-full mx-auto">
+          {/* <h1 className="text-3xl font-bold text-brown mb-4">カレンダー</h1> */}
+          <div className="bg-white p-4 rounded-lg shadow-md mb-4 flex justify-center">
+            {isClient && (
+              <Calendar onChange={onDateChange} value={date} locale="en-US" />
             )}
-            <div className="mt-4">
-              {message ? (
-                <p className="text-center text-white font-bold">{message}</p>
-              ) : isFetchingClothes ? (
-                <LoadingScreen />
-              ) : (
-                <div className="grid grid-cols-2 gap-4">
-                  {clothesByDate
-                    .sort(
-                      (a, b) =>
-                        categories.indexOf(a.category) -
-                        categories.indexOf(b.category)
-                    )
-                    .map((item) => (
-                      <div key={item.id} className="relative">
-                        <button
-                          type="button"
-                          className="absolute top-3 right-3 text-black hover:bg-gray-300 font-bold bg-white rounded-full w-5 h-5 flex items-center justify-center"
-                          onClick={() => handleRemoveClothes(item.id)}
-                        >
-                          ×
-                        </button>
-                        {getImageSrc(item) !== null && (
-                          <Image
-                            src={getImageSrc(item) as string}
-                            alt="Current Image"
-                            className="w-full h-auto rounded"
-                            onClick={() => handleImageClick(item.id)}
-                            width={200}
-                            height={200}
-                          />
-                        )}
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
+          </div>
+          <Button type="button" className="" onClick={handleAddClothes}>
+            {showClothesList ? "Close" : "Register Clothes"}
+          </Button>
+          {showClothesList && (
+            <ClothesModal
+              categories={categories}
+              clothes={clothes}
+              clothesByDate={clothesByDate}
+              getImageSrc={getImageSrc}
+              handleClothSelect={handleClothSelect}
+              handleConfirmSelection={handleConfirmSelection}
+              isFetchingClothes={isFetchingClothes}
+              isRegisteringCloth={isRegisteringCloth}
+              isOpen={showClothesList}
+              LoadingScreen={LoadingScreen}
+              onRequestClose={() => setShowClothesList(false)}
+              selectedClothes={selectedClothes}
+            />
+          )}
+          <div className="mt-4">
+            {message ? (
+              <p className="text-center text-white font-bold">{message}</p>
+            ) : isFetchingClothes ? (
+              <LoadingScreen />
+            ) : (
+              <div className="grid grid-cols-4 gap-4">
+                {clothesByDate
+                  .sort(
+                    (a, b) =>
+                      categories.indexOf(a.category) -
+                      categories.indexOf(b.category)
+                  )
+                  .map((item) => (
+                    <div key={item.id} className="relative">
+                      <button
+                        type="button"
+                        className="absolute top-0 right-0 text-black border-black hover:bg-gray-300 font-bold bg-white rounded-full flex items-center justify-center border !w-5 !h-5 "
+                        onClick={() => handleRemoveCloth(item.id)}
+                      >
+                        ×
+                      </button>
+                      {getImageSrc(item) !== null && (
+                        <Image
+                          src={getImageSrc(item) as string}
+                          alt="Current Image"
+                          className="w-full h-auto rounded"
+                          onClick={() => handleImageClick(item.id)}
+                          width={200}
+                          height={200}
+                        />
+                      )}
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
         </div>
-      </>
-    );
+        {(isRemovingCloth || isFetchingClothesByDate) && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 pointer-events-auto mt-20">
+            <LoadingScreen />
+          </div>
+        )}
+      </div>
+    </>
+  );
 };
 
 export default CalendarPage;

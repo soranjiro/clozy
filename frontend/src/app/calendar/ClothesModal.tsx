@@ -2,6 +2,7 @@ import React from "react";
 import Modal from "react-modal";
 import Image from "next/image";
 import { ClothType, ClothesType } from "@/types/clothes";
+import { Button } from "@/components/ui/button";
 
 // ここでアプリのルート要素を設定します
 if (typeof document !== "undefined") {
@@ -16,6 +17,7 @@ interface ClothesModalProps {
   handleClothSelect: (cloth: ClothType) => void;
   handleConfirmSelection: () => void;
   isFetchingClothes: boolean;
+  isRegisteringCloth: boolean;
   isOpen: boolean;
   LoadingScreen: React.FC;
   onRequestClose: () => void;
@@ -30,6 +32,7 @@ const ClothesModal: React.FC<ClothesModalProps> = ({
   handleClothSelect,
   handleConfirmSelection,
   isFetchingClothes,
+  isRegisteringCloth,
   isOpen,
   LoadingScreen,
   onRequestClose,
@@ -113,13 +116,14 @@ const ClothesModal: React.FC<ClothesModalProps> = ({
               ))
             )}
           </div>
-          <button
+          <Button
             type="button"
             className="bg-white text-brown py-2 px-4 rounded hover:bg-brown-dark mt-4 fixed bottom-4"
             onClick={handleConfirmSelection}
+            isLoading={isRegisteringCloth}
           >
             Confirm
-          </button>
+          </Button>
         </div>
       </Modal>
     </>

@@ -12,6 +12,7 @@ import Header from "@/components/header";
 import ClothesDetailEdit from "./ClothesDetailEdit";
 import { Button } from "@/components/ui/button";
 import { ERRORS } from "@/errors/errors";
+import LoadingScreen from "@/components/ui/loading";
 
 const ClothesDetail = () => {
   const { user } = useContext(UserContext);
@@ -195,7 +196,7 @@ const ClothesDetail = () => {
   };
 
   if (!selectedCloth) {
-    return <div>Loading...</div>;
+    return <LoadingScreen />;
   }
 
   return (
@@ -276,7 +277,9 @@ const ClothesDetail = () => {
               </>
             )
           ) : (
-            <div>Loading...</div>
+            <div className="flex items-center justify-center w-full h-full">
+              <LoadingScreen />
+            </div>
           )}
         </div>
       </div>

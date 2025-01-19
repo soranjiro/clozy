@@ -16,7 +16,7 @@ export const Button: React.FC<ButtonProps> = ({
     <>
       {isLoading && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 pointer-events-auto"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 pointer-events-auto mt-20"
         >
           <LoadingScreen />
         </div>
