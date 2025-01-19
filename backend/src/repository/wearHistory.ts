@@ -17,13 +17,25 @@ export const wearHistoryModule = (qb: D1QB) => ({
       )
     );
   },
-  findByDate: async (where: { date: string, email: string }) => {
+  findByDate: async (where: { email: string, date: string }) => {
     const result = await qb
       .fetchAll<WearHistory>({
         tableName: 'wearHistory',
         where: {
-          conditions: 'date = ?1 AND email = ?2',
-          params: [where.date, where.email],
+          conditions: 'email = ?1 AND date = ?2',
+          params: [where.email, where.date],
+        },
+      })
+      .execute();
+    return result;
+  },
+  findByDateRange: async (where: { email: string, startDate: string, endDate: string }) => {
+    const result = await qb
+      .fetchAll<WearHistory>({
+        tableName: 'wearHistory',
+        where: {
+          conditions: 'email = ?1 AND date BETWEEN ?2 AND ?3',
+          params: [where.email, where.startDate, where.endDate],
         },
       })
       .execute();

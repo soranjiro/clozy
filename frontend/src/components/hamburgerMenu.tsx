@@ -65,6 +65,12 @@ const HamburgerMenu = forwardRef((props, ref) => {
             Calendar
           </Link>
           <Link
+            href="/statics"
+            className="block px-4 py-2 text-gray-800 border border-amber-700 hover:bg-amber-500"
+          >
+            Statics
+          </Link>
+          <Link
             href="/account"
             className="block px-4 py-2 text-gray-800 border border-amber-700 hover:bg-amber-500"
           >

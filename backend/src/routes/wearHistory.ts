@@ -5,7 +5,7 @@ import { WearHistory } from '../types'
 
 const wearHistoryRoutes = new Hono<{ Bindings: Env }>();
 
-wearHistoryRoutes.get('/clothesByDate', async (c) => {
+wearHistoryRoutes.get('/wearHistory/clothesByDate', async (c) => {
   const email = c.req.query('email');
   const date = c.req.query('date');
 
@@ -15,6 +15,27 @@ wearHistoryRoutes.get('/clothesByDate', async (c) => {
 
   const database = db(c.env);
   const clothes = await database.wearHistory.findByDate({ date, email });
+
+  if (!clothes.results) {
+    return c.json([]);
+  }
+  return c.json(clothes.results.map((item) => item.clothesID));
+});
+
+wearHistoryRoutes.get('/wearHistory/clothesByDateRange', async (c) => {
+  const email = c.req.query('email');
+  const startDate = c.req.query('startDate');
+  const endDate = c.req.query('endDate');
+
+  if (!email || !startDate || !endDate) {
+    return c.json({ error: 'Email, startDate, and endDate are required' }, 400);
+  }
+  if (startDate > endDate) {
+    return c.json({ error: 'startDate must be before endDate' }, 400);
+  }
+
+  const database = db(c.env);
+  const clothes = await database.wearHistory.findByDateRange({ email, startDate, endDate });
 
   if (!clothes.results) {
     return c.json([]);

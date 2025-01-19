@@ -5,9 +5,17 @@ dotenv.config();
 const API_DOMAIN = process.env.NEXT_PUBLIC_API_DOMAIN;
 
 export const fetchClothesByDate = async (date: Date, userID: string) => {
-  const response = await fetch(`${API_DOMAIN}/api/clothesByDate?date=${date.toISOString().split("T")[0]}&email=${userID}`);
+  const response = await fetch(`${API_DOMAIN}/api/wearHistory/clothesByDate?date=${date.toISOString().split("T")[0]}&email=${userID}`);
   if (!response.ok) {
     throw new Error("Failed to fetch clothes by date");
+  }
+  return response.json();
+};
+
+export const fetchClothesByDateRange = async (startDate: Date, endDate: Date, userID: string) => {
+  const response = await fetch(`${API_DOMAIN}/api/wearHistory/clothesByDateRange?startDate=${startDate.toISOString().split("T")[0]}&endDate=${endDate.toISOString().split("T")[0]}&email=${userID}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch clothes by date range");
   }
   return response.json();
 };

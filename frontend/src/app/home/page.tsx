@@ -54,6 +54,13 @@ export default function Page() {
               </Button>
               <Button
                 type="button"
+                onClick={() => router.push("/statics")}
+                className="hover:bg-brown-dark"
+              >
+                Statics
+              </Button>
+              <Button
+                type="button"
                 onClick={() => router.push("/account")}
                 className="hover:bg-brown-dark"
               >
