@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/header";
 import { Button } from "@/components/ui/button";
+import LoadingScreen from "@/components/ui/loading";
 import { UserContext } from "@/context/UserContext";
 import { ClothContext } from "@/context/ClothContext";
 import type { ClothType } from "@/types/clothes";
 
 const Clothes = () => {
   const { user } = useContext(UserContext);
-  const { clothes, categories } = useContext(ClothContext);
+  const { clothes, categories, isFetchingClothes } = useContext(ClothContext);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -90,39 +91,44 @@ const Clothes = () => {
             Add Clothes
           </Button>
         </div>
-        {categories.map((category) => (
-          <div key={category} className="mb-10">
-            {filteredClothes.filter((item) => item.category === category)
-              .length > 0 && (
-              <>
-                <h2 className="text-2xl font-semibold text-white text-center mb-4">
-                  {category}
-                </h2>
-                <div className="grid grid-cols-4 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {filteredClothes
-                    .filter((item) => item.category === category)
-                    .map((item) => (
-                      <div
-                        key={item.id}
-                        className="cursor-pointer"
-                        onClick={() => handleImageClick(item)}
-                      >
-                        {getImageSrc(item) !== null && (
-                          <Image
-                            src={getImageSrc(item) as string}
-                            alt="Current Image"
-                            width={200}
-                            height={200}
-                            className="w-full h-auto rounded justify-center items-center"
-                          />
-                        )}
-                      </div>
-                    ))}
-                </div>
-              </>
-            )}
-          </div>
-        ))}
+        {isFetchingClothes ? (
+          // <div className="text-center text-white">ロード中...</div>
+          <LoadingScreen />
+        ) : (
+          categories.map((category) => (
+            <div key={category} className="mb-10">
+              {filteredClothes.filter((item) => item.category === category)
+                .length > 0 && (
+                <>
+                  <h2 className="text-2xl font-semibold text-white text-center mb-4">
+                    {category}
+                  </h2>
+                  <div className="grid grid-cols-4 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {filteredClothes
+                      .filter((item) => item.category === category)
+                      .map((item) => (
+                        <div
+                          key={item.id}
+                          className="cursor-pointer"
+                          onClick={() => handleImageClick(item)}
+                        >
+                          {getImageSrc(item) !== null && (
+                            <Image
+                              src={getImageSrc(item) as string}
+                              alt="Current Image"
+                              width={200}
+                              height={200}
+                              className="w-full h-auto rounded justify-center items-center"
+                            />
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                </>
+              )}
+            </div>
+          ))
+        )}
         {filteredClothes.length > 0 && (
           <div className="flex justify-center">
             <Button

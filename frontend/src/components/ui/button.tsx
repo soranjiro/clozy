@@ -1,4 +1,5 @@
 import React from "react";
+import LoadingScreen from "@/components/ui/loading";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   className?: string;
@@ -17,7 +18,7 @@ export const Button: React.FC<ButtonProps> = ({
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 pointer-events-auto"
         >
-          <div className="border-4 border-gray-200 border-t-blue-500 rounded-full w-12 h-12 animate-spin" />
+          <LoadingScreen />
         </div>
       )}
       <button

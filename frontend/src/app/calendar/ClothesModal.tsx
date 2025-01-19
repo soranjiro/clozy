@@ -4,32 +4,36 @@ import Image from "next/image";
 import { ClothType, ClothesType } from "@/types/clothes";
 
 // ここでアプリのルート要素を設定します
-if (typeof document !== 'undefined') {
+if (typeof document !== "undefined") {
   Modal.setAppElement(document.body);
 }
 
 interface ClothesModalProps {
-  isOpen: boolean;
-  onRequestClose: () => void;
-  clothes: ClothesType;
   categories: string[];
+  clothes: ClothesType;
   clothesByDate: ClothesType;
-  selectedClothes: ClothesType;
+  getImageSrc: (item: ClothType) => string | null;
   handleClothSelect: (cloth: ClothType) => void;
   handleConfirmSelection: () => void;
-  getImageSrc: (item: ClothType) => string | null;
+  isFetchingClothes: boolean;
+  isOpen: boolean;
+  LoadingScreen: React.FC;
+  onRequestClose: () => void;
+  selectedClothes: ClothesType;
 }
 
 const ClothesModal: React.FC<ClothesModalProps> = ({
-  isOpen,
-  onRequestClose,
-  clothes,
   categories,
+  clothes,
   clothesByDate,
-  selectedClothes,
+  getImageSrc,
   handleClothSelect,
   handleConfirmSelection,
-  getImageSrc,
+  isFetchingClothes,
+  isOpen,
+  LoadingScreen,
+  onRequestClose,
+  selectedClothes,
 }) => {
   const groupClothesByCategory = (clothes: ClothesType) => {
     return clothes.reduce((acc, item) => {
@@ -60,52 +64,60 @@ const ClothesModal: React.FC<ClothesModalProps> = ({
             ×
           </button>
           <div className="p-4 w-full">
-            {categories.map((category) => (
-              <div key={category} className="mb-10">
-                {Object.entries(
-                  groupClothesByCategory(
-                    clothes.filter(
-                      (item) => !clothesByDate.some((c) => c.id === item.id) && item.category === category
-                    )
-                  )
-                ).map(([category, items]) => (
-                  <div key={category}>
-                    <h2 className="text-xl font-semibold text-white text-center mt-5 mb-5">
-                      {category}
-                    </h2>
-                    <div className="grid grid-cols-4 gap-4">
-                      {items.map((item) => (
-                        <div
-                          key={item.id}
-                          className={`p-2 border rounded ${
-                            selectedClothes.some((c) => c.id === item.id)
-                              ? "border-blue-500 bg-blue-100"
-                              : "border-gray-300"
-                          }`}
-                          onClick={() => handleClothSelect(item)}
-                        >
-                          {getImageSrc(item) !== null && (
-                            <Image
-                              src={getImageSrc(item) as string}
-                              alt="Current Image"
-                              className="w-full h-auto rounded"
-                              width={200}
-                              height={200}
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+            {isFetchingClothes ? (
+              <div className="flex items-center justify-center w-full h-full">
+                <LoadingScreen />
               </div>
-            ))}
+            ) : (
+              categories.map((category: string) => (
+                <div key={category} className="mb-10">
+                  {Object.entries(
+                    groupClothesByCategory(
+                      clothes.filter(
+                        (item) =>
+                          !clothesByDate.some((c) => c.id === item.id) &&
+                          item.category === category
+                      )
+                    )
+                  ).map(([category, items]) => (
+                    <div key={category}>
+                      <h2 className="text-xl font-semibold text-white text-center mt-5 mb-5">
+                        {category}
+                      </h2>
+                      <div className="grid grid-cols-4 gap-4">
+                        {items.map((item) => (
+                          <div
+                            key={item.id}
+                            className={`p-2 border rounded ${
+                              selectedClothes.some((c) => c.id === item.id)
+                                ? "border-blue-500 bg-blue-100"
+                                : "border-gray-300"
+                            }`}
+                            onClick={() => handleClothSelect(item)}
+                          >
+                            {getImageSrc(item) !== null && (
+                              <Image
+                                src={getImageSrc(item) as string}
+                                alt="Current Image"
+                                className="w-full h-auto rounded"
+                                width={200}
+                                height={200}
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))
+            )}
           </div>
-            <button
+          <button
             type="button"
             className="bg-white text-brown py-2 px-4 rounded hover:bg-brown-dark mt-4 fixed bottom-4"
             onClick={handleConfirmSelection}
-            >
+          >
             Confirm
           </button>
         </div>

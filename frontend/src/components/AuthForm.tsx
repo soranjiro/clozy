@@ -15,14 +15,17 @@ export default function AuthForm({ type, onSubmit }: AuthFormProps) {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     if (type === "login") {
       onSubmit(email, password);
     } else {
       onSubmit(email, password, username);
     }
+    setIsLoading(false);
   };
 
   return (
@@ -80,6 +83,7 @@ export default function AuthForm({ type, onSubmit }: AuthFormProps) {
             <Button
               type="submit"
               className="w-1/3 mx-auto bg-brown hover:bg-brown-dark text-cream"
+              isLoading={isLoading}
             >
               {type === "login" ? "Login" : "Sign Up"}
             </Button>

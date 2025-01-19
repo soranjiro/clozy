@@ -16,11 +16,12 @@ import {
 import ClothesModal from "@/app/calendar/ClothesModal";
 import Header from "@/components/header";
 import { Button } from "@/components/ui/button";
+import LoadingScreen from "@/components/ui/loading";
 
 const CalendarPage = () => {
   const router = useRouter();
   const { user } = useContext(UserContext);
-  const { clothes, categories } = useContext(ClothContext);
+  const { clothes, categories, isFetchingClothes } = useContext(ClothContext);
   const [date, setDate] = useState(new Date());
   const [showClothesList, setShowClothesList] = useState(false);
   const [clothesByDate, setClothesByDate] = useState<ClothesType>([]);
@@ -140,74 +141,76 @@ const CalendarPage = () => {
     }
   };
 
-  return (
-    <>
-      <Header title="Calendar" />
-      <div className="p-4 bg-wood min-h-screen flex flex-col justify-center items-center">
-        <div className="w-full mx-auto">
-          {/* <h1 className="text-3xl font-bold text-brown mb-4">カレンダー</h1> */}
-          <div className="bg-white p-4 rounded-lg shadow-md mb-4 flex justify-center">
-            {isClient && (
-              <Calendar onChange={onDateChange} value={date} locale="en-US" />
+    return (
+      <>
+        <Header title="Calendar" />
+        <div className="p-4 bg-wood min-h-screen flex flex-col justify-center items-center">
+          <div className="w-full mx-auto">
+            {/* <h1 className="text-3xl font-bold text-brown mb-4">カレンダー</h1> */}
+            <div className="bg-white p-4 rounded-lg shadow-md mb-4 flex justify-center">
+              {isClient && (
+                <Calendar onChange={onDateChange} value={date} locale="en-US" />
+              )}
+            </div>
+            <Button type="button" className="" onClick={handleAddClothes}>
+              {showClothesList ? "Close" : "Register Clothes"}
+            </Button>
+            {showClothesList && (
+              <ClothesModal
+                categories={categories}
+                clothes={clothes}
+                clothesByDate={clothesByDate}
+                getImageSrc={getImageSrc}
+                handleClothSelect={handleClothSelect}
+                handleConfirmSelection={handleConfirmSelection}
+                isFetchingClothes={isFetchingClothes}
+                isOpen={showClothesList}
+                LoadingScreen={LoadingScreen}
+                onRequestClose={() => setShowClothesList(false)}
+                selectedClothes={selectedClothes}
+              />
             )}
-          </div>
-          <Button
-            type="button"
-            className=""
-            onClick={handleAddClothes}
-          >
-            {showClothesList ? "Close" : "Register Clothes"}
-          </Button>
-          {showClothesList && (
-            <ClothesModal
-              isOpen={showClothesList}
-              onRequestClose={() => setShowClothesList(false)}
-              clothes={clothes}
-              categories={categories}
-              clothesByDate={clothesByDate}
-              selectedClothes={selectedClothes}
-              handleClothSelect={handleClothSelect}
-              handleConfirmSelection={handleConfirmSelection}
-              getImageSrc={getImageSrc}
-            />
-          )}
-          <div className="mt-4">
-            {message ? (
-              <p className="text-center text-white font-bold">
-                {message}
-              </p>
-            ) : (
-              <div className="grid grid-cols-2 gap-4">
-                {clothesByDate
-                  .sort((a, b) => categories.indexOf(a.category) - categories.indexOf(b.category))
-                  .map((item) => (
-                    <div key={item.id} className="relative">
-                      <button
-                        type="button"
-                        className="absolute top-3 right-3 text-black hover:bg-gray-300 font-bold bg-white rounded-full w-5 h-5 flex items-center justify-center"
-                        onClick={() => handleRemoveClothes(item.id)}
-                      >
-                        ×
-                      </button>
-                      {getImageSrc(item) !== null && (
-                        <Image
-                          src={getImageSrc(item) as string}
-                          alt="Current Image"
-                          className="w-full h-auto rounded"
-                          onClick={() => handleImageClick(item.id)}
-                          width={200}
-                          height={200}
-                        />
-                      )}
-                    </div>
-                  ))}
-              </div>
-            )}
+            <div className="mt-4">
+              {message ? (
+                <p className="text-center text-white font-bold">{message}</p>
+              ) : isFetchingClothes ? (
+                <LoadingScreen />
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  {clothesByDate
+                    .sort(
+                      (a, b) =>
+                        categories.indexOf(a.category) -
+                        categories.indexOf(b.category)
+                    )
+                    .map((item) => (
+                      <div key={item.id} className="relative">
+                        <button
+                          type="button"
+                          className="absolute top-3 right-3 text-black hover:bg-gray-300 font-bold bg-white rounded-full w-5 h-5 flex items-center justify-center"
+                          onClick={() => handleRemoveClothes(item.id)}
+                        >
+                          ×
+                        </button>
+                        {getImageSrc(item) !== null && (
+                          <Image
+                            src={getImageSrc(item) as string}
+                            alt="Current Image"
+                            className="w-full h-auto rounded"
+                            onClick={() => handleImageClick(item.id)}
+                            width={200}
+                            height={200}
+                          />
+                        )}
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </>
-  );
+      </>
+    );
 };
 
 export default CalendarPage;
