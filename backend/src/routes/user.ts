@@ -2,7 +2,7 @@
 import { Hono } from 'hono'
 import bcrypt from 'bcryptjs'
 import { Env } from '../index'
-import { db } from '../db'
+import { db } from '../repository'
 import { User, Query } from '../types'
 import { deleteImagesFromR2 } from '../r2'
 

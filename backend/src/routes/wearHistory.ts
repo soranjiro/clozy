@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { Env } from '../index'
-import { db } from '../db'
+import { db } from '../repository'
 import { WearHistory } from '../types'
 
 const wearHistoryRoutes = new Hono<{ Bindings: Env }>();

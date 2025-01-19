@@ -1,6 +1,6 @@
 
 import { Hono } from 'hono'
-import { categories } from '../categories'
+import { categories } from '../repository/categories'
 
 const categoryRoutes = new Hono();
 

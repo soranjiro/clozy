@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { Env } from '../index'
-import { db } from '../db'
-import { categories } from '../categories'
+import { db } from '../repository'
+import { categories } from '../repository/categories'
 import { uploadImageToR2, getImageFromR2, deleteImagesFromR2 } from '../r2'
 
 const clothesRoutes = new Hono<{ Bindings: Env }>();
