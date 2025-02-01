@@ -14,7 +14,7 @@ export default function SignupPage() {
 
   // const handleSignup = async (email: string, password: string, username?: string) => {
   //   if (!username) {
-  //     console.error("Username is required");
+  //     alert("Username is required");
   //     return;
   //   }
   //   try {
@@ -22,7 +22,7 @@ export default function SignupPage() {
   //     setUser({ username: response.username, email });
   //     router.push('/home');
   //   } catch (error) {
-  //     console.error("Signup failed", error);
+  //     alert("Signup failed", error);
   //   }
   // };
 

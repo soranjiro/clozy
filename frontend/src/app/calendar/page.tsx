@@ -50,7 +50,7 @@ const CalendarPage = () => {
   const fetchUserClothesByDate = async (selectedDate: Date) => {
     console.log(selectedDate);
     if (!user) {
-      console.error("User is not logged in");
+      alert("User is not logged in");
       return;
     }
 
@@ -104,7 +104,7 @@ const CalendarPage = () => {
 
   const handleConfirmSelection = async () => {
     if (!user) {
-      console.error("User is not logged in");
+      alert("User is not logged in");
       return;
     }
     setIsRegisteringCloth(true);
@@ -119,7 +119,7 @@ const CalendarPage = () => {
       setSelectedClothes([]);
       fetchUserClothesByDate(date); // 更新されたデータを再取得
     } catch (error) {
-      console.error("Error adding wear history:", error);
+      alert("Error adding wear history:"+ error);
     } finally {
       setShowClothesList(false); // モーダルを閉じる
     }
@@ -128,7 +128,7 @@ const CalendarPage = () => {
 
   const handleRemoveCloth = async (clothesID: string) => {
     if (!user) {
-      console.error("User is not logged in");
+      alert("User is not logged in");
       return;
     }
     setIsRemovingCloth(true);
@@ -221,9 +221,7 @@ const CalendarPage = () => {
             )}
           </div>
         </div>
-        {(isRemovingCloth || isFetchingClothesByDate) && (
-          <LoadingScreen />
-        )}
+        {(isRemovingCloth || isFetchingClothesByDate) && <LoadingScreen />}
       </div>
     </>
   );

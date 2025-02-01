@@ -155,7 +155,7 @@ const ClothesDetail = () => {
       setIsSaving(false);
       // router.push("/clothes");
     } catch (error) {
-      console.error("Error updating clothes:", error);
+      alert("Error updating clothes:"+ error);
       setIsEditing(false);
       setIsSaving(false);
     }
@@ -174,7 +174,7 @@ const ClothesDetail = () => {
       router.push("/clothes");
       setIsDeleting(false);
     } catch (error) {
-      console.error("Error deleting clothes:", error);
+      alert("Error deleting clothes:"+ error);
       setIsDeleting(false);
     }
   };

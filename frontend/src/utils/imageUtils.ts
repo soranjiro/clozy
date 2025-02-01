@@ -15,7 +15,7 @@ export const createImageLocalURL = (imageFile: string): string | null => {
     const blob = new Blob([byteArray], { type: "image/jpeg" });
     return URL.createObjectURL(blob);
   } catch (error) {
-    console.error("Failed to decode base64 data:", error);
+    alert("Failed to decode base64 data:"+ error);
     return null;
   }
 };

@@ -69,7 +69,7 @@ const AddClothes = () => {
       ...formData,
       imageFile: file,
     });
-  }
+  };
 
   const handleAddCloth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,7 +113,7 @@ const AddClothes = () => {
       setClothes(newClothes);
       router.push("/clothes");
     } catch (error) {
-      console.error("Error adding clothes:", error);
+      alert("Error adding clothes:"+ error);
     }
     setIsAdding(false);
   };

@@ -52,11 +52,9 @@ export default function StaticsPage() {
           const found = newStats.find((s) => s.id === cloth.id);
           return found ? found : { id: cloth.id, name: cloth.name, count: 0 };
         });
-        setStats(
-          allStats.sort((a, b) => b.count - a.count)
-        );
+        setStats(allStats.sort((a, b) => b.count - a.count));
       })
-      .catch((err) => console.error(err));
+      .catch((err) => alert(err));
   }, [user, clothes]);
 
   const handleImageClick = (id: string) => {
@@ -96,13 +94,17 @@ export default function StaticsPage() {
           {isFetchingClothes && <LoadingScreen />}
         </div>
         {(() => {
-          const uniqueCounts = Array.from(new Set(stats.map((s) => s.count))).sort((a, b) => b - a);
+          const uniqueCounts = Array.from(
+            new Set(stats.map((s) => s.count))
+          ).sort((a, b) => b - a);
           return uniqueCounts.map((count) => {
             const items = stats.filter((s) => s.count === count);
             if (items.length === 0) return null;
             return (
               <div key={count}>
-                <div className="mt-8 mb-8 flex justify-center">{count} times</div>
+                <div className="mt-8 mb-8 flex justify-center">
+                  {count} times
+                </div>
                 <div className="grid grid-cols-4 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {items.map((item) => (
                     <div
