@@ -118,6 +118,7 @@ const ClothesModal: React.FC<ClothesModalProps> = ({
             className="bg-white text-brown py-2 px-4 rounded hover:bg-brown-dark mt-4 fixed bottom-4"
             onClick={handleConfirmSelection}
             isLoading={isRegisteringCloth}
+            isDisabled={selectedClothes.length === 0}
           >
             Confirm
           </Button>
