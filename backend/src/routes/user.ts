@@ -1,12 +1,19 @@
 
-import { Hono } from 'hono'
+import { Hono, Context } from 'hono'
 import bcrypt from 'bcryptjs'
 import { Env } from '../index'
 import { db } from '../repository'
-import { User, Query } from '../types'
+import { Query } from '../types'
 import { deleteImagesFromR2 } from '../r2'
 
 const userRoutes = new Hono<{ Bindings: Env }>();
+
+const handleDemoEmail = (c: Context<{ Bindings: Env }>, email: string) => {
+  if (email === c.env.DEMO_EMAIL) {
+    return true;
+  }
+  return false;
+};
 
 // userRoutes.post('/signup', async (c) => {
 //   const { email, password, username }: User = await c.req.json()
@@ -18,6 +25,9 @@ const userRoutes = new Hono<{ Bindings: Env }>();
 
 userRoutes.post('/signout', async (c) => {
   const { email }: Query = await c.req.json()
+  if (handleDemoEmail(c, email)) {
+    return c.text('Demo user cannot be deleted')
+  }
   const database = db(c.env)
   await database.user.delete({ email })
   await database.clothes.deleteByUser({ userID: email });
@@ -44,6 +54,9 @@ userRoutes.post('/logout', (c) => {
 
 userRoutes.post('/changePassword', async (c) => {
   const { email, password, newPassword }: { email: string; password: string; newPassword: string } = await c.req.json();
+  if (handleDemoEmail(c, email)) {
+    return c.text('Demo user cannot change password');
+  }
   const database = db(c.env);
   const user = await database.user.findUnique({ email });
 

@@ -12,6 +12,7 @@ export interface Env {
   R2_BUCKET: R2Bucket;
   LOCAL_ORIGIN: string;
   REMOTE_ORIGIN: string;
+  DEMO_EMAIL: string;
 }
 
 const app = new Hono<{Bindings: Env}>();
