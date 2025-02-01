@@ -16,7 +16,7 @@ import {
 import ClothesModal from "@/app/calendar/ClothesModal";
 import Header from "@/components/header";
 import { Button } from "@/components/ui/button";
-import LoadingScreen from "@/components/ui/loading";
+import LoadingScreen from "@/components/ui/loadingScreen";
 
 const CalendarPage = () => {
   const router = useRouter();
@@ -178,7 +178,6 @@ const CalendarPage = () => {
               isFetchingClothes={isFetchingClothes}
               isRegisteringCloth={isRegisteringCloth}
               isOpen={showClothesList}
-              LoadingScreen={LoadingScreen}
               onRequestClose={() => setShowClothesList(false)}
               selectedClothes={selectedClothes}
             />
@@ -222,9 +221,7 @@ const CalendarPage = () => {
           </div>
         </div>
         {(isRemovingCloth || isFetchingClothesByDate) && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 pointer-events-auto mt-20">
-            <LoadingScreen />
-          </div>
+          <LoadingScreen />
         )}
       </div>
     </>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Header from "@/components/header";
 import { Button } from "@/components/ui/button";
-import LoadingScreen from "@/components/ui/loading";
+import LoadingScreen from "@/components/ui/loadingScreen";
 import { UserContext } from "@/context/UserContext";
 import { ClothContext } from "@/context/ClothContext";
 import type { ClothType } from "@/types/clothes";
@@ -92,7 +92,6 @@ const Clothes = () => {
           </Button>
         </div>
         {isFetchingClothes ? (
-          // <div className="text-center text-white">ロード中...</div>
           <LoadingScreen />
         ) : (
           categories.map((category) => (

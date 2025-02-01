@@ -3,6 +3,7 @@ import Modal from "react-modal";
 import Image from "next/image";
 import { ClothType, ClothesType } from "@/types/clothes";
 import { Button } from "@/components/ui/button";
+import Loading from "@/components/ui/loading";
 
 // ここでアプリのルート要素を設定します
 if (typeof document !== "undefined") {
@@ -19,7 +20,6 @@ interface ClothesModalProps {
   isFetchingClothes: boolean;
   isRegisteringCloth: boolean;
   isOpen: boolean;
-  LoadingScreen: React.FC;
   onRequestClose: () => void;
   selectedClothes: ClothesType;
 }
@@ -34,7 +34,6 @@ const ClothesModal: React.FC<ClothesModalProps> = ({
   isFetchingClothes,
   isRegisteringCloth,
   isOpen,
-  LoadingScreen,
   onRequestClose,
   selectedClothes,
 }) => {
@@ -68,9 +67,7 @@ const ClothesModal: React.FC<ClothesModalProps> = ({
           </button>
           <div className="p-4 w-full">
             {isFetchingClothes ? (
-              <div className="flex items-center justify-center w-full h-full">
-                <LoadingScreen />
-              </div>
+              <Loading />
             ) : (
               categories.map((category: string) => (
                 <div key={category} className="mb-10">

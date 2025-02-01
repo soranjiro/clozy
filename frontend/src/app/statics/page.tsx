@@ -6,7 +6,7 @@ import Image from "next/image";
 import { UserContext } from "@/context/UserContext";
 import { ClothContext } from "@/context/ClothContext";
 import Header from "@/components/header";
-import LoadingScreen from "@/components/ui/loading";
+import LoadingScreen from "@/components/ui/loadingScreen";
 import type { ClothType } from "@/types/clothes";
 import { fetchClothesByDateRange } from "@/api/wearHistory";
 

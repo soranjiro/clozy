@@ -10,7 +10,7 @@ const Header = ({ title }: { title: string }) => {
   const { user } = useContext(UserContext);
 
   return (
-    <header className="relative flex justify-between items-center p-4 bg-header-wood text-white">
+    <header className="relative z-50 flex justify-between items-center p-4 bg-header-wood text-white">
       <div className="absolute inset-0 bg-black opacity-70"></div>
       <div className="relative flex-1 text-lg font-bold">
         <Link href="/">Clozy</Link>

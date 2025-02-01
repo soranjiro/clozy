@@ -12,7 +12,7 @@ import Header from "@/components/header";
 import ClothesDetailEdit from "./ClothesDetailEdit";
 import { Button } from "@/components/ui/button";
 import { ERRORS } from "@/errors/errors";
-import LoadingScreen from "@/components/ui/loading";
+import LoadingScreen from "@/components/ui/loadingScreen";
 
 const ClothesDetail = () => {
   const { user } = useContext(UserContext);
@@ -277,9 +277,7 @@ const ClothesDetail = () => {
               </>
             )
           ) : (
-            <div className="flex items-center justify-center w-full h-full">
-              <LoadingScreen />
-            </div>
+            <LoadingScreen />
           )}
         </div>
       </div>
