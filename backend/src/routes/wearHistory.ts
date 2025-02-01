@@ -10,7 +10,7 @@ wearHistoryRoutes.get('/wearHistory/clothesByDate', async (c) => {
   const date = c.req.query('date');
 
   if (!email || !date) {
-    return c.json({ error: 'Email and date are required' }, 400);
+    return c.json({ message: 'Email and date are required' }, 400);
   }
 
   const database = db(c.env);
@@ -28,10 +28,10 @@ wearHistoryRoutes.get('/wearHistory/clothesByDateRange', async (c) => {
   const endDate = c.req.query('endDate');
 
   if (!email || !startDate || !endDate) {
-    return c.json({ error: 'Email, startDate, and endDate are required' }, 400);
+    return c.json({ message: 'Email, startDate, and endDate are required' }, 400);
   }
   if (startDate > endDate) {
-    return c.json({ error: 'startDate must be before endDate' }, 400);
+    return c.json({ message: 'startDate must be before endDate' }, 400);
   }
 
   const database = db(c.env);
@@ -52,18 +52,18 @@ wearHistoryRoutes.post('/wearHistory', async (c) => {
   );
 
   if (existingEntries.some((entry) => entry)) {
-    return c.json({ error: 'Some items are already registered' }, 400);
+    return c.json({ message: 'Some items are already registered' }, 400);
   }
 
   await database.wearHistory.create({ email, clothesIDs, date });
-  return c.text('Wear history added');
+  return c.json({ message: 'Wear history added' }, 201);
 });
 
 wearHistoryRoutes.delete('/wearHistory', async (c) => {
   const { email, clothesID, date }: WearHistory = await c.req.json();
   const database = db(c.env);
   await database.wearHistory.delete({ email, clothesID, date });
-  return c.text('Wear history deleted');
+  return c.json({ message: 'Wear history deleted' }, 200);
 });
 
 export default wearHistoryRoutes;

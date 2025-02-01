@@ -18,15 +18,15 @@ clothesRoutes.post('/clothes', async (c) => {
   const imageURL = formData.get('imageURL') as string;
 
   if (!categories.includes(category)) {
-    return c.json({ error: 'Invalid category' }, 400);
+    return c.json({ message: 'Invalid category' }, 400);
   }
 
   if (imageFile && imageURL) {
-    return c.json({ error: 'Cannot provide both image file and image URL' }, 400);
+    return c.json({ message: 'Cannot provide both image file and image URL' }, 400);
   }
 
   if (imageFile && imageFile.size > 2 * 1024 * 1024) { // 2MB
-    return c.json({ error: 'Image size is too large' }, 400);
+    return c.json({ message: 'Image size is too large' }, 400);
   }
 
   let imageKey;
@@ -36,7 +36,7 @@ clothesRoutes.post('/clothes', async (c) => {
 
   const database = db(c.env);
   await database.clothes.create({ name, category, size, color, brand, imageKey, imageURL, userID });
-  return c.text('Clothes added');
+  return c.json({ message: 'Clothes added' }, 201);
 })
 
 clothesRoutes.get('/clothes', async (c) => {
@@ -44,12 +44,12 @@ clothesRoutes.get('/clothes', async (c) => {
   const email = c.req.query('userID');
 
   if (!email) {
-    return c.text('No userID', 401);
+    return c.json({ message: 'No userID' }, 401);
   }
 
   const clothes = await database.clothes.findMany({ userID: email });
   if (!clothes) {
-    return c.json([]); // 結果がない場合は空の配列を返す
+    return c.json([]); // No clothes
   }
 
   const clothesWithImages = await Promise.all(clothes.map(async (item) => {
@@ -69,7 +69,7 @@ clothesRoutes.get('/clothes/:id', async (c) => {
   const email = c.req.query('userID');
 
   if (!email) {
-    return c.text('No userID', 401);
+    return c.json({ message: 'No userID' }, 401);
   }
 
   const database = db(c.env);
@@ -101,14 +101,14 @@ clothesRoutes.put('/clothes/:id', async (c) => {
   console.log(formData);
 
   if (!categories.includes(category)) {
-    return c.json({ error: 'Invalid category' }, 400);
+    return c.json({ message: 'Invalid category' }, 400);
   }
   if (imageFile && imageURL) {
-    return c.json({ error: 'Cannot provide both image file and image URL' }, 400);
+    return c.json({ message: 'Cannot provide both image file and image URL' }, 400);
   }
 
   if (imageFile && imageFile.size > 2 * 1024 * 1024) { // 2MB
-    return c.json({ error: 'Image size is too large' }, 400);
+    return c.json({ message: 'Image size is too large' }, 400);
   }
 
   const database = db(c.env);
@@ -136,10 +136,10 @@ clothesRoutes.put('/clothes/:id', async (c) => {
     console.log(updateData);
 
     await database.clothes.update({ id, ...updateData });
-    return c.text('Clothes updated');
+    return c.json({ message: 'Clothes updated' }, 200);
   }
 
-  return c.json({ error: 'Clothes not found' }, 404);
+  return c.json({ message: 'Clothes not found' }, 404);
 });
 
 clothesRoutes.delete('/clothes/:id', async (c) => {
@@ -147,12 +147,13 @@ clothesRoutes.delete('/clothes/:id', async (c) => {
   const email = c.req.query('userID');
 
   if (!email) {
-    return c.text('No userID', 401);
+    return c.json({ message: 'No userID' }, 401);
   }
 
   const database = db(c.env);
+  await database.wearHistory.deleteByCloth({ email, clothesID: id });
   await database.clothes.delete({ id, userID: email });
-  return c.text('Clothes deleted');
+  return c.json({ message: 'Clothes deleted' }, 200);
 });
 
 export default clothesRoutes;

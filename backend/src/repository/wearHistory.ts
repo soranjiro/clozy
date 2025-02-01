@@ -75,4 +75,15 @@ export const wearHistoryModule = (qb: D1QB) => ({
       })
       .execute();
   },
+  deleteByCloth: async (where: { email: string; clothesID: number }) => {
+    await qb
+      .delete({
+        tableName: 'wearHistory',
+        where: {
+          conditions: 'email = ?1 AND clothesID = ?2',
+          params: [where.email, where.clothesID],
+        },
+      })
+      .execute();
+  },
 });

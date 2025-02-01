@@ -13,11 +13,11 @@ export const signup = async (email: string, password: string, username: string) 
     body: JSON.stringify({ email, password, username }),
   });
 
+  const responseData = await response.json();
   if (!response.ok) {
-    throw new Error("Signup failed");
+    throw new Error(responseData.message);
   }
-
-  return response.json();
+  return responseData;
 };
 
 export const login = async (email: string, password: string) => {
@@ -29,15 +29,11 @@ export const login = async (email: string, password: string) => {
     body: JSON.stringify({ email, password }),
   });
 
-  if (response.status === 401) {
-    throw new Error("The email address or password is incorrect");
-  }
-
+  const responseData = await response.json();
   if (!response.ok) {
-    throw new Error("Login failed");
+    throw new Error(responseData.message);
   }
-
-  return response.json();
+  return responseData;
 };
 
 export const changePassword = async (email: string, password: string, newPassword: string) => {
@@ -50,23 +46,11 @@ export const changePassword = async (email: string, password: string, newPasswor
       body: JSON.stringify({ email, password, newPassword }),
     });
 
-    if (response.status === 401) {
-      throw new Error("パスワードが違います");
-    }
-
     const responseData = await response.json();
-    if (
-      response.status === 400 &&
-      responseData.error === "New password must be different"
-    ) {
-      throw new Error("新しいパスワードは現在のパスワードと異なる必要があります");
-    }
-
     if (!response.ok) {
-      throw new Error(responseData.error || "パスワードの変更に失敗しました");
+      throw new Error(responseData.message);
     }
-
-    return response; // c.text('Password changed');
+    return responseData;
   } catch (error) {
     throw error;
   }
@@ -81,9 +65,9 @@ export const signOut = async (email: string) => {
     body: JSON.stringify({ email }),
   });
 
+  const responseData = await response.json();
   if (!response.ok) {
-    throw new Error("Failed to sign out");
+    throw new Error(responseData.message);
   }
-
-  return response.json();
+  return responseData;
 };

@@ -27,7 +27,7 @@ const Account = () => {
     if (!user) return;
     try {
       await changePassword(user.email, password, newPassword);
-      alert("パスワードが変更されました");
+      alert("Password has been changed");
       setShowPasswordChange(false);
     } catch (error) {
       alert(error);
@@ -37,7 +37,7 @@ const Account = () => {
   const handleSignOut = async () => {
     if (!user) return;
     const confirmSignOut = window.confirm(
-      "ユーザーデータが全て消去されます．\n本当によろしいですか？"
+      "All user data will be deleted.\nAre you sure you want to proceed?"
     );
     if (!confirmSignOut) return;
 

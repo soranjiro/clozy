@@ -6,26 +6,29 @@ const API_DOMAIN = process.env.NEXT_PUBLIC_API_DOMAIN;
 
 export const fetchClothes = async (userID: string) => {
   const response = await fetch(`${API_DOMAIN}/api/clothes?userID=${userID}`);
+  const responseData = await response.json();
   if (!response.ok) {
-    throw new Error("Failed to fetch clothes");
+    throw new Error(responseData.message);
   }
-  return response.json();
+  return responseData;
 };
 
 export const fetchClothesById = async (id: string, userID: string) => {
   const response = await fetch(`${API_DOMAIN}/api/clothes/${id}?userID=${userID}`);
+  const responseData = await response.json();
   if (!response.ok) {
-    throw new Error("Failed to fetch clothes by ID");
+    throw new Error(responseData.message);
   }
-  return response.json();
+  return responseData;
 };
 
 export const fetchCategories = async () => {
   const response = await fetch(`${API_DOMAIN}/api/categories`);
+  const responseData = await response.json();
   if (!response.ok) {
-    throw new Error("Failed to fetch categories");
+    throw new Error(responseData.message);
   }
-  return response.json();
+  return responseData;
 };
 
 export const addClothes = async (formData: FormData, userID: string) => {
@@ -34,10 +37,11 @@ export const addClothes = async (formData: FormData, userID: string) => {
     method: "POST",
     body: formData,
   });
+  const responseData = await response.json();
   if (!response.ok) {
-    throw new Error("Failed to add clothes");
+    throw new Error(responseData.message);
   }
-  return response; // c.text('Clothes added');
+  return responseData;
 };
 
 export const updateClothes = async (id: string, formData: FormData, userID: string) => {
@@ -46,18 +50,20 @@ export const updateClothes = async (id: string, formData: FormData, userID: stri
     method: "PUT",
     body: formData,
   });
+  const responseData = await response.json();
   if (!response.ok) {
-    throw new Error("Failed to update clothes");
+    throw new Error(responseData.message);
   }
-  return response; // c.text('Clothes updated');
+  return responseData;
 };
 
 export const deleteClothes = async (id: string, userID: string) => {
   const response = await fetch(`${API_DOMAIN}/api/clothes/${id}?userID=${userID}`, {
     method: "DELETE",
   });
+  const responseData = await response.json();
   if (!response.ok) {
-    throw new Error("Failed to delete clothes");
+    throw new Error(responseData.message);
   }
-  return response; // c.text('Clothes deleted');
+  return responseData;
 };

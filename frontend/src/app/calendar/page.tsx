@@ -48,6 +48,7 @@ const CalendarPage = () => {
   }, [user, router]);
 
   const fetchUserClothesByDate = async (selectedDate: Date) => {
+    console.log(selectedDate);
     if (!user) {
       console.error("User is not logged in");
       return;
