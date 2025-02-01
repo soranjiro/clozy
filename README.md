@@ -1,37 +1,33 @@
 # clozy
 
-this app manages your clothes.
+This app manages your clothes.
 
-## Start
+## setup
+
+- install node and yarn
+- install wrangler
+- install vercel
 
 ```bash
-cd backend
-npm run dev
+make setup
+```
+
+## dev
+
+```bash
+make frontend-dev
 ```
 
 ```bash
-cd frontend
-yarn dev
+make backend-dev
 ```
 
-## Deploy
+## deploy
 
-
-### DB
 ```bash
-cd backend
-npx wrangler d1 execute clozy --remote --file=./db/migration.sql
-# press y
+make frontend-deploy
 ```
 
-### Worker
 ```bash
-cd backend
-npm run deploy
-```
-
-### Frontend
-```bash
-cd frontend
-vercel --prod
+make backend-deploy
 ```

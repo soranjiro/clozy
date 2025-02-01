@@ -7,6 +7,7 @@ compatibility_flags = [ "nodejs_compat" ]
 [vars]
 NODE_ENV = "production"
 REMOTE_ORIGIN = "https://xxxxxxxxxxxxxxx"
+DEMO_EMAIL = "demo@example.com"
 
 # [[kv_namespaces]]
 # binding = "MY_KV_NAMESPACE"

@@ -1,8 +1,22 @@
+.PHONY: setup
+setup:
+	cd ./frontend && yarn
+	cd ./backend && yarn
+
+
 # frontend
 
 .PHONY: frontend-dev
 frontend-dev:
 	cd ./frontend && yarn dev
+
+.PHONY: frontend-build
+frontend-build:
+	cd ./frontend && yarn build
+
+.PHONY: frontend-deploy
+frontend-deploy:
+	cd ./frontend && vercel --prod
 
 
 # backend
@@ -10,6 +24,10 @@ frontend-dev:
 .PHONY: backend-dev
 backend-dev:
 	cd ./backend && yarn dev
+
+.PHONY: backend-deploy
+backend-deploy:
+	cd ./backend && wrangler publish
 
 ## wrangler
 
