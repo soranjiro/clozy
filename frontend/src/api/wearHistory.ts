@@ -4,9 +4,13 @@ dotenv.config();
 
 const API_DOMAIN = process.env.NEXT_PUBLIC_API_DOMAIN;
 
-export const fetchClothesByDate = async (date: Date, userID: string) => {
+const convertDate = (date: Date): String => {
   const jstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
-  const response = await fetch(`${API_DOMAIN}/api/wearHistory/clothesByDate?date=${jstDate.toISOString().split("T")[0]}&email=${userID}`);
+  return jstDate.toISOString().split("T")[0]
+}
+
+export const fetchClothesByDate = async (date: Date, userID: string) => {
+  const response = await fetch(`${API_DOMAIN}/api/wearHistory/clothesByDate?date=${convertDate(date)}&email=${userID}`);
   const responseData = await response.json();
   if (!response.ok) {
     throw new Error(responseData.message);
@@ -15,7 +19,7 @@ export const fetchClothesByDate = async (date: Date, userID: string) => {
 };
 
 export const fetchClothesByDateRange = async (startDate: Date, endDate: Date, userID: string) => {
-  const response = await fetch(`${API_DOMAIN}/api/wearHistory/clothesByDateRange?startDate=${startDate.toISOString().split("T")[0]}&endDate=${endDate.toISOString().split("T")[0]}&email=${userID}`);
+  const response = await fetch(`${API_DOMAIN}/api/wearHistory/clothesByDateRange?startDate=${convertDate(startDate)}&endDate=${convertDate(endDate)}&email=${userID}`);
   const responseData = await response.json();
   if (!response.ok) {
     throw new Error(responseData.message);
@@ -29,7 +33,7 @@ export const addWearHistory = async (clothesIDs: string[], date: Date, userID: s
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ clothesIDs, date: date.toISOString().split("T")[0], "email": userID }),
+    body: JSON.stringify({ clothesIDs, date: convertDate(date), "email": userID }),
   });
   const responseData = await response.json();
   if (!response.ok) {
@@ -44,7 +48,7 @@ export const removeWearHistory = async (clothesID: string, date: Date, userID: s
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ clothesID, date: date.toISOString().split("T")[0], "email": userID }),
+    body: JSON.stringify({ clothesID, date: convertDate(date), "email": userID }),
   });
   const responseData = await response.json();
   if (!response.ok) {
