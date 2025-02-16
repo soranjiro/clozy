@@ -4,7 +4,7 @@ dotenv.config();
 
 const API_DOMAIN = process.env.NEXT_PUBLIC_API_DOMAIN;
 
-const convertDate = (date: Date): String => {
+const convertDate = (date: Date): string => {
   const jstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
   return jstDate.toISOString().split("T")[0]
 }

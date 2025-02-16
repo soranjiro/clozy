@@ -31,3 +31,4 @@ build/
 
 # docs
 docs/*
+!docs/HowToUse

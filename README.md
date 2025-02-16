@@ -2,6 +2,8 @@
 
 This app manages your clothes.
 
+Documentation is [here](./docs/HowToUse/README.md)
+
 ## setup
 
 - install node and yarn
