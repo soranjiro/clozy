@@ -7,6 +7,7 @@ import AuthForm from "@/components/AuthForm";
 import Header from "@/components/header";
 import { login } from "@/api/user";
 import { UserContext } from "@/context/UserContext";
+import { FaGithub } from "react-icons/fa";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -47,6 +48,25 @@ export default function LoginPage() {
           >
             Sign up here
           </Link>
+        </p>
+        <p className="justify-center text-center text-white">
+          Documentation is{" "}
+          <Link
+            href="https://github.com/soranjiro/clozy/blob/main/docs/HowToUse/README.md"
+            className="text-amber-500 font-bold hover:underline inline-block"
+          >
+            here
+          </Link>
+        </p>
+        <p className="flex justify-center text-center text-amber-600">
+          <a
+            href="https://github.com/soranjiro/rotanika-next"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="GitHub Repository"
+          >
+            <FaGithub size={30} />
+          </a>
         </p>
       </div>
     </>

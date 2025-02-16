@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, forwardRef, useImperativeHandle, useContext } from 'react';
-import Link from 'next/link';
-import { UserContext } from '../context/UserContext';
+import { useState, forwardRef, useImperativeHandle, useContext } from "react";
+import Link from "next/link";
+import { UserContext } from "../context/UserContext";
+import { FaGithub } from "react-icons/fa";
+
 
 const HamburgerMenu = forwardRef((props, ref) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,7 +17,7 @@ const HamburgerMenu = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
     closeMenu() {
       setIsOpen(false);
-    }
+    },
   }));
 
   return (
@@ -45,7 +47,15 @@ const HamburgerMenu = forwardRef((props, ref) => {
             <div className="w-6 h-0.5 bg-gray-800 mb-1 rotate-45 transform"></div>
             <div className="w-6 h-0.5 bg-gray-800 -rotate-45 transform"></div>
           </button>
-          <h2 className="text-2xl text-black font-bold mb-4">Menu</h2>
+          <h2 className="text-2xl text-black font-bold mb-4">
+            Menu
+            <Link
+              href="https://github.com/soranjiro/clozy/blob/main/docs/HowToUse/README.md"
+              className="text-amber-600 font-bold hover:underline inline-block ml-2"
+            >
+              <FaGithub className="inline-block ml-1" />
+            </Link>
+          </h2>
           <Link
             href="/clothes"
             className="block px-4 py-2 text-gray-800 border border-amber-700 hover:bg-amber-500"
@@ -89,6 +99,6 @@ const HamburgerMenu = forwardRef((props, ref) => {
   );
 });
 
-HamburgerMenu.displayName = 'HamburgerMenu';
+HamburgerMenu.displayName = "HamburgerMenu";
 
 export default HamburgerMenu;
