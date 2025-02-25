@@ -211,6 +211,7 @@ const ClothesDetail = () => {
         return URL.createObjectURL(formData.imageFile);
       } catch (error) {
         // TODO: handle error
+        console.log(error);
         return `data:image/jpeg;base64,${item.imageFile}`;
       }
     } else if (item.imageURL) {
