@@ -34,7 +34,7 @@ interface ClothesDetailEditProps {
   handleImageOptionChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleEdit: () => void;
-  setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
+  handleEditCancel: () => void;
   isSaving: boolean;
   getImageSrc: (cloth: ClothType) => string | null;
   selectedCloth: ClothType;
@@ -48,12 +48,13 @@ const ClothesDetailEdit: React.FC<ClothesDetailEditProps> = ({
   handleImageOptionChange,
   handleFileChange,
   handleEdit,
-  setIsEditing,
+  handleEditCancel,
   isSaving,
   getImageSrc,
   selectedCloth,
   categories,
 }) => {
+
   return (
     <div className="bg-white p-6 rounded shadow-md">
       <div className="mb-4">
@@ -213,7 +214,7 @@ const ClothesDetailEdit: React.FC<ClothesDetailEditProps> = ({
       </Button>
       <Button
         type="button"
-        onClick={() => setIsEditing(false)}
+        onClick={handleEditCancel}
         className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-700"
       >
         Cancel

@@ -155,7 +155,7 @@ const ClothesDetail = () => {
       setIsSaving(false);
       // router.push("/clothes");
     } catch (error) {
-      alert("Error updating clothes:"+ error);
+      alert("Error updating clothes:" + error);
       setIsEditing(false);
       setIsSaving(false);
     }
@@ -174,9 +174,13 @@ const ClothesDetail = () => {
       router.push("/clothes");
       setIsDeleting(false);
     } catch (error) {
-      alert("Error deleting clothes:"+ error);
+      alert("Error deleting clothes:" + error);
       setIsDeleting(false);
     }
+  };
+
+  const handleEditCancel = () => {
+    setIsEditing(false);
   };
 
   const getImageSrc = (item: ClothType) => {
@@ -215,7 +219,7 @@ const ClothesDetail = () => {
                 handleImageOptionChange={handleImageOptionChange}
                 handleFileChange={handleFileChange}
                 handleEdit={handleEdit}
-                setIsEditing={setIsEditing}
+                handleEditCancel={handleEditCancel}
                 isSaving={isSaving}
                 getImageSrc={getImageSrc}
                 selectedCloth={selectedCloth}
