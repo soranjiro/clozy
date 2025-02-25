@@ -22,7 +22,7 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: npm install
+        run: cd ./frontend && yarn install
 
       - name: Run frontend build
-        run: make frontend-build
+        run: cd ./frontend && yarn build
