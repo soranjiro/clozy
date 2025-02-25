@@ -3,7 +3,7 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { fetchClothes, addClothes, fetchCategories } from "@/api/clothes";
-import { formValid } from "@/utils/formValid";
+import { formValid, PostMethod } from "@/utils/formValid";
 import ClothForm from "@/components/clothForm";
 import Header from "@/components/header";
 import { Button } from "@/components/ui/button";
@@ -79,6 +79,7 @@ const AddClothes = () => {
       return;
     }
     const error = await formValid(
+      PostMethod,
       formData.name,
       formData.category,
       formData.size,

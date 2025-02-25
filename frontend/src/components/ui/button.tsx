@@ -4,14 +4,14 @@ import LoadingScreen from "@/components/ui/loadingScreen";
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   className?: string;
   isLoading?: boolean;
-  isDisabled?: boolean; // 新しいプロパティを追加
+  isDisabled?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
   className = "",
   children,
   isLoading,
-  isDisabled, // 新しいプロパティを追加
+  isDisabled,
   ...props
 }) => {
   return (

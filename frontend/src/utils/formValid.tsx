@@ -3,7 +3,11 @@
 import { resizeImage } from "./imageUtils";
 import { ERRORS } from "@/errors/errors";
 
+export const PostMethod = "POST";
+export const PutMethod = "PUT";
+
 export const formValid = async (
+  method: string,
   name: string,
   category: string,
   size: string,
@@ -30,7 +34,10 @@ export const formValid = async (
     return ERRORS.BRAND_NOT_REGISTERED;
   }
   if ((useImageURL && !imageURL) || (!useImageURL && !imageFile)) {
-    return ERRORS.NO_IMAGE_SELECTED;
+    if (method === PostMethod) {
+      return ERRORS.NO_IMAGE_SELECTED;
+    }
+    return null;
   }
   const maxSize = 2 * 1024 * 1024; // 2MB
   if (imageFile && imageFile.size > maxSize) {
