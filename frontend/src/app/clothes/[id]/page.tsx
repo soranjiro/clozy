@@ -6,7 +6,7 @@ import Image from "next/image";
 import { fetchClothes, updateClothes, deleteClothes } from "@/api/clothes";
 import { UserContext } from "@/context/UserContext";
 import { ClothContext } from "@/context/ClothContext";
-import { formValid } from "@/utils/formValid";
+import { formValid, PutMethod } from "@/utils/formValid";
 import type { ClothType } from "@/types/clothes";
 import Header from "@/components/header";
 import ClothesDetailEdit from "./ClothesDetailEdit";
@@ -48,14 +48,15 @@ const ClothesDetail = () => {
     const fetchData = async () => {
       if (!user) {
         router.push("/login");
-      } else {
-        const cloth = clothes.find((c) => String(c.id) === id);
-        if (!cloth) {
-          router.push("/clothes");
-          return;
-        }
-        setSelectedCloth(cloth);
+        return;
       }
+      const cloth = clothes.find((c) => String(c.id) === id);
+      if (!cloth) {
+        router.push("/clothes");
+        return;
+      }
+      setSelectedCloth(cloth);
+      setUseImageURL(!!cloth.imageURL);
     };
     fetchData();
   }, [user, router, clothes, id]);
@@ -98,7 +99,7 @@ const ClothesDetail = () => {
   };
 
   // change image file when file is resized
-  const handleFileUpdate = (file: File) => {
+  const handleFileUpdate = (file: File | null) => {
     setFormData({
       ...formData,
       imageFile: file,
@@ -109,7 +110,25 @@ const ClothesDetail = () => {
     setIsSaving(true);
     setIsEditing(true);
 
+    // form data must be different from selectedCloth
+    if (
+      formData.name === selectedCloth.name &&
+      formData.category === selectedCloth.category &&
+      formData.size === selectedCloth.size &&
+      formData.color === selectedCloth.color &&
+      formData.brand === selectedCloth.brand &&
+      (formData.imageURL === "" ||
+        formData.imageURL === selectedCloth.imageURL) &&
+      formData.imageFile === null
+    ) {
+      alert("No changes detected.");
+      setIsEditing(false);
+      setIsSaving(false);
+      return;
+    }
+
     const error = await formValid(
+      PutMethod,
       formData.name,
       formData.category,
       formData.size,
@@ -180,6 +199,7 @@ const ClothesDetail = () => {
   };
 
   const handleEditCancel = () => {
+    handleFileUpdate(null);
     setIsEditing(false);
   };
 
@@ -187,7 +207,12 @@ const ClothesDetail = () => {
     if (isEditing && useImageURL) {
       return formData.imageURL;
     } else if (formData.imageFile) {
-      return URL.createObjectURL(formData.imageFile);
+      try {
+        return URL.createObjectURL(formData.imageFile);
+      } catch (error) {
+        // TODO: handle error
+        return `data:image/jpeg;base64,${item.imageFile}`;
+      }
     } else if (item.imageURL) {
       return item.imageURL;
     } else if (item.imageLocalURL) {
