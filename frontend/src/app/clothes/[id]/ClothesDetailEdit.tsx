@@ -63,7 +63,7 @@ const ClothesDetailEdit: React.FC<ClothesDetailEditProps> = ({
         </label>
         <input
           id="name"
-          type="text"
+          name="name"
           value={formData.name}
           onChange={handleInputChange}
           className="border border-brown rounded px-4 py-2 w-full"
