@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, use } from "react";
 import { useRouter } from "next/navigation";
 import { fetchClothes, addClothes, fetchCategories } from "@/api/clothes";
 import { formValid, PostMethod } from "@/utils/formValid";
@@ -33,7 +33,7 @@ const AddClothes = () => {
       if (!user) {
         router.push("/login");
       } else {
-        const categories = await fetchCategories();
+        const categories = await fetchCategories(user.email);
         setCategories(categories);
       }
     };
