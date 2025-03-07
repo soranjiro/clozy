@@ -11,6 +11,7 @@ export const signup = async (email: string, password: string, username: string) 
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ email, password, username }),
+    credentials: "include",
   });
 
   const responseData = await response.json();
@@ -44,6 +45,7 @@ export const changePassword = async (email: string, password: string, newPasswor
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ email, password, newPassword }),
+      credentials: "include",
     });
 
     const responseData = await response.json();
@@ -63,6 +65,7 @@ export const signOut = async (email: string) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ email }),
+    credentials: "include",
   });
 
   const responseData = await response.json();
