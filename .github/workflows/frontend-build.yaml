@@ -4,9 +4,19 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '*.md'
+      - 'Makefile'
+      - 'docs/**'
+      - 'backend/**'
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - '*.md'
+      - 'Makefile'
+      - 'docs/**'
+      - 'backend/**'
 
 jobs:
   build:
