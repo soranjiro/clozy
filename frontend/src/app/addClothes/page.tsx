@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useContext, use } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { fetchClothes, addClothes, fetchCategories } from "@/api/clothes";
 import { formValid, PostMethod } from "@/utils/formValid";
