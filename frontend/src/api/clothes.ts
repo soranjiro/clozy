@@ -5,7 +5,9 @@ dotenv.config();
 const API_DOMAIN = process.env.NEXT_PUBLIC_API_DOMAIN;
 
 export const fetchClothes = async (userID: string) => {
-  const response = await fetch(`${API_DOMAIN}/api/clothes?userID=${userID}`);
+  const response = await fetch(`${API_DOMAIN}/api/clothes?userID=${userID}`, {
+    credentials: "include",
+  });
   const responseData = await response.json();
   if (!response.ok) {
     throw new Error(responseData.message);
@@ -14,7 +16,12 @@ export const fetchClothes = async (userID: string) => {
 };
 
 export const fetchClothesById = async (id: string, userID: string) => {
-  const response = await fetch(`${API_DOMAIN}/api/clothes/${id}?userID=${userID}`);
+  const response = await fetch(
+    `${API_DOMAIN}/api/clothes/${id}?userID=${userID}`,
+    {
+      credentials: "include",
+    }
+  );
   const responseData = await response.json();
   if (!response.ok) {
     throw new Error(responseData.message);
@@ -22,8 +29,13 @@ export const fetchClothesById = async (id: string, userID: string) => {
   return responseData;
 };
 
-export const fetchCategories = async () => {
-  const response = await fetch(`${API_DOMAIN}/api/categories`);
+export const fetchCategories = async (userID: string) => {
+  const response = await fetch(
+    `${API_DOMAIN}/api/categories?userID=${userID}`,
+    {
+      credentials: "include",
+    }
+  );
   const responseData = await response.json();
   if (!response.ok) {
     throw new Error(responseData.message);
@@ -35,6 +47,7 @@ export const addClothes = async (formData: FormData, userID: string) => {
   formData.append("userID", userID);
   const response = await fetch(`${API_DOMAIN}/api/clothes`, {
     method: "POST",
+    credentials: "include",
     body: formData,
   });
   const responseData = await response.json();
@@ -44,10 +57,15 @@ export const addClothes = async (formData: FormData, userID: string) => {
   return responseData;
 };
 
-export const updateClothes = async (id: string, formData: FormData, userID: string) => {
+export const updateClothes = async (
+  id: string,
+  formData: FormData,
+  userID: string
+) => {
   formData.append("userID", userID);
   const response = await fetch(`${API_DOMAIN}/api/clothes/${id}`, {
     method: "PUT",
+    credentials: "include",
     body: formData,
   });
   const responseData = await response.json();
@@ -58,9 +76,13 @@ export const updateClothes = async (id: string, formData: FormData, userID: stri
 };
 
 export const deleteClothes = async (id: string, userID: string) => {
-  const response = await fetch(`${API_DOMAIN}/api/clothes/${id}?userID=${userID}`, {
-    method: "DELETE",
-  });
+  const response = await fetch(
+    `${API_DOMAIN}/api/clothes/${id}?userID=${userID}`,
+    {
+      method: "DELETE",
+      credentials: "include",
+    }
+  );
   const responseData = await response.json();
   if (!response.ok) {
     throw new Error(responseData.message);

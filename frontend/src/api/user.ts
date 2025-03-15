@@ -11,6 +11,7 @@ export const signup = async (email: string, password: string, username: string) 
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ email, password, username }),
+    credentials: "include",
   });
 
   const responseData = await response.json();
@@ -20,6 +21,24 @@ export const signup = async (email: string, password: string, username: string) 
   return responseData;
 };
 
+export const signOut = async (email: string) => {
+  const response = await fetch(`${API_DOMAIN}/api/signout`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email }),
+    credentials: "include",
+  });
+
+  const responseData = await response.json();
+  if (!response.ok) {
+    throw new Error(responseData.message);
+  }
+  return responseData;
+};
+
+
 export const login = async (email: string, password: string) => {
   const response = await fetch(`${API_DOMAIN}/api/login`, {
     method: "POST",
@@ -27,6 +46,20 @@ export const login = async (email: string, password: string) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ email, password }),
+    credentials: "include",
+  });
+
+  const responseData = await response.json();
+  if (!response.ok) {
+    throw new Error(responseData.message);
+  }
+  return responseData;
+};
+
+export const logout = async () => {
+  const response = await fetch(`${API_DOMAIN}/api/logout`, {
+    method: "POST",
+    credentials: "include",
   });
 
   const responseData = await response.json();
@@ -44,6 +77,7 @@ export const changePassword = async (email: string, password: string, newPasswor
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ email, password, newPassword }),
+      credentials: "include",
     });
 
     const responseData = await response.json();
@@ -54,20 +88,4 @@ export const changePassword = async (email: string, password: string, newPasswor
   } catch (error) {
     throw error;
   }
-};
-
-export const signOut = async (email: string) => {
-  const response = await fetch(`${API_DOMAIN}/api/signout`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email }),
-  });
-
-  const responseData = await response.json();
-  if (!response.ok) {
-    throw new Error(responseData.message);
-  }
-  return responseData;
 };

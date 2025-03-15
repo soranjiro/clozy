@@ -8,7 +8,7 @@ import { FaGithub } from "react-icons/fa";
 
 const HamburgerMenu = forwardRef((props, ref) => {
   const [isOpen, setIsOpen] = useState(false);
-  const { logout } = useContext(UserContext);
+  const { userLogout } = useContext(UserContext);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -88,7 +88,7 @@ const HamburgerMenu = forwardRef((props, ref) => {
           </Link>
           <button
             type="button"
-            onClick={logout}
+            onClick={userLogout}
             className="block mt-5 px-4 py-2 text-gray-800 text-left border border-amber-700 hover:bg-amber-700"
           >
             Logout

@@ -44,7 +44,7 @@ export const ClotheProvider = ({ children }: { children: ReactNode }) => {
       setIsFetchingClothes(false);
     };
     const fetchCategoriesData = async () => {
-      const categoriesData = await fetchCategories();
+      const categoriesData = await fetchCategories(user.email);
       setCategories(categoriesData);
     }
     fetchUserClothes();

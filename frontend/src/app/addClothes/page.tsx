@@ -33,7 +33,7 @@ const AddClothes = () => {
       if (!user) {
         router.push("/login");
       } else {
-        const categories = await fetchCategories();
+        const categories = await fetchCategories(user.email);
         setCategories(categories);
       }
     };

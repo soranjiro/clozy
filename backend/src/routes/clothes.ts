@@ -1,32 +1,43 @@
-import { Hono } from 'hono'
-import { Env } from '../index'
-import { db } from '../repository'
-import { categories } from '../repository/categories'
-import { uploadImageToR2, getImageFromR2, deleteImagesFromR2 } from '../r2'
+import { Hono } from "hono";
+
+import { validateSession } from "../../lib/auth";
+import { Env } from "../index";
+import { uploadImageToR2, getImageFromR2, deleteImagesFromR2 } from "../r2";
+
+import { db } from "../repository";
+import { categories } from "../repository/categories";
 
 const clothesRoutes = new Hono<{ Bindings: Env }>();
 
-clothesRoutes.post('/clothes', async (c) => {
+clothesRoutes.post("/clothes", async (c) => {
   const formData = await c.req.formData();
-  const name = formData.get('name') as string;
-  const category = formData.get('category') as string;
-  const size = formData.get('size') as string;
-  const color = formData.get('color') as string;
-  const brand = formData.get('brand') as string;
-  const userID = formData.get('userID') as string;  // email
-  const imageFile = formData.get('image') as File;
-  const imageURL = formData.get('imageURL') as string;
+  const name = formData.get("name") as string;
+  const category = formData.get("category") as string;
+  const size = formData.get("size") as string;
+  const color = formData.get("color") as string;
+  const brand = formData.get("brand") as string;
+  const userID = formData.get("userID") as string; // email
+  const imageFile = formData.get("image") as File;
+  const imageURL = formData.get("imageURL") as string;
+
+  if (!(await validateSession(c, userID))) {
+    return c.json({ message: "Unauthorized" }, 401);
+  }
 
   if (!categories.includes(category)) {
-    return c.json({ message: 'Invalid category' }, 400);
+    return c.json({ message: "Invalid category" }, 400);
   }
 
   if (imageFile && imageURL) {
-    return c.json({ message: 'Cannot provide both image file and image URL' }, 400);
+    return c.json(
+      { message: "Cannot provide both image file and image URL" },
+      400
+    );
   }
 
-  if (imageFile && imageFile.size > 2 * 1024 * 1024) { // 2MB
-    return c.json({ message: 'Image size is too large' }, 400);
+  if (imageFile && imageFile.size > 2 * 1024 * 1024) {
+    // 2MB
+    return c.json({ message: "Image size is too large" }, 400);
   }
 
   let imageKey;
@@ -35,41 +46,62 @@ clothesRoutes.post('/clothes', async (c) => {
   }
 
   const database = db(c.env);
-  await database.clothes.create({ name, category, size, color, brand, imageKey, imageURL, userID });
-  return c.json({ message: 'Clothes added' }, 201);
-})
+  await database.clothes.create({
+    name,
+    category,
+    size,
+    color,
+    brand,
+    imageKey,
+    imageURL,
+    userID,
+  });
+  return c.json({ message: "Clothes added" }, 201);
+});
 
-clothesRoutes.get('/clothes', async (c) => {
+
+clothesRoutes.get("/clothes", async (c) => {
+  const email = c.req.query("userID");
   const database = db(c.env);
-  const email = c.req.query('userID');
-
   if (!email) {
-    return c.json({ message: 'No userID' }, 401);
+    return c.json({ message: "No userID" }, 401);
   }
+
+  if (!(await validateSession(c, email))) {
+    return c.json({ message: "Unauthorized" }, 401);
+  }
+
 
   const clothes = await database.clothes.findMany({ userID: email });
   if (!clothes) {
     return c.json([]); // No clothes
   }
 
-  const clothesWithImages = await Promise.all(clothes.map(async (item) => {
-    if (item.imageKey) {
-      item.imageFile = await getImageFromR2(c.env, item.imageKey);
-    }
+  const clothesWithImages = await Promise.all(
+    clothes.map(async (item) => {
+      if (item.imageKey) {
+        item.imageFile = await getImageFromR2(c.env, item.imageKey);
+      }
 
-    const { imageKey, ...itemWithoutImageKey } = item;
-    return itemWithoutImageKey;
-  }));
+      const { imageKey, ...itemWithoutImageKey } = item;
+      return itemWithoutImageKey;
+    })
+  );
 
   return c.json(clothesWithImages);
 });
 
-clothesRoutes.get('/clothes/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
-  const email = c.req.query('userID');
+
+clothesRoutes.get("/clothes/:id", async (c) => {
+  const id = parseInt(c.req.param("id"));
+  const email = c.req.query("userID");
+
+  if (!(await validateSession(c, email))) {
+    return c.json({ message: "Unauthorized" }, 401);
+  }
 
   if (!email) {
-    return c.json({ message: 'No userID' }, 401);
+    return c.json({ message: "No userID" }, 401);
   }
 
   const database = db(c.env);
@@ -87,28 +119,37 @@ clothesRoutes.get('/clothes/:id', async (c) => {
   return c.json({});
 });
 
-clothesRoutes.put('/clothes/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
+
+clothesRoutes.put("/clothes/:id", async (c) => {
+  const id = parseInt(c.req.param("id"));
   const formData = await c.req.formData();
-  const name = formData.get('name') as string;
-  const category = formData.get('category') as string;
-  const size = formData.get('size') as string;
-  const color = formData.get('color') as string;
-  const brand = formData.get('brand') as string;
-  const userID = formData.get('userID') as string;
-  const imageFile = formData.get('imageFile') as File;
-  const imageURL = formData.get('imageURL') as string;
+  const name = formData.get("name") as string;
+  const category = formData.get("category") as string;
+  const size = formData.get("size") as string;
+  const color = formData.get("color") as string;
+  const brand = formData.get("brand") as string;
+  const userID = formData.get("userID") as string;
+  const imageFile = formData.get("imageFile") as File;
+  const imageURL = formData.get("imageURL") as string;
   console.log(formData);
 
-  if (!categories.includes(category)) {
-    return c.json({ message: 'Invalid category' }, 400);
-  }
-  if (imageFile && imageURL) {
-    return c.json({ message: 'Cannot provide both image file and image URL' }, 400);
+  if (!(await validateSession(c, userID))) {
+    return c.json({ message: "Unauthorized" }, 401);
   }
 
-  if (imageFile && imageFile.size > 2 * 1024 * 1024) { // 2MB
-    return c.json({ message: 'Image size is too large' }, 400);
+  if (!categories.includes(category)) {
+    return c.json({ message: "Invalid category" }, 400);
+  }
+  if (imageFile && imageURL) {
+    return c.json(
+      { message: "Cannot provide both image file and image URL" },
+      400
+    );
+  }
+
+  if (imageFile && imageFile.size > 2 * 1024 * 1024) {
+    // 2MB
+    return c.json({ message: "Image size is too large" }, 400);
   }
 
   const database = db(c.env);
@@ -121,7 +162,11 @@ clothesRoutes.put('/clothes/:id', async (c) => {
       imageKey = null;
     }
     if (imageFile) {
-      imageKey = await uploadImageToR2(c.env, existingClothes.userID, imageFile);
+      imageKey = await uploadImageToR2(
+        c.env,
+        existingClothes.userID,
+        imageFile
+      );
     }
 
     const updateData: any = {
@@ -136,24 +181,29 @@ clothesRoutes.put('/clothes/:id', async (c) => {
     console.log(updateData);
 
     await database.clothes.update({ id, ...updateData });
-    return c.json({ message: 'Clothes updated' }, 200);
+    return c.json({ message: "Clothes updated" }, 200);
   }
 
-  return c.json({ message: 'Clothes not found' }, 404);
+  return c.json({ message: "Clothes not found" }, 404);
 });
 
-clothesRoutes.delete('/clothes/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
-  const email = c.req.query('userID');
 
+clothesRoutes.delete("/clothes/:id", async (c) => {
+  const id = parseInt(c.req.param("id"));
+  const email = c.req.query("userID");
   if (!email) {
-    return c.json({ message: 'No userID' }, 401);
+    return c.json({ message: "No userID" }, 401);
   }
+
+  if (!(await validateSession(c, email))) {
+    return c.json({ message: "Unauthorized" }, 401);
+  }
+
 
   const database = db(c.env);
   await database.wearHistory.deleteByCloth({ email, clothesID: id });
   await database.clothes.delete({ id, userID: email });
-  return c.json({ message: 'Clothes deleted' }, 200);
+  return c.json({ message: "Clothes deleted" }, 200);
 });
 
 export default clothesRoutes;
