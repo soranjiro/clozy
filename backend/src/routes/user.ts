@@ -67,8 +67,8 @@ userRoutes.post("/login", async (c) => {
 });
 
 
-userRoutes.post("/logout", (c) => {
-  clearSession(c);
+userRoutes.post("/logout", async (c) => {
+  await clearSession(c);
   return c.json({ message: "Logout successful" }, 200);
 });
 

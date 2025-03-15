@@ -31,13 +31,17 @@ const app = new Hono<{Bindings: Env}>();
 app.use('*', logger())
 app.use('*', sessionMiddleware)
 
-app.use('/api/*', cors({
-  origin: (origin, c) => {
-    return c.env.NODE_ENV === 'production'
-      ? c.env.REMOTE_ORIGIN
-      : c.env.LOCAL_ORIGIN
-  },
-}))
+app.use(
+  "/api/*",
+  cors({
+    origin: (origin, c) => {
+      return c.env.NODE_ENV === "production"
+        ? c.env.REMOTE_ORIGIN
+        : c.env.LOCAL_ORIGIN;
+    },
+    credentials: true,
+  })
+);
 
 app.get('/_health', (c) => c.text('OK'))
 

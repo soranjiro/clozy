@@ -8,11 +8,7 @@ class Session {
   private loaded: boolean = false;
   private sessionExpire: number;
 
-  constructor(
-    c: Context,
-    sessionId: string,
-    sessionExpire: number = 60 * 60 * 24
-  ) {
+  constructor(c: Context, sessionId: string, sessionExpire: number = 60) {
     this.sessionId = sessionId;
     this.kv = c.env.SESSION_KV;
     this.sessionExpire = sessionExpire;
@@ -53,6 +49,37 @@ class Session {
 
   public async destroy(): Promise<void> {
     await this.kv.delete(this.sessionId);
+  }
+
+  // KVの全内容を表示するメソッド
+  private async showAllKVContent(): Promise<void> {
+    try {
+      console.log("===== KV CONTENT =====");
+      const listResult = await this.kv.list();
+      console.log(`Total keys: ${listResult.keys.length}`);
+
+      for (const keyInfo of listResult.keys) {
+        const key = keyInfo.name;
+        const value = await this.kv.get(key);
+        console.log(`Key: ${key}, Value: ${value}`);
+      }
+      console.log("======================");
+    } catch (error) {
+      console.error("Error displaying KV content:", error);
+    }
+  }
+
+  // KVの全内容を削除するメソッド
+  public async clearAllKVContent(): Promise<void> {
+    try {
+      const listResult = await this.kv.list();
+      for (const keyInfo of listResult.keys) {
+        const key = keyInfo.name;
+        await this.kv.delete(key);
+      }
+    } catch (error) {
+      console.error("Error clearing KV content:", error);
+    }
   }
 }
 
