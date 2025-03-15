@@ -4,7 +4,8 @@ This app manages your clothes.
 
 Documentation is [here](./docs/HowToUse/README.md)
 
-https://clozy.vercel.app/login
+url : https://clozy.vercel.app/login
+
 <img src="./docs/HowToUse/images/pc/clothes_list.png" alt="Login Screen" width="500">
 
 You can try it with the following account.
