@@ -27,7 +27,7 @@ backend-dev:
 
 .PHONY: backend-deploy
 backend-deploy:
-	cd ./backend && wrangler publish
+	cd ./backend && wrangler deploy
 
 ## wrangler
 
