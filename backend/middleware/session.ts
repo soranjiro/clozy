@@ -10,8 +10,8 @@ function generateAndSetSessionId(c: Context) {
     httpOnly: false,
     path: "/",
     maxAge: SESSION_EXPIRE,
-    secure: c.req.url.startsWith("https"),
-    sameSite: "lax",
+    secure: true,
+    sameSite: "None",
   });
   return sessionId;
 }
