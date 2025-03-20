@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useState, ReactNode } from 'react';
+import { useRouter } from "next/navigation";
 
 import { logout } from '@/api/user';
 
@@ -22,6 +23,7 @@ export const UserContext = createContext<UserContextProps>({
 });
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
+  const router = useRouter();
 	const [user, setUser] = useState<User | null>(null);
 
 	const userLogout = async () => {
@@ -29,6 +31,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     document.cookie =
       "session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     setUser(null);
+    router.push("/login");
   };
 
 	return (
