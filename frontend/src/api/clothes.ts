@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { getResponseData } from "./helpers";
 
 dotenv.config();
 
@@ -8,9 +9,9 @@ export const fetchClothes = async (userID: string) => {
   const response = await fetch(`${API_DOMAIN}/api/clothes?userID=${userID}`, {
     credentials: "include",
   });
-  const responseData = await response.json();
+  const responseData = await getResponseData(response);
   if (!response.ok) {
-    throw new Error(responseData.message);
+    throw new Error(responseData?.message ?? responseData);
   }
   return responseData;
 };
@@ -22,9 +23,9 @@ export const fetchClothesById = async (id: string, userID: string) => {
       credentials: "include",
     }
   );
-  const responseData = await response.json();
+  const responseData = await getResponseData(response);
   if (!response.ok) {
-    throw new Error(responseData.message);
+    throw new Error(responseData?.message ?? responseData);
   }
   return responseData;
 };
@@ -36,9 +37,9 @@ export const fetchCategories = async (userID: string) => {
       credentials: "include",
     }
   );
-  const responseData = await response.json();
+  const responseData = await getResponseData(response);
   if (!response.ok) {
-    throw new Error(responseData.message);
+    throw new Error(responseData?.message ?? responseData);
   }
   return responseData;
 };
@@ -50,9 +51,9 @@ export const addClothes = async (formData: FormData, userID: string) => {
     credentials: "include",
     body: formData,
   });
-  const responseData = await response.json();
+  const responseData = await getResponseData(response);
   if (!response.ok) {
-    throw new Error(responseData.message);
+    throw new Error(responseData?.message ?? responseData);
   }
   return responseData;
 };
@@ -68,9 +69,9 @@ export const updateClothes = async (
     credentials: "include",
     body: formData,
   });
-  const responseData = await response.json();
+  const responseData = await getResponseData(response);
   if (!response.ok) {
-    throw new Error(responseData.message);
+    throw new Error(responseData?.message ?? responseData);
   }
   return responseData;
 };
@@ -83,9 +84,9 @@ export const deleteClothes = async (id: string, userID: string) => {
       credentials: "include",
     }
   );
-  const responseData = await response.json();
+  const responseData = await getResponseData(response);
   if (!response.ok) {
-    throw new Error(responseData.message);
+    throw new Error(responseData?.message ?? responseData);
   }
   return responseData;
 };

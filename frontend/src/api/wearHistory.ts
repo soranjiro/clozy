@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { getResponseData } from "./helpers";
 
 dotenv.config();
 
@@ -18,9 +19,9 @@ export const fetchClothesByDate = async (date: Date, userID: string) => {
       credentials: "include",
     }
   );
-  const responseData = await response.json();
+  const responseData = await getResponseData(response);
   if (!response.ok) {
-    throw new Error(responseData.message);
+    throw new Error(responseData?.message ?? responseData);
   }
   return responseData;
 };
@@ -38,9 +39,9 @@ export const fetchClothesByDateRange = async (
       credentials: "include",
     }
   );
-  const responseData = await response.json();
+  const responseData = await getResponseData(response);
   if (!response.ok) {
-    throw new Error(responseData.message);
+    throw new Error(responseData?.message ?? responseData);
   }
   return responseData;
 };
@@ -62,9 +63,9 @@ export const addWearHistory = async (
       email: userID,
     }),
   });
-  const responseData = await response.json();
+  const responseData = await getResponseData(response);
   if (!response.ok) {
-    throw new Error(responseData.message);
+    throw new Error(responseData?.message ?? responseData);
   }
   return responseData;
 };
@@ -82,9 +83,9 @@ export const removeWearHistory = async (
     credentials: "include",
     body: JSON.stringify({ clothesID, date: convertDate(date), email: userID }),
   });
-  const responseData = await response.json();
+  const responseData = await getResponseData(response);
   if (!response.ok) {
-    throw new Error(responseData.message);
+    throw new Error(responseData?.message ?? responseData);
   }
   return responseData;
 };
