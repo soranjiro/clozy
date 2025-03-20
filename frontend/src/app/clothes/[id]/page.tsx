@@ -15,7 +15,7 @@ import { ERRORS } from "@/errors/errors";
 import LoadingScreen from "@/components/ui/loadingScreen";
 
 const ClothesDetail = () => {
-  const { user } = useContext(UserContext);
+  const { user, userLogout } = useContext(UserContext);
   const router = useRouter();
   const pathname = usePathname();
   const id = pathname.split("/")[2];
@@ -47,7 +47,7 @@ const ClothesDetail = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!user) {
-        router.push("/login");
+          userLogout;
         return;
       }
       const cloth = clothes.find((c) => String(c.id) === id);

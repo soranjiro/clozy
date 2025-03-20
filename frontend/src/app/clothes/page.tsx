@@ -11,7 +11,7 @@ import { ClothContext } from "@/context/ClothContext";
 import type { ClothType } from "@/types/clothes";
 
 const Clothes = () => {
-  const { user } = useContext(UserContext);
+  const { user, userLogout } = useContext(UserContext);
   const { clothes, categories, isFetchingClothes } = useContext(ClothContext);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -20,7 +20,7 @@ const Clothes = () => {
   useEffect(() => {
     if (user === undefined) return;
     if (!user) {
-      router.push("/login");
+      userLogout;
     }
   }, [user, router]);
 
