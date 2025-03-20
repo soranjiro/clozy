@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { Hono, Context } from "hono";
+import { setCookie } from "hono/cookie";
 
 import { setSessionUser, validateSession, clearSession } from "../../lib/auth";
 import { Env } from "../index";
@@ -17,7 +18,6 @@ const handleDemoEmail = (c: Context<{ Bindings: Env }>, email: string) => {
   return false;
 };
 
-
 // userRoutes.post('/signup', async (c) => {
 //   const { email, password, username }: User = await c.req.json()
 //   const hashedPassword = await bcrypt.hash(password, 10)
@@ -25,7 +25,6 @@ const handleDemoEmail = (c: Context<{ Bindings: Env }>, email: string) => {
 //   await database.user.create({ email, password: hashedPassword, username })
 //   return c.json({ message: 'User created' })
 // })
-
 
 userRoutes.post("/signout", async (c) => {
   const { email }: Query = await c.req.json();
@@ -46,32 +45,34 @@ userRoutes.post("/signout", async (c) => {
   return c.json({ message: "User and related data deleted" }, 200);
 });
 
-
 userRoutes.post("/login", async (c) => {
-  const { email, password }: Query = await c.req.json();
-  const database = db(c.env);
-  const user = await database.user.findUnique({ email: email });
+  try {
+    const { email, password }: Query = await c.req.json();
+    const database = db(c.env);
+    const user = await database.user.findUnique({ email: email });
 
-  if (
-    user &&
-    user.password &&
-    password &&
-    (await bcrypt.compare(password, user.password))
-  ) {
-    // save user in session
-    await setSessionUser(c, email);
-    return c.json({ username: user.username }, 200);
+    if (
+      user &&
+      user.password &&
+      password &&
+      (await bcrypt.compare(password, user.password))
+    ) {
+      // save user in session
+      await setSessionUser(c, email);
+      return c.json({ username: user.username }, 200);
+    }
+
+    return c.json({ message: "Invalid credentials" }, 401);
+  } catch (error) {
+    setCookie(c, "session_id", "", { maxAge: 0, path: "/" });
+    return c.json({ message: "Internal server error" }, 500);
   }
-
-  return c.json({ message: "Invalid credentials" }, 401);
 });
-
 
 userRoutes.post("/logout", async (c) => {
   await clearSession(c);
   return c.json({ message: "Logout successful" }, 200);
 });
-
 
 userRoutes.post("/changePassword", async (c) => {
   const {
