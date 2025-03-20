@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 
 const Account = () => {
   const router = useRouter();
-  const { user, setUser } = useContext(UserContext);
+  const { user, setUser, userLogout } = useContext(UserContext);
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [showPasswordChange, setShowPasswordChange] = useState(false);
@@ -19,7 +19,7 @@ const Account = () => {
 
   useEffect(() => {
     if (!user) {
-      router.push("/login");
+      userLogout();
     }
   }, [user, router]);
 

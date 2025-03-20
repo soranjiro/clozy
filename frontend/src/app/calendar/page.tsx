@@ -20,7 +20,7 @@ import LoadingScreen from "@/components/ui/loadingScreen";
 
 const CalendarPage = () => {
   const router = useRouter();
-  const { user } = useContext(UserContext);
+  const { user, userLogout } = useContext(UserContext);
   const { clothes, categories, isFetchingClothes } = useContext(ClothContext);
   const [date, setDate] = useState(new Date());
   const [showClothesList, setShowClothesList] = useState(false);
@@ -43,7 +43,7 @@ const CalendarPage = () => {
   useEffect(() => {
     if (user === undefined) return;
     if (!user) {
-      router.push("/login");
+      userLogout();
     }
   }, [user, router]);
 

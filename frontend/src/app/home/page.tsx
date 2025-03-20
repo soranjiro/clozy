@@ -7,12 +7,12 @@ import Header from "@/components/header";
 import { Button } from "@/components/ui/button";
 
 export default function Page() {
-  const { user } = useContext(UserContext);
+  const { user, userLogout } = useContext(UserContext);
   const router = useRouter();
 
   useEffect(() => {
     if (!user) {
-      router.push("/login");
+      userLogout();
     }
   }, [user, router]);
 

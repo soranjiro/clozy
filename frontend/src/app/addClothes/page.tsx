@@ -11,7 +11,7 @@ import { UserContext } from "@/context/UserContext";
 import { ClothContext } from "@/context/ClothContext";
 
 const AddClothes = () => {
-  const { user } = useContext(UserContext);
+  const { user, userLogout } = useContext(UserContext);
   const { setClothes } = useContext(ClothContext);
   const [formData, setFormData] = useState({
     name: "",
@@ -31,7 +31,7 @@ const AddClothes = () => {
     const fetchData = async () => {
       if (user === undefined) return; // ユーザー情報がまだ読み込まれていない場合は何もしない
       if (!user) {
-        router.push("/login");
+        userLogout();
       } else {
         const categories = await fetchCategories(user.email);
         setCategories(categories);
