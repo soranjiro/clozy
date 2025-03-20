@@ -43,7 +43,7 @@ const CalendarPage = () => {
   useEffect(() => {
     if (user === undefined) return;
     if (!user) {
-      userLogout;
+      userLogout();
     }
   }, [user, router]);
 

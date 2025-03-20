@@ -31,7 +31,7 @@ const AddClothes = () => {
     const fetchData = async () => {
       if (user === undefined) return; // ユーザー情報がまだ読み込まれていない場合は何もしない
       if (!user) {
-        userLogout;
+        userLogout();
       } else {
         const categories = await fetchCategories(user.email);
         setCategories(categories);

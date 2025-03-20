@@ -47,7 +47,7 @@ const ClothesDetail = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!user) {
-          userLogout;
+          userLogout();
         return;
       }
       const cloth = clothes.find((c) => String(c.id) === id);

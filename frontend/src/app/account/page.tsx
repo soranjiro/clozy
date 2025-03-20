@@ -19,7 +19,7 @@ const Account = () => {
 
   useEffect(() => {
     if (!user) {
-      userLogout;
+      userLogout();
     }
   }, [user, router]);
 
