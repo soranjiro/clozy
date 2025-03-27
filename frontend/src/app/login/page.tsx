@@ -60,7 +60,7 @@ export default function LoginPage() {
         </p>
         <p className="flex justify-center text-center text-amber-600">
           <a
-            href="https://github.com/soranjiro/rotanika-next"
+            href="https://github.com/soranjiro/clozy"
             target="_blank"
             rel="noopener noreferrer"
             title="GitHub Repository"
