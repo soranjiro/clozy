@@ -1,4 +1,4 @@
-name: Vercel Production Deployment
+name: Frontend Build and Deploy
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -6,16 +6,42 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'frontend/**'
     paths-ignore:
       - '*.md'
-      - 'Makefile'
-      - 'docs/**'
-      - 'backend/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+    paths-ignore:
+      - '*.md'
 jobs:
-  Deploy-Production:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: cd ./frontend && yarn install
+
+      - name: Run frontend build
+        run: cd ./frontend && yarn build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # mainブランチのpushイベントの場合のみデプロイを実行
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
       - name: Pull Vercel Environment Information
