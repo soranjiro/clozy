@@ -57,14 +57,12 @@ userRoutes.post("/login", async (c) => {
       password &&
       (await bcrypt.compare(password, user.password))
     ) {
-      // save user in session
-      await setSessionUser(c, email);
-      return c.json({ username: user.username }, 200);
+      const token = await setSessionUser(c, email);
+      return c.json({ username: user.username, token }, 200);
     }
 
     return c.json({ message: "Invalid credentials" }, 401);
   } catch (error) {
-    setCookie(c, "session_id", "", { maxAge: 0, path: "/" });
     return c.json({ message: "Internal server error" }, 500);
   }
 });

@@ -1,5 +1,10 @@
 import dotenv from "dotenv";
-import { getResponseData } from "./helpers";
+import {
+  getResponseData,
+  saveToken,
+  removeToken,
+  getAuthHeaders,
+} from "./helpers";
 
 dotenv.config();
 
@@ -16,11 +21,13 @@ export const signup = async (
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ email, password, username }),
-    credentials: "include",
   });
   const responseData = await getResponseData(response);
   if (!response.ok) {
     throw new Error(responseData?.message ?? responseData);
+  }
+  if (responseData.token) {
+    saveToken(responseData.token);
   }
   return responseData;
 };
@@ -28,16 +35,14 @@ export const signup = async (
 export const signOut = async (email: string) => {
   const response = await fetch(`${API_DOMAIN}/api/signout`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify({ email }),
-    credentials: "include",
   });
   const responseData = await getResponseData(response);
   if (!response.ok) {
     throw new Error(responseData?.message ?? responseData);
   }
+  removeToken();
   return responseData;
 };
 
@@ -48,11 +53,14 @@ export const login = async (email: string, password: string) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ email, password }),
-    credentials: "include",
   });
   const responseData = await getResponseData(response);
   if (!response.ok) {
     throw new Error(responseData?.message ?? responseData);
+  }
+  // レスポンスからトークンを取得して保存する
+  if (responseData.token) {
+    saveToken(responseData.token);
   }
   return responseData;
 };
@@ -60,12 +68,13 @@ export const login = async (email: string, password: string) => {
 export const logout = async () => {
   const response = await fetch(`${API_DOMAIN}/api/logout`, {
     method: "POST",
-    credentials: "include",
+    headers: getAuthHeaders(),
   });
   const responseData = await getResponseData(response);
   if (!response.ok) {
     throw new Error(responseData?.message ?? responseData);
   }
+  removeToken();
   return responseData;
 };
 
@@ -77,11 +86,8 @@ export const changePassword = async (
   try {
     const response = await fetch(`${API_DOMAIN}/api/changePassword`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ email, password, newPassword }),
-      credentials: "include",
     });
     const responseData = await getResponseData(response);
     if (!response.ok) {

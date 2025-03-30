@@ -1,85 +1,73 @@
 import { Context } from "hono";
-import { KVNamespace } from "@cloudflare/workers-types";
+
+interface SessionData {
+  [key: string]: any;
+}
 
 class Session {
-  private data: Record<string, any> | undefined;
+  private context: Context;
   private sessionId: string;
-  private kv: KVNamespace;
-  private loaded: boolean = false;
-  private sessionExpire: number;
+  private expiration: number;
+  private data: SessionData = {};
+  private isLoaded: boolean = false;
 
-  constructor(c: Context, sessionId: string, sessionExpire: number = 60) {
+  constructor(context: Context, sessionId: string, expiration: number) {
+    this.context = context;
     this.sessionId = sessionId;
-    this.kv = c.env.SESSION_KV;
-    this.sessionExpire = sessionExpire;
+    this.expiration = expiration;
   }
 
-  private async loadData(): Promise<void> {
-    if (!this.loaded) {
-      const data = await this.kv.get(this.sessionId);
-      this.data = data ? JSON.parse(data) : {};
-      this.loaded = true;
+  private async load(): Promise<void> {
+    if (this.isLoaded || !this.sessionId) return;
+
+    try {
+      const sessionData = await this.context.env.SESSION_KV.get(this.sessionId);
+      if (sessionData) {
+        this.data = JSON.parse(sessionData);
+      }
+    } catch (error) {
+      console.error("セッションデータ読み込みエラー:", error);
+    }
+
+    this.isLoaded = true;
+  }
+
+  private async save(): Promise<void> {
+    if (!this.sessionId) return;
+
+    try {
+      await this.context.env.SESSION_KV.put(
+        this.sessionId,
+        JSON.stringify(this.data),
+        { expirationTtl: this.expiration }
+      );
+    } catch (error) {
+      console.error("セッションデータ保存エラー:", error);
     }
   }
 
-  public async set(key: string, value: any): Promise<void> {
-    await this.loadData();
-    this.data![key] = value;
-    await this.kv.put(this.sessionId, JSON.stringify(this.data), {
-      // save session data for expirationTtl seconds
-      expirationTtl: this.sessionExpire,
-    });
+  async get(key: string): Promise<any> {
+    await this.load();
+    return this.data[key];
   }
 
-  public async get(key: string): Promise<any> {
-    await this.loadData();
-    return this.data![key];
+  async set(key: string, value: any): Promise<void> {
+    await this.load();
+    this.data[key] = value;
+    await this.save();
   }
 
-  public async delete(key: string): Promise<void> {
-    await this.loadData();
-    delete this.data![key];
-    await this.kv.put(this.sessionId, JSON.stringify(this.data));
-  }
+  async destroy(): Promise<void> {
+    if (!this.sessionId) return;
 
-  public async clear(): Promise<void> {
+    try {
+      await this.context.env.SESSION_KV.delete(this.sessionId);
+    } catch (error) {
+      console.error("セッション削除エラー:", error);
+    }
+
     this.data = {};
-    await this.kv.put(this.sessionId, JSON.stringify(this.data));
-  }
-
-  public async destroy(): Promise<void> {
-    await this.kv.delete(this.sessionId);
-  }
-
-  // KVの全内容を表示するメソッド
-  private async showAllKVContent(): Promise<void> {
-    try {
-      console.log("===== KV CONTENT =====");
-      const listResult = await this.kv.list();
-      console.log(`Total keys: ${listResult.keys.length}`);
-
-      for (const keyInfo of listResult.keys) {
-        const key = keyInfo.name;
-        const value = await this.kv.get(key);
-        console.log(`Key: ${key}, Value: ${value}`);
-      }
-      console.log("======================");
-    } catch (error) {
-      console.error("Error displaying KV content:", error);
-    }
-  }
-
-  // KVの全内容を削除するメソッド
-  public async clearAllKVContent(): Promise<void> {
-    try {
-      const listResult = await this.kv.list();
-      for (const keyInfo of listResult.keys) {
-        const key = keyInfo.name;
-        await this.kv.delete(key);
-      }
-    } catch (error) {
-      console.error("Error clearing KV content:", error);
-    }
+    this.isLoaded = false;
   }
 }
 
