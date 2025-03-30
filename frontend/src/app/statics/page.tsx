@@ -7,6 +7,7 @@ import { UserContext } from "@/context/UserContext";
 import { ClothContext } from "@/context/ClothContext";
 import Header from "@/components/header";
 import LoadingScreen from "@/components/ui/loadingScreen";
+import ErrorRetry from "@/components/ui/ErrorRetry";
 import type { ClothType } from "@/types/clothes";
 import { fetchClothesByDateRange } from "@/api/wearHistory";
 
@@ -18,11 +19,13 @@ type DateRange = {
 
 export default function StaticsPage() {
   const { user } = useContext(UserContext);
-  const { clothes, isFetchingClothes } = useContext(ClothContext);
+  const { clothes, isFetchingClothes, fetchError, refetchClothes } =
+    useContext(ClothContext);
   const [stats, setStats] = useState<
     { id: string; name: string; count: number }[]
   >([]);
   const [loading, setLoading] = useState(false);
+  const [statsError, setStatsError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>(() => {
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -61,6 +64,7 @@ export default function StaticsPage() {
   const fetchStatsForRange = async (start: Date, end: Date) => {
     if (!user) return;
     setLoading(true);
+    setStatsError(null);
 
     try {
       const data = await fetchClothesByDateRange(start, end, user.email);
@@ -93,7 +97,9 @@ export default function StaticsPage() {
 
       setStats(allStats.sort((a, b) => b.count - a.count));
     } catch (err) {
-      alert(err);
+      setStatsError(
+        err instanceof Error ? err.message : "データの取得に失敗しました。"
+      );
     } finally {
       setLoading(false);
     }
@@ -277,6 +283,19 @@ export default function StaticsPage() {
           </div>
 
           {(isFetchingClothes || loading) && <LoadingScreen />}
+
+          {fetchError && (
+            <ErrorRetry errorMessage={fetchError} onRetry={refetchClothes} />
+          )}
+
+          {statsError && (
+            <ErrorRetry
+              errorMessage={statsError}
+              onRetry={() =>
+                fetchStatsForRange(dateRange.startDate, dateRange.endDate)
+              }
+            />
+          )}
         </div>
 
         {stats.length === 0 && !loading ? (

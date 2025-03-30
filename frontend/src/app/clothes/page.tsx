@@ -6,13 +6,15 @@ import Image from "next/image";
 import Header from "@/components/header";
 import { Button } from "@/components/ui/button";
 import LoadingScreen from "@/components/ui/loadingScreen";
+import ErrorRetry from "@/components/ui/ErrorRetry";
 import { UserContext } from "@/context/UserContext";
 import { ClothContext } from "@/context/ClothContext";
 import type { ClothType } from "@/types/clothes";
 
 const Clothes = () => {
   const { user, userLogout } = useContext(UserContext);
-  const { clothes, categories, isFetchingClothes } = useContext(ClothContext);
+  const { clothes, categories, isFetchingClothes, fetchError, refetchClothes } =
+    useContext(ClothContext);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -93,6 +95,8 @@ const Clothes = () => {
         </div>
         {isFetchingClothes ? (
           <LoadingScreen />
+        ) : fetchError ? (
+          <ErrorRetry errorMessage={fetchError} onRetry={refetchClothes} />
         ) : (
           categories.map((category) => (
             <div key={category} className="mb-10">

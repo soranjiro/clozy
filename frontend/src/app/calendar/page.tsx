@@ -17,11 +17,13 @@ import ClothesModal from "@/app/calendar/ClothesModal";
 import Header from "@/components/header";
 import { Button } from "@/components/ui/button";
 import LoadingScreen from "@/components/ui/loadingScreen";
+import ErrorRetry from "@/components/ui/ErrorRetry";
 
 const CalendarPage = () => {
   const router = useRouter();
   const { user, userLogout } = useContext(UserContext);
-  const { clothes, categories, isFetchingClothes } = useContext(ClothContext);
+  const { clothes, categories, isFetchingClothes, fetchError, refetchClothes } =
+    useContext(ClothContext);
   const [date, setDate] = useState(new Date());
   const [showClothesList, setShowClothesList] = useState(false);
   const [clothesByDate, setClothesByDate] = useState<ClothesType>([]);
@@ -31,6 +33,7 @@ const CalendarPage = () => {
   const [isFetchingClothesByDate, setIsFetchingClothesByDate] = useState(false);
   const [isRegisteringCloth, setIsRegisteringCloth] = useState(false);
   const [isRemovingCloth, setIsRemovingCloth] = useState(false);
+  const [fetchDateError, setFetchDateError] = useState<string | null>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -55,23 +58,32 @@ const CalendarPage = () => {
     }
 
     setIsFetchingClothesByDate(true);
-    console.log("fetching clothes by date...", isFetchingClothesByDate);
-    const filteredClothesIDs: string[] = await fetchClothesByDate(
-      selectedDate,
-      user.email
-    );
-    if (filteredClothesIDs.length === 0) {
-      setMessage("No clothes registered for this date");
-      setClothesByDate([]);
-    } else {
-      setMessage("");
-      setClothesByDate(
-        clothes
-          .filter((item) => filteredClothesIDs.some((id) => id === item.id))
-          .sort((a, b) => a.category.localeCompare(b.category)) // カテゴリー順に並び替え
+    setFetchDateError(null);
+    try {
+      const filteredClothesIDs: string[] = await fetchClothesByDate(
+        selectedDate,
+        user.email
       );
+      if (filteredClothesIDs.length === 0) {
+        setMessage("No clothes registered for this date");
+        setClothesByDate([]);
+      } else {
+        setMessage("");
+        setClothesByDate(
+          clothes
+            .filter((item) => filteredClothesIDs.some((id) => id === item.id))
+            .sort((a, b) => a.category.localeCompare(b.category)) // カテゴリー順に並び替え
+        );
+      }
+    } catch (error) {
+      setFetchDateError(
+        error instanceof Error
+          ? error.message
+          : "日付ごとの服情報の取得に失敗しました。"
+      );
+    } finally {
+      setIsFetchingClothesByDate(false);
     }
-    setIsFetchingClothesByDate(false);
   };
 
   const onDateChange: CalendarProps["onChange"] = (value) => {
@@ -119,7 +131,7 @@ const CalendarPage = () => {
       setSelectedClothes([]);
       fetchUserClothesByDate(date); // 更新されたデータを再取得
     } catch (error) {
-      alert("Error adding wear history:"+ error);
+      alert("Error adding wear history:" + error);
     } finally {
       setShowClothesList(false); // モーダルを閉じる
     }
@@ -183,6 +195,18 @@ const CalendarPage = () => {
               selectedClothes={selectedClothes}
             />
           )}
+
+          {fetchError && (
+            <ErrorRetry errorMessage={fetchError} onRetry={refetchClothes} />
+          )}
+
+          {fetchDateError && (
+            <ErrorRetry
+              errorMessage={fetchDateError}
+              onRetry={() => fetchUserClothesByDate(date)}
+            />
+          )}
+
           <div className="mt-4">
             {message ? (
               <p className="text-center text-white font-bold">{message}</p>
