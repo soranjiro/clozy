@@ -8,7 +8,6 @@ export const sessionMiddleware = async (
 ) => {
   // Authorizationヘッダーからトークンを取得
   const token = extractToken(c.req.header("Authorization"));
-
   // JWT秘密鍵を環境変数から取得
   const jwtSecret = c.env.JWT_SECRET;
 

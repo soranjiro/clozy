@@ -28,12 +28,12 @@ export const removeToken = () => {
 // getAuthHeaders.ts の修正例
 export function getAuthHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
   };
 
   const token = getToken();
   if (token) {
-    headers.Authorization = token;
+    headers.Authorization = `Bearer ${token}`;
   }
 
   return headers;
