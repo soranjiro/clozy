@@ -11,21 +11,26 @@ export const sessionMiddleware = async (
   // JWT秘密鍵を環境変数から取得
   const jwtSecret = c.env.JWT_SECRET;
 
+  let userEmail = "";
+  let userData = {};
+
   if (token && jwtSecret) {
     // トークンを検証
     const payload = await verifyToken(token, jwtSecret);
     if (payload) {
-      // 有効なトークンの場合、セッションを初期化しユーザー情報を設定
-      c.session = new Session(c, payload.email, 0);
-      await c.session.set("user", { email: payload.email });
-    } else {
-      // 無効なトークンの場合は空のセッションを作成
-      c.session = new Session(c, "", 0);
+      userEmail = payload.email;
+      userData = { email: payload.email };
     }
-  } else {
-    // トークンがない場合は空のセッションを作成
-    c.session = new Session(c, "", 0);
   }
 
+  // JWTから取得したデータでセッションを初期化
+  c.session = new Session(c, userEmail, { user: userData });
+
   await next();
+
+  // レスポンス前にセッションに変更があれば新しいトークンを生成
+  const newToken = await c.session.save();
+  if (newToken) {
+    c.res.headers.set("X-New-Token", newToken);
+  }
 };
