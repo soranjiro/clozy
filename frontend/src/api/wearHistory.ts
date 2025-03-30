@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { getResponseData } from "./helpers";
+import { getResponseData, getAuthHeaders } from "./helpers";
 
 dotenv.config();
 
@@ -16,7 +16,7 @@ export const fetchClothesByDate = async (date: Date, userID: string) => {
       date
     )}&email=${userID}`,
     {
-      credentials: "include",
+      headers: getAuthHeaders(),
     }
   );
   const responseData = await getResponseData(response);
@@ -36,7 +36,7 @@ export const fetchClothesByDateRange = async (
       startDate
     )}&endDate=${convertDate(endDate)}&email=${userID}`,
     {
-      credentials: "include",
+      headers: getAuthHeaders(),
     }
   );
   const responseData = await getResponseData(response);
@@ -53,10 +53,7 @@ export const addWearHistory = async (
 ) => {
   const response = await fetch(`${API_DOMAIN}/api/wearHistory`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
+    headers: getAuthHeaders(),
     body: JSON.stringify({
       clothesIDs,
       date: convertDate(date),
@@ -77,10 +74,7 @@ export const removeWearHistory = async (
 ) => {
   const response = await fetch(`${API_DOMAIN}/api/wearHistory`, {
     method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
+    headers: getAuthHeaders(),
     body: JSON.stringify({ clothesID, date: convertDate(date), email: userID }),
   });
   const responseData = await getResponseData(response);
