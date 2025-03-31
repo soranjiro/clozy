@@ -14,7 +14,7 @@ export default function Page() {
     if (!user) {
       userLogout();
     }
-  }, [user, router, userLogout]);
+  }, [user, router]);
 
   return (
     <>
@@ -22,7 +22,9 @@ export default function Page() {
       <div className="min-h-screen bg-wood">
         {user ? (
           <div className="container mx-auto py-8">
-            <h1 className="text-3xl text-white font-bold text-center">Home</h1>
+            <h1 className="text-3xl text-white font-bold text-center">
+              Home
+            </h1>
             {user && (
               <p className="text-3xl text-white text-center mt-4">
                 Welcome, {user.username}!

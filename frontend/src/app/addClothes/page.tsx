@@ -38,7 +38,7 @@ const AddClothes = () => {
       }
     };
     fetchData();
-  }, [user, router, userLogout]);
+  }, [user, router]);
 
   const handleImageOptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUseImageURL(e.target.value === "url");
@@ -114,7 +114,7 @@ const AddClothes = () => {
       setClothes(newClothes);
       router.push("/clothes");
     } catch (error) {
-      alert("Error adding clothes:" + error);
+      alert("Error adding clothes:"+ error);
     }
     setIsAdding(false);
   };
