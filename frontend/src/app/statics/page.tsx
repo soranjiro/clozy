@@ -107,7 +107,7 @@ export default function StaticsPage() {
 
   useEffect(() => {
     fetchStatsForRange(dateRange.startDate, dateRange.endDate);
-  }, [user, clothes, dateRange]);
+  }, [user, clothes, dateRange, fetchStatsForRange]);
 
   const handleDateRangeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;

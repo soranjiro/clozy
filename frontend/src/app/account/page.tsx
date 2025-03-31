@@ -21,7 +21,7 @@ const Account = () => {
     if (!user) {
       userLogout();
     }
-  }, [user, router]);
+  }, [user, router, userLogout]);
 
   const handlePasswordChange = async () => {
     if (!user) return;
@@ -46,7 +46,7 @@ const Account = () => {
       setUser(null);
       router.push("/login");
     } catch (error) {
-      alert("Error signing out:"+ error);
+      alert("Error signing out:" + error);
     }
   };
 
