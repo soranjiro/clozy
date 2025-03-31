@@ -30,6 +30,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     try {
       logout();
       setUser(null);
+      router.push("/login");
     } catch (error) {
       console.error("Failed to logout:", error);
     }
