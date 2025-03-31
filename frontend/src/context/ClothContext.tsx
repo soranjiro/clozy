@@ -67,7 +67,7 @@ export const ClotheProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!user) return;
     fetchUserData();
-  }, [user]);
+  }, [user, fetchUserData]);
 
   return (
     <ClothContext.Provider

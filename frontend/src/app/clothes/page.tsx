@@ -24,7 +24,7 @@ const Clothes = () => {
     if (!user) {
       userLogout();
     }
-  }, [user, router]);
+  }, [user, router, userLogout]);
 
   const handleImageClick = (item: ClothType) => {
     router.push(`/clothes/${item.id}`);

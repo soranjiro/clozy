@@ -47,7 +47,7 @@ const ClothesDetail = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!user) {
-          userLogout();
+        userLogout();
         return;
       }
       const cloth = clothes.find((c) => String(c.id) === id);
@@ -59,7 +59,7 @@ const ClothesDetail = () => {
       setUseImageURL(!!cloth.imageURL);
     };
     fetchData();
-  }, [user, router, clothes, id]);
+  }, [user, router, clothes, id, userLogout]);
 
   useEffect(() => {
     if (selectedCloth) {
