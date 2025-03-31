@@ -39,11 +39,23 @@ class Session {
       throw new Error("JWT secret is not configured");
     }
 
+    // Cookieの設定を調整 - SameSite=Laxを使用
+    this.context.res.headers.set(
+      "Set-Cookie",
+      `auth_session=${this.userEmail}; HttpOnly; SameSite=Lax; Secure; Path=/; Max-Age=3600`
+    );
+
     this.isDirty = false;
     return generateToken({ email: this.userEmail }, jwtSecret);
   }
 
   async destroy(): Promise<void> {
+    // セッション破棄時にCookieも削除
+    this.context.res.headers.set(
+      "Set-Cookie",
+      `auth_session=; HttpOnly; SameSite=Lax; Secure; Path=/; Max-Age=0`
+    );
+
     this.sessionData = {};
     this.userEmail = "";
     this.isDirty = false;

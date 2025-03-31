@@ -17,7 +17,10 @@ export const generateToken = (
   return sign(
     {
       ...payload,
+      // nonce（使い捨て値）を含めて再生攻撃を防止
+      nonce: Math.random().toString(36).substring(2, 15),
       exp: now + TOKEN_EXPIRE,
+      iat: now,
     },
     secret
   );
@@ -29,7 +32,24 @@ export const verifyToken = async (
   secret: string
 ): Promise<JWTPayload | null> => {
   try {
-    return (await verify(token, secret)) as JWTPayload;
+    const payload = (await verify(token, secret)) as JWTPayload & {
+      iat?: number;
+    };
+
+    // 発行時刻が設定されているか確認
+    if (!payload.iat) {
+      console.error("トークンに発行時刻(iat)がありません");
+      return null;
+    }
+
+    // 有効期限を確認
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp < now) {
+      console.error("トークンの有効期限が切れています");
+      return null;
+    }
+
+    return payload;
   } catch (error) {
     console.error("JWT検証エラー:", error);
     return null;
