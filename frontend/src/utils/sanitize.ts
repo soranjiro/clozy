@@ -26,8 +26,8 @@ export const sanitizeJson = <T>(json: T): T => {
     return json.map(sanitizeJson) as unknown as T;
   }
 
-  const result: Record<string, unknown> = {};
-  Object.entries(json as Record<string, unknown>).forEach(([key, value]) => {
+  const result: Record<string, any> = {};
+  Object.entries(json as Record<string, any>).forEach(([key, value]) => {
     result[key] = sanitizeJson(value);
   });
 
