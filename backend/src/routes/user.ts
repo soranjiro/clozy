@@ -3,11 +3,22 @@ import { Hono, Context } from "hono";
 import { setCookie } from "hono/cookie";
 
 import { setSessionUser, validateSession, clearSession } from "../../lib/auth";
+import { generateCSRFToken } from "../../lib/csrf";
 import { Env } from "../index";
 import { deleteImagesFromR2 } from "../r2";
 
 import { Query } from "../types";
 import { db } from "../repository";
+
+// XSS対策 - 文字列をエスケープする関数
+const escapeHtml = (unsafe: string): string => {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};
 
 const userRoutes = new Hono<{ Bindings: Env }>();
 
@@ -45,11 +56,22 @@ userRoutes.post("/signout", async (c) => {
   return c.json({ message: "User and related data deleted" }, 200);
 });
 
+// ログインエンドポイントをPOSTに戻す
 userRoutes.post("/login", async (c) => {
   try {
+    // リクエストボディから認証情報を受け取る
     const { email, password }: Query = await c.req.json();
+
+    // 必須パラメータのチェック
+    if (!email || !password) {
+      return c.json({ message: "Email and password are required" }, 400);
+    }
+
+    // XSS対策 - 入力値をサニタイズ
+    const sanitizedEmail = escapeHtml(email);
+
     const database = db(c.env);
-    const user = await database.user.findUnique({ email: email });
+    const user = await database.user.findUnique({ email: sanitizedEmail });
 
     if (
       user &&
@@ -57,8 +79,33 @@ userRoutes.post("/login", async (c) => {
       password &&
       (await bcrypt.compare(password, user.password))
     ) {
-      const token = await setSessionUser(c, email);
-      return c.json({ username: user.username, token }, 200);
+      const token = await setSessionUser(c, sanitizedEmail);
+
+      // ユーザー名もサニタイズして返す
+      const sanitizedUsername = escapeHtml(user.username);
+
+      // SameSite=Laxでもフォームのサブミットは許可されるので安全
+      setCookie(c, "auth_session", token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "Lax", // POSTでもフォームのサブミットは許可される
+        path: "/",
+        maxAge: 3600, // 1時間
+      });
+
+      // CSRFトークンをヘッダーとレスポンスボディの両方に含める
+      const csrfToken = await generateCSRFToken(c);
+      c.res.headers.set("X-CSRF-Token", csrfToken);
+
+      // トークンをレスポンスボディにも含める（確実に受け取れるように）
+      return c.json(
+        {
+          username: sanitizedUsername,
+          token,
+          csrfToken, // ボディにもCSRFトークンを含める
+        },
+        200
+      );
     }
 
     return c.json({ message: "Invalid credentials" }, 401);
@@ -67,10 +114,7 @@ userRoutes.post("/login", async (c) => {
   }
 });
 
-userRoutes.post("/logout", async (c) => {
-  await clearSession(c);
-  return c.json({ message: "Logout successful" }, 200);
-});
+// ログアウトAPIを削除
 
 userRoutes.post("/changePassword", async (c) => {
   const {

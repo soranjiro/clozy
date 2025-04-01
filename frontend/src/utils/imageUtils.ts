@@ -1,11 +1,14 @@
 "use client";
 
 import Resizer from "react-image-file-resizer";
+import { sanitizeHtml } from "./sanitize";
 
 export const createImageLocalURL = (imageFile: string): string | null => {
   try {
+    // サニタイズ処理を追加
+    const sanitizedImage = sanitizeHtml(imageFile);
     // base64データをバイナリデータに変換
-    const byteCharacters = atob(imageFile);
+    const byteCharacters = atob(sanitizedImage);
     const byteNumbers = new Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) {
       byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -15,11 +18,10 @@ export const createImageLocalURL = (imageFile: string): string | null => {
     const blob = new Blob([byteArray], { type: "image/jpeg" });
     return URL.createObjectURL(blob);
   } catch (error) {
-    alert("Failed to decode base64 data:"+ error);
+    alert("Failed to decode base64 data:" + error);
     return null;
   }
 };
-
 
 export const resizeImage = async (imageFile: File, maxSize: number) => {
   try {

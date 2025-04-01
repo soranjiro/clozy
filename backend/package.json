@@ -8,6 +8,7 @@
     "@types/bcrypt": "^5.0.2",
     "bcryptjs": "^2.4.3",
     "hono": "^4.6.12",
+    "nanoid": "^5.1.5",
     "workers-qb": "^1.7.0"
   },
   "devDependencies": {
