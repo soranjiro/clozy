@@ -57,18 +57,8 @@ app.use(
   })
 );
 
-// 認証エンドポイントを除外してCSRF対策のミドルウェアを追加
-// ログインとサインアップには適用しない
-app.use("/api/*", async (c, next) => {
-  const path = c.req.path;
-  // ログインとサインアップの場合はCSRF保護をスキップ
-  if (path === "/api/login" || path === "/api/signup") {
-    await next();
-  } else {
-    // その他のエンドポイントにはCSRF保護を適用
-    await csrfMiddleware(c, next);
-  }
-});
+// CSRF対策のミドルウェアを直接適用（重複したラッパーを削除）
+app.use("/api/*", csrfMiddleware);
 
 app.get("/_health", (c) => c.text("OK"));
 
