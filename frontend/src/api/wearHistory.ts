@@ -19,6 +19,14 @@ export const fetchClothesByDate = async (date: Date, userID: string) => {
       headers: getAuthHeaders(),
     }
   );
+
+  // CSRFトークンをレスポンスヘッダーから取得して保存
+  const csrfToken = response.headers.get("X-CSRF-Token");
+  if (csrfToken) {
+    localStorage.setItem("csrf_token", csrfToken);
+    console.log("新しいCSRFトークンを保存しました");
+  }
+
   const responseData = await getResponseData(response);
   if (!response.ok) {
     throw new Error(responseData?.message ?? responseData);
@@ -39,6 +47,14 @@ export const fetchClothesByDateRange = async (
       headers: getAuthHeaders(),
     }
   );
+
+  // CSRFトークンをレスポンスヘッダーから取得して保存
+  const csrfToken = response.headers.get("X-CSRF-Token");
+  if (csrfToken) {
+    localStorage.setItem("csrf_token", csrfToken);
+    console.log("新しいCSRFトークンを保存しました");
+  }
+
   const responseData = await getResponseData(response);
   if (!response.ok) {
     throw new Error(responseData?.message ?? responseData);
@@ -59,7 +75,9 @@ export const addWearHistory = async (
       date: convertDate(date),
       email: userID,
     }),
+    credentials: "include", // Cookieを送信するために追加
   });
+
   const responseData = await getResponseData(response);
   if (!response.ok) {
     throw new Error(responseData?.message ?? responseData);
@@ -76,7 +94,9 @@ export const removeWearHistory = async (
     method: "DELETE",
     headers: getAuthHeaders(),
     body: JSON.stringify({ clothesID, date: convertDate(date), email: userID }),
+    credentials: "include", // Cookieを送信するために追加
   });
+
   const responseData = await getResponseData(response);
   if (!response.ok) {
     throw new Error(responseData?.message ?? responseData);
