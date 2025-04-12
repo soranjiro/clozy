@@ -8,11 +8,7 @@ url : https://clozy.vercel.app/login
 
 <img src="./docs/HowToUse/images/pc/clothes_list.png" alt="Login Screen" width="500">
 
-You can try it with the following account.
-```
-email: demo@example.com
-password: pw
-```
+You can try it with the demo account.
 
 ## setup
 

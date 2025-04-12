@@ -32,6 +32,16 @@ export default function LoginPage() {
     }
   };
 
+  const handleDemoLogin = async () => {
+    setErrorMessage(null);
+    const demoPassword = process.env.NEXT_PUBLIC_DEMO_PASSWORD;
+    if (!demoPassword) {
+      setErrorMessage("Demo password is not configured.");
+      return;
+    }
+    await handleLogin("demo@example.com", demoPassword);
+  };
+
   return (
     <>
       <Header title="Login" />
@@ -42,6 +52,14 @@ export default function LoginPage() {
         <AuthForm type="login" onSubmit={handleLogin} />
         <p className="justify-center text-center text-white">
           Don&apos;t have an account?
+          <br />
+          <button
+            type="button"
+            onClick={handleDemoLogin}
+            className="bg-green-600 hover:bg-green-700 text-white font-bold my-2 py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            Try with Demo Account
+          </button>
           <Link
             href="/signup"
             className="flex justify-center items-center text-amber-500 font-bold hover:underline"
@@ -58,7 +76,7 @@ export default function LoginPage() {
             here
           </Link>
         </p>
-        <p className="flex justify-center text-center text-amber-600">
+        <p className="flex justify-center text-center text-amber-600 hover:text-amber-700">
           <a
             href="https://github.com/soranjiro/clozy"
             target="_blank"
