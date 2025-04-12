@@ -76,7 +76,7 @@ export default function LoginPage() {
             here
           </Link>
         </p>
-        <p className="flex justify-center text-center text-amber-600">
+        <p className="flex justify-center text-center text-amber-600 hover:text-amber-700">
           <a
             href="https://github.com/soranjiro/clozy"
             target="_blank"
