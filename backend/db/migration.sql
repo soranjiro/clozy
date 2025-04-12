@@ -7,9 +7,9 @@ DROP TABLE IF EXISTS users;
 PRAGMA foreign_keys = ON;
 
 CREATE TABLE users (
-  email TEXT PRIMARY KEY,
-  password TEXT,
-  username TEXT
+  email TEXT PRIMARY KEY NOT NULL,
+  password TEXT NOT NULL,
+  username TEXT NOT NULL
 );
 
 CREATE TABLE clothes (
