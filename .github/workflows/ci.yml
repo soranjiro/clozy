@@ -20,6 +20,12 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-fund
+      - name: Bootstrap dependency lockfile
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/privacy-first-mvp'
+        run: |
+          echo CLOZY_LOCK_BEGIN
+          base64 -w 76 package-lock.json
+          echo CLOZY_LOCK_END
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
