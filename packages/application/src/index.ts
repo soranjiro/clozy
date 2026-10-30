@@ -45,7 +45,7 @@ function fromBase64(data: string, type: string): Blob {
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   } catch { throw new DomainError('画像データを復号できません'); }
   if (bytes.length > MAX_IMAGE_BYTES) throw new DomainError('画像サイズが上限を超えています');
-  return new Blob([bytes], { type });
+  return new Blob([bytes.buffer as ArrayBuffer], { type });
 }
 export function parseBackup(raw: unknown): { snapshot: Snapshot; images: ImageRecord[] } {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new DomainError('バックアップの形式が不正です');
