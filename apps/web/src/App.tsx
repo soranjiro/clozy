@@ -190,9 +190,7 @@ function Settings({ service, onReload, onNotice, busy, setBusy }: {
   async function clear() {
     if (!window.confirm('すべてのローカルデータを完全に削除します。元には戻せません。続行しますか？')) return;
     setBusy(true);
-    try { await service['list'](); await service['remove']; } catch { /* no-op */ }
     try {
-      // Use the repository's transactional replace operation through the maintenance use case.
       await service.clearAll();
       await onReload();
       onNotice({ kind: 'success', message: 'すべてのデータを削除しました。' });

@@ -101,6 +101,7 @@ export class ClozyService {
     await this.repo.saveClothing(validateClothing({ ...current, favorite: !current.favorite, updatedAt: new Date().toISOString() }));
   }
   remove(id: string): Promise<void> { return this.repo.deleteClothing(id); }
+  clearAll(): Promise<void> { return this.repo.replaceAll({ clothing: [], wears: [] }, []); }
   async toggleWear(item: Clothing, date: string, existing: WearEntry[]): Promise<void> {
     const found = existing.find(x => x.clothingId === item.id && x.date === date);
     if (found) return this.repo.deleteWear(found.id);
