@@ -1,0 +1,9 @@
+{
+  "name": "@clozy/application",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": { "@clozy/domain": "*" },
+  "exports": { ".": "./src/index.ts" },
+  "types": "./src/index.ts"
+}
