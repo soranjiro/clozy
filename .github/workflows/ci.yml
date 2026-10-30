@@ -15,18 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
-      - run: npm install --no-fund
-      - name: Bootstrap dependency lockfile
-        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/privacy-first-mvp'
-        run: |
-          echo CLOZY_LOCK_BEGIN
-          base64 -w 76 package-lock.json
-          echo CLOZY_LOCK_END
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci --no-fund
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - run: npm audit --audit-level=high --omit=dev
+      - run: npm audit --audit-level=high
