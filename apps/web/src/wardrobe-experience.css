@@ -1,0 +1,315 @@
+/* Clozy / Wardrobe Experience v3
+   Visual system: oak, walnut, linen, brass; no external fonts or images.
+   The scroll-driven wardrobe scene is decorative, while its controls are real buttons. */
+:root {
+  --wood-dark: #39281d;
+  --wood: #7a5131;
+  --wood-light: #bc8a60;
+  --linen: #f8f5ee;
+  --brass: #ae8756;
+  --hairline: #d8d0c5;
+  --ink: #2b251f;
+  --muted: #696155;
+  --serif: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", Georgia, serif;
+  color: var(--ink);
+  background: var(--linen);
+}
+body {background:var(--linen);}
+a,button,input {touch-action:manipulation;}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible {
+  outline:3px solid #d19a4f;
+  outline-offset:3px;
+}
+.main-shell {background:var(--linen);}
+.topbar {
+  position:sticky;
+  top:0;
+  z-index:7;
+  height:70px;
+  background:#f8f5eeef;
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-color:#d8cec0;
+}
+.main-content {max-width:1330px;padding-top:27px;}
+.brand,.mobile-brand strong {font-family:Georgia,var(--serif);font-weight:500;letter-spacing:-.04em;}
+.brand {font-size:34px;}
+.brand-mark {border:1px solid #967354;color:#d4ad7b;background:transparent;border-radius:2px;box-shadow:none;}
+.brand-dot {color:#c0925e;}
+.sidebar {
+  background:
+    repeating-linear-gradient(90deg,transparent 0 10px,#ffffff06 11px,transparent 12px,#00000009 31px),
+    linear-gradient(150deg,#59412e,#35271e 80%);
+  box-shadow:inset -7px 0 18px #1a100a3b;
+}
+.sidebar::before {border-color:#b9906155;border-radius:2px;}
+.sidebar .nav-link {border-radius:2px;color:#dfcdb7;font-size:13px;}
+.sidebar .nav-link.active {background:#e8d8c1;border-color:#e8d8c1;box-shadow:none;color:#3e2b1c;}
+.sidebar .nav-link:hover:not(.active) {background:#ffffff14;}
+.sidebar-label {color:#dfbe91;}
+.privacy-card {border-radius:2px;background:#5c412e77;}
+.privacy-card p {color:#e7d0b0;}
+.eyebrow {color:#8a6749;font-size:10px;letter-spacing:.2em;}
+.page-intro {border-bottom:1px solid var(--hairline);margin-bottom:20px;}
+.page-intro h2,.section-head h3,.insight-panel h3,.calendar-head h3 {
+  font-family:var(--serif);font-weight:600;letter-spacing:-.04em;
+}
+.page-intro h2 {font-size:clamp(29px,3.5vw,44px);}
+.section-head h3 {font-size:clamp(18px,2vw,25px);}
+.button {border-radius:3px;}
+.button-primary,.button-light {background:#64492f;border-color:#64492f;color:#fff9ee;}
+.button-primary:hover:not(:disabled),.button-light:hover {background:#432f20;}
+.button-outline {background:transparent;color:#483726;border:1px solid #a99882;}
+.button-outline:hover:not(:disabled) {background:#eee5d8;}
+.section-link {font-weight:600;color:#765337;}
+.metric-grid {border-color:var(--hairline);}
+.metric {border-color:var(--hairline);}
+.metric strong {font-family:var(--serif);font-weight:500;}
+.garment-card {border-color:var(--hairline);}
+.garment-card:hover {background:#ece8de;}
+.garment-media {border:1px solid #e0d8c8;background:#e8e1d4;}
+.garment-placeholder {color:#88755f;background:linear-gradient(140deg,#ebe5da,#d8c9b5);}
+.garment-name {font-size:14px;}
+.category-label {color:#80664b;font-weight:500;}
+.garment-details p {color:#817668;}
+.favorite-button {background:#f9f4eced;color:#86705c;}
+.favorite-button.is-favorite {color:#a45e4a;}
+.quick-actions button {color:#453223;}
+.quick-actions button > svg:first-child {color:#906e4d;}
+.quick-actions button:hover {background:#eee8dd;}
+.empty-state {background:transparent;padding:40px 15px;border-color:var(--hairline);}
+.activity-panel,.calendar-panel,.wear-panel,.insight-panel,.settings-card,.settings-highlight {border-color:var(--hairline);}
+.calendar-panel,.wear-panel,.insight-panel {background:transparent;}
+.wear-option {background:transparent;border-bottom:1px solid var(--hairline);}
+.wear-option-icon {color:#765b3c;background:#e9dfd0;}
+.wear-option.worn {background:#eae2d5;}
+.bar-row progress::-webkit-progress-value {background:linear-gradient(90deg,#b58b63,#74543a);}
+.bar-row progress::-moz-progress-bar {background:#896743;}
+.day-cell.selected {background:#725033;}
+.day-cell.today:not(.selected) {border-color:#a47748;}
+.search-box,.filter-fav,.sort-control select {border-radius:3px;}
+.pill {border-radius:0;}
+.pill.active {color:#59402b;border-bottom-color:#59402b;}
+.page-footer {color:#807568;}
+
+/* The first viewport is a wardrobe: panel doors, lit interior, hangers, shelves and drawer. */
+.wardrobe-stage {
+  --door-open:0;
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  width:100%;
+  height:clamp(470px,66svh,660px);
+  border:10px solid #7b5338;
+  border-top-width:16px;
+  border-bottom-width:18px;
+  background:#4e3523;
+  box-shadow:inset 0 0 60px #2112089c,0 15px 30px #4030211d;
+  color:#fff8ee;
+}
+.wardrobe-stage::before {
+  content:"";position:absolute;inset:-2px;z-index:4;pointer-events:none;
+  box-shadow:inset 0 7px 12px #2d140c80,inset 0 -8px 13px #2010099c;
+}
+.wardrobe-stage-interior {
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 50% 0,#e4b98465,transparent 58%),
+    repeating-linear-gradient(90deg,#ffffff0a 0 1px,transparent 1px 28px),
+    linear-gradient(100deg,#714729,#91613b 44%,#634027);
+}
+.cabinet-top {position:absolute;top:0;left:0;right:0;height:24%;border-bottom:14px solid #986640;box-shadow:0 6px 14px #2a180e70;display:flex;justify-content:space-around;align-items:center;}
+.cabinet-box {width:31%;height:64%;background:linear-gradient(140deg,#c0a889,#8e745a);border-radius:50% 50% 5px 5px/12% 12% 5px 5px;box-shadow:inset 0 9px 12px #e8d0a450,7px 5px 10px #2716093b;}
+.cabinet-towels {height:69%;width:29%;display:flex;flex-direction:column;justify-content:end;gap:4px;}
+.cabinet-towels i {height:23%;background:linear-gradient(0deg,#e3d2b6,#f0e8d6);border-radius:3px 3px 0 0;box-shadow:1px 3px 4px #29190950;}
+.cabinet-towels i:nth-child(2){background:#ada390}.cabinet-towels i:nth-child(3){background:#66625c}
+.cabinet-rail {position:absolute;top:34%;left:8%;right:8%;height:7px;border-radius:4px;background:linear-gradient(#dfc18c,#745333,#c8a66f);box-shadow:0 3px 7px #26150785;}
+.cabinet-clothes {position:absolute;top:34%;left:9%;right:9%;height:41%;display:flex;justify-content:center;gap:clamp(4px,2.3vw,19px);align-items:stretch;}
+.cabinet-cloth {position:relative;width:clamp(56px,13%,95px);max-width:16%;filter:drop-shadow(6px 12px 6px #26180f6e);transform:translateY(calc(var(--cloth-order) * 2px));}
+.cabinet-hook {position:absolute;top:2px;left:48%;width:13px;height:16px;border:2px solid #bfa280;border-bottom:0;border-radius:11px 11px 0 0;transform:translateX(-50%);}
+.cabinet-hanger {position:absolute;z-index:2;top:14px;left:10%;width:80%;height:23px;clip-path:polygon(48% 0,55% 0,100% 75%,93% 91%,8% 91%,0 75%);background:linear-gradient(#dcb486,#7b4e2d);}
+.cabinet-fabric {
+  position:absolute;top:30px;bottom:0;left:0;right:0;
+  background:linear-gradient(90deg,#ffffff18,#ffffff40 18%,#00000014 42%,#ffffff10 56%,#00000036 93%);
+  clip-path:polygon(26% 0,38% 6%,62% 6%,74% 0,100% 15%,91% 40%,79% 34%,85% 100%,15% 100%,21% 34%,9% 40%,0 15%);
+  border-radius:5px;
+}
+.cabinet-cloth.ivory .cabinet-fabric {background-color:#e7ddcb;}
+.cabinet-cloth.sand .cabinet-fabric {background-color:#b6a18c;}
+.cabinet-cloth.charcoal .cabinet-fabric {background-color:#42474b;}
+.cabinet-cloth.cream .cabinet-fabric {background-color:#d7cab4;}
+.cabinet-cloth.olive .cabinet-fabric {background-color:#656752;}
+.cabinet-bottom {position:absolute;top:78%;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:space-evenly;border-top:15px solid #90613e;box-shadow:0 -5px 15px #26150855;}
+.cabinet-bag {width:30%;height:66%;position:relative;background:linear-gradient(110deg,#915734,#6c3923);border:2px solid #aa7851;border-radius:10px 10px 7px 7px;box-shadow:6px 5px 8px #24130c50;}
+.cabinet-bag::before {content:"";position:absolute;width:44%;height:45%;left:28%;top:-25%;border:7px solid #714125;border-bottom:0;border-radius:50% 50% 0 0;}
+.cabinet-bag span {position:absolute;top:20%;left:45%;width:10%;height:18%;background:#c9a076;border-radius:3px;}
+.cabinet-drawers {width:32%;height:83%;display:flex;flex-direction:column;gap:4px;}
+.cabinet-drawers i {flex:1;background:linear-gradient(#c59a74,#a67a53);border:2px solid #875734;box-shadow:inset 0 2px #f5d9aa36;position:relative;}
+.cabinet-drawers i::after {content:"";width:19%;height:4px;background:#6b4229;position:absolute;top:45%;left:40%;border-radius:5px;}
+.wardrobe-door {position:absolute;z-index:2;top:0;bottom:0;width:49.5%;
+  background:
+    repeating-linear-gradient(90deg,transparent 0 8px,#23150b22 9px,#fff9 10px,#24120717 13px,transparent 15px),
+    linear-gradient(90deg,#5d3c27,#a47a55 12%,#855a3c 56%,#ad815a 88%,#5d3a24);
+  box-shadow:inset 7px 0 13px #28170a57,inset -7px 0 18px #2a160a5e,0 0 20px #1a100ba8;
+  will-change:transform;
+}
+.wardrobe-door::before {content:"";position:absolute;inset:7% 5%;border:2px solid #e6b98835;pointer-events:none;}
+.wardrobe-door-left {left:0;transform:translateX(calc(var(--door-open) * -100%));}
+.wardrobe-door-right {right:0;transform:translateX(calc(var(--door-open) * 100%));}
+.wardrobe-handle {position:absolute;top:49%;right:8%;height:23%;width:8px;border-radius:6px;background:linear-gradient(90deg,#5b3922,#ddbf86 55%,#80522d);box-shadow:-3px 3px 5px #1f130a9e,2px 0 2px #f3d0a866;}
+.wardrobe-door-right .wardrobe-handle {right:auto;left:8%;}
+.wardrobe-copy {
+  position:absolute;z-index:3;inset:7% auto auto 7%;
+  max-width:74%;
+  text-shadow:0 2px 9px #3b2419a6;
+  opacity:calc(1 - var(--door-open));
+  transform:translateY(calc(var(--door-open) * -18px));
+  pointer-events:none;
+}
+.wardrobe-overline {font-size:10px;letter-spacing:.22em;color:#f9e7cd;}
+.wardrobe-copy h1 {font:normal clamp(43px,5vw,73px)/1.1 Georgia,var(--serif);letter-spacing:-.055em;margin:0 0 clamp(22px,7vh,63px);}
+.wardrobe-headline {font:600 clamp(23px,3vw,40px)/1.6 var(--serif);margin:0 0 17px;}
+.wardrobe-description {font-size:clamp(11px,1.2vw,14px);line-height:2;color:#f6e8d7;}
+.wardrobe-stage-controls {position:absolute;z-index:5;bottom:23px;left:7%;right:7%;display:flex;align-items:center;justify-content:space-between;gap:13px;}
+.wardrobe-door-toggle,.wardrobe-scroll-cue {display:inline-flex;align-items:center;gap:9px;min-height:44px;border:1px solid #fff9e6a6;background:#362418b8;color:#fff8e9;padding:8px 15px;font-size:12px;font-weight:650;}
+.wardrobe-door-toggle:hover,.wardrobe-scroll-cue:hover {background:#23160fe5;}
+.wardrobe-scroll-cue svg {transform:rotate(90deg);}
+.wardrobe-stage[data-open="true"] .wardrobe-scroll-cue {background:#f8efdfd9;color:#42301f;}
+/* The reading layer under the doors becomes a calm shelf index. */
+.home-contents {scroll-margin-top:76px;}
+.home-greeting {display:flex;align-items:end;justify-content:space-between;gap:18px;padding:38px 0 20px;border-bottom:1px solid var(--hairline);}
+.home-greeting h2 {font:600 clamp(25px,2.8vw,37px)/1.4 var(--serif);margin:0 0 8px;}
+.home-greeting p:last-child {color:var(--muted);font-size:12px;margin:0;}
+.home-greeting > span {font-family:var(--serif);font-size:13px;white-space:nowrap;color:#7a6146;}
+.home-contents .content-section {margin-top:38px;}
+.home-contents .section-head {padding-bottom:12px;}
+.home-contents .metric-grid {margin:19px 0 30px;}
+.home-contents .quick-actions {margin:0 0 30px;}
+.home-contents .quick-actions button {border-radius:0;}
+/* Shelf buttons are real filters; the closet is not decorative navigation only. */
+.shelf-section {margin:20px 0 25px;overflow:hidden;border:8px solid #986e4c;border-top-width:13px;border-bottom-width:13px;background:#795335;}
+.shelf-section-title {display:flex;justify-content:space-between;gap:8px;padding:8px 16px;color:#faf1e3;background:#4c3323;font-size:11px;letter-spacing:.08em;}
+.shelf-choices {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;position:relative;
+  background:
+    radial-gradient(ellipse at top,#ffffff20,transparent 80%),
+    repeating-linear-gradient(90deg,transparent 0 30px,#ffffff06 31px,transparent 33px),
+    linear-gradient(130deg,#845b3b,#5a3825);
+}
+.shelf-choices::after {content:"";position:absolute;bottom:0;left:0;right:0;height:10px;background:linear-gradient(#bd885b,#755033);pointer-events:none;}
+.shelf-choice {color:#fff4e3;display:flex;align-items:center;justify-content:end;flex-direction:column;gap:6px;background:transparent;border:0;border-right:1px solid #f1d2a52b;min-height:135px;padding:22px 5px 19px;text-shadow:0 2px 4px #321d14;position:relative;}
+.shelf-choice svg {stroke-width:1.4px;filter:drop-shadow(2px 4px 2px #1c120c60);}
+.shelf-choice::before {content:"";position:absolute;top:17px;left:20%;right:20%;height:2px;background:#d4ad74aa;}
+.shelf-choice span {font-size:12px;font-weight:700;}
+.shelf-choice small {font-size:10px;color:#f2d8b7;}
+.shelf-choice[aria-pressed="true"] {background:#f4d6a82a;box-shadow:inset 0 0 0 2px #f9d3a781;}
+.shelf-choice:hover {background:#fff4da22;}
+.wardrobe-controls {position:sticky;top:70px;z-index:6;background:var(--linen);padding:13px 0 9px;border-bottom:1px solid var(--hairline);}
+.wardrobe-controls .toolbar,.wardrobe-controls .category-pills {margin-top:0;}
+.wardrobe-controls .category-pills {padding-bottom:0;}
+/* Pages use the same wood rail / linen sheet motif. */
+.closet-banner {display:grid;grid-template-columns:minmax(0,1fr) minmax(130px,34%);align-items:center;min-height:168px;padding:23px clamp(18px,3vw,38px);margin-bottom:23px;color:#fff3e0;
+ background:repeating-linear-gradient(90deg,transparent 0 27px,#ffffff0a 28px,#26160b16 29px,transparent 31px),
+ linear-gradient(115deg,#79573c,#513724 95%);border-top:7px solid #b68b60;border-bottom:9px solid #966c48;box-shadow:inset 0 6px 8px #21130930;}
+.closet-banner .eyebrow {color:#e5c9a6;}
+.closet-banner h2 {font:600 clamp(24px,3vw,38px)/1.35 var(--serif);color:#fff7eb;margin:0 0 8px;}
+.closet-banner p:last-child {font-size:12px;line-height:1.8;color:#f1dfc6;margin:0;}
+.closet-banner-art {position:relative;display:flex;justify-content:center;gap:10px;align-items:center;align-self:stretch;}
+.closet-banner-art::before {content:"";position:absolute;top:15%;left:5%;right:5%;height:4px;border-radius:6px;background:linear-gradient(#f1d3a3,#805332);}
+.closet-banner-art span {width:27%;height:68%;position:relative;margin-top:23px;background:linear-gradient(100deg,#ece0cc,#b7a793);clip-path:polygon(25% 0,40% 7%,60% 7%,75% 0,100% 18%,88% 36%,79% 29%,82% 100%,18% 100%,21% 29%,12% 36%,0 18%);filter:drop-shadow(4px 6px 4px #21150d);}
+.closet-banner-art span:nth-child(2) {background:linear-gradient(100deg,#b6a28b,#8b7259);}
+.closet-banner-art span:nth-child(3) {background:linear-gradient(100deg,#545858,#303437);}
+.look-stage {position:relative;background:linear-gradient(#715038,#a77a52);border-top:9px solid #855a37;border-bottom:13px solid #936845;padding:40px 16px 22px;margin:20px 0 24px;overflow-x:auto;display:flex;justify-content:space-evenly;align-items:stretch;min-height:185px;gap:12px;}
+.look-stage::before {content:"";position:absolute;top:20px;left:5%;right:5%;height:5px;background:linear-gradient(#ebcf9a,#805e39);border-radius:6px;}
+.look-hanger {flex:1;max-width:180px;min-width:75px;display:flex;align-items:center;flex-direction:column;gap:5px;padding:14px 4px;background:none;border:0;color:#fff8ea;text-align:center;position:relative;}
+.look-hanger::before {content:"";position:absolute;top:-14px;left:50%;width:10px;height:17px;transform:translateX(-50%);border:2px solid #cdae85;border-bottom:0;border-radius:10px 10px 0 0;}
+.look-garment {width:min(82px,80%);aspect-ratio:.86;background:linear-gradient(105deg,#ded5c6,#bfb4a4);clip-path:polygon(25% 0,40% 8%,60% 8%,75% 0,100% 18%,85% 39%,80% 30%,86% 100%,14% 100%,20% 30%,15% 39%,0 18%);box-shadow:inset -8px 1px #3d2b1a20;filter:drop-shadow(4px 5px 3px #30201778);}
+.look-hanger:nth-child(2) .look-garment {background:linear-gradient(105deg,#b6a38b,#6d6258);}
+.look-hanger:nth-child(3) .look-garment {background:linear-gradient(105deg,#7b8081,#393c3f);}
+.look-hanger span:not(.look-garment) {font-size:11px;max-width:14ch;text-overflow:ellipsis;white-space:nowrap;overflow:hidden;}
+.look-hanger:hover {background:#fff1d51b;}
+.calendar-legend {font-size:11px;color:var(--muted);padding:0 0 13px;}
+.calendar-day-review {display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--hairline);padding:13px 0;color:#725537;font-size:11px;}
+.calendar-day-review span {border-right:1px solid var(--hairline);padding-right:8px;}
+/* Registering a garment feels like placing it on the rail, with an anchored drawer action. */
+.editor-dialog {border:1px solid #8a6040;border-radius:3px;background:var(--linen);}
+.editor-dialog::backdrop {background:#21180fb8;backdrop-filter:blur(5px);}
+.dialog-head {background:repeating-linear-gradient(90deg,transparent 0 20px,#ffffff0a 21px,transparent 23px),linear-gradient(125deg,#80593b,#533927);color:#fff5e7;border-bottom:9px solid #b38a5c;}
+.dialog-head .eyebrow {color:#ebcfaa;}
+.dialog-head h2 {font-family:var(--serif);font-size:25px;font-weight:600;}
+.dialog-head .icon-button {color:#fff5e7;}
+.editor-form {background:var(--linen);}
+.photo-field {padding:18px;margin-bottom:24px;background:#e9ddca;}
+.photo-preview {border:5px solid #a47a52;border-top-width:12px;border-radius:0;background:linear-gradient(#765239,#b58e69);color:#f6ecde;box-shadow:inset 0 4px 8px #4a2c1a;}
+.photo-instructions p {color:#5f5549;}
+.dialog-actions {position:sticky;bottom:-30px;z-index:2;background:#f8f5ee;padding:15px 0 max(12px,env(safe-area-inset-bottom));border-color:var(--hairline);}
+.field input:not([type=checkbox]),.field textarea,.field select {border-radius:3px;}
+/* Clear hierarchy on mobile; no trapped scrolling or sideways content. */
+@media (max-width:850px) {
+  .topbar {height:64px;}
+  .mobile-brand strong {color:#4e3625;font-size:24px;}
+  .mobile-brand .brand-mark {width:30px;height:30px;border:0;color:#795334;}
+  .mobile-settings {border-color:var(--hairline);border-radius:2px;background:transparent;}
+  .mobile-nav {height:calc(72px + env(safe-area-inset-bottom));background:#fbf8f2f7;border-color:#d2c5b5;box-shadow:0 -4px 12px #37231212;}
+  .mobile-nav button {font-size:10px;gap:5px;border-radius:0;min-height:54px;}
+  .mobile-nav button.active {border-top:2px solid #705038;color:#4c3020;background:transparent;}
+  .mobile-add {border-radius:3px;background:#63452b;bottom:calc(91px + env(safe-area-inset-bottom));right:15px;box-shadow:0 6px 17px #26170b44;}
+  .main-content {padding:22px 18px calc(138px + env(safe-area-inset-bottom));}
+  .main-content:has(.wardrobe-stage) {padding-top:0;}
+  .wardrobe-stage {height:clamp(520px,calc(100svh - 142px),870px);}
+  .home-contents {padding:0 2px;}
+  .wardrobe-controls {top:64px;}
+}
+@media (max-width:600px) {
+  .main-content:has(.wardrobe-stage) {padding-inline:0;}
+  .wardrobe-stage {border:6px solid #765037;border-top-width:10px;border-bottom-width:13px;height:calc(100svh - 143px);min-height:420px;max-height:790px;}
+  .wardrobe-stage-controls {left:6%;right:6%;bottom:15px;align-items:flex-end;}
+  .wardrobe-copy {top:8%;left:7%;max-width:87%;}
+  .wardrobe-copy h1 {font-size:47px;margin-bottom:clamp(25px,10vh,90px);}
+  .wardrobe-headline {font-size:clamp(22px,6vw,29px);line-height:1.55;}
+  .wardrobe-description {font-size:11px;}
+  .wardrobe-door-toggle {font-size:11px;padding:8px 11px;}
+  .wardrobe-scroll-cue {font-size:10px;max-width:144px;text-align:left;line-height:1.6;padding:8px 10px;}
+  .cabinet-clothes {gap:4px;}
+  .cabinet-cloth {width:20%;max-width:20%;}
+  .home-contents {padding:0 16px;}
+  .home-greeting {padding-top:29px;flex-direction:column;align-items:flex-start;gap:8px;}
+  .home-greeting h2 {font-size:26px;}
+  .home-greeting p:last-child {line-height:1.7;}
+  .home-contents .content-section {margin-top:29px;}
+  .shelf-section {margin-top:14px;border-width:6px;border-top-width:10px;}
+  .shelf-choice {min-height:110px;padding:18px 2px 15px;}
+  .shelf-choice svg {width:28px;height:28px;}
+  .shelf-choice span {font-size:10px;}
+  .shelf-choice small {font-size:9px;}
+  .wardrobe-controls {padding-top:8px;}
+  .closet-banner {min-height:137px;grid-template-columns:1fr 32%;padding:16px 13px;border-top-width:5px;}
+  .closet-banner h2 {font-size:25px;}
+  .closet-banner p:last-child {font-size:11px;}
+  .look-stage {padding:34px 10px 16px;min-height:156px;}
+  .look-hanger {min-width:68px;}
+  .look-garment {width:65px;}
+  .editor-dialog {width:100%;max-width:100%;height:100dvh;max-height:100dvh;margin:0;border:0;border-radius:0;}
+  .dialog-head {padding:calc(18px + env(safe-area-inset-top)) 18px 20px;}
+  .editor-form {padding:17px 16px 80px;}
+  .photo-field {gap:15px;padding:13px;}
+  .photo-preview {width:110px;height:137px;}
+  .dialog-actions {position:sticky;bottom:0;margin:0 -16px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));box-shadow:0 -4px 12px #3a2d1912;}
+  .dialog-actions .button[type=submit] {flex:1;min-width:105px;}
+  .day-cell {min-height:44px;}
+}
+@media(max-width:350px) {
+  .wardrobe-stage {min-height:400px;}
+  .wardrobe-copy h1 {margin-bottom:20px;}
+  .wardrobe-headline {font-size:21px;}
+  .wardrobe-scroll-cue {max-width:122px;}
+  .shelf-choice span {font-size:9px;}
+}
+@media(prefers-reduced-motion:no-preference) {
+  .wardrobe-door {transition:transform 120ms ease-out;}
+  .home-contents .content-section {animation:stage-reveal both;animation-timeline:view();animation-range:entry 0% entry 23%;}
+  @keyframes stage-reveal {from {opacity:.64;transform:translateY(10px);}to {opacity:1;transform:translateY(0);}}
+}
+@media(prefers-reduced-motion:reduce) {
+  .wardrobe-door,.wardrobe-copy {transition:none!important;}
+  .home-contents .content-section {animation:none!important;}
+}
