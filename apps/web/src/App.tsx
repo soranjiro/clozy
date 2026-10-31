@@ -8,6 +8,7 @@ import type { IconName } from './Icon';
 import GarmentForm from './GarmentForm';
 import BulkAdd from './BulkAdd';
 import Planning from './Planning';
+import CloudAccount from './CloudAccount';
 import { hasPasskey, supportsPasskey, registerPasskey, removePasskey, passkeyError } from './passkey';
 
 type View = 'home' | 'wardrobe' | 'planning' | 'calendar' | 'insights' | 'settings';
@@ -75,10 +76,10 @@ function Home({ items, wears, service, onAdd, onGo, onEdit, onFavorite, busy }: 
   return <>
     <div className="hero">
       <div className="hero-copy">
-        <p className="eyebrow hero-eyebrow">WELCOME TO YOUR CLOSET</p>
-        <h2>好きな服と、<br /><em>心地よい毎日を。</em></h2>
-        <p>しまう、見つける、着る。<br />あなたの一着一着に、ちゃんと居場所を。</p>
-        <button className="button button-light" onClick={onAdd}><Icon name="plus" size={19} /> 最初の一着をしまう <Icon name="arrow" size={17} /></button>
+        <p className="eyebrow hero-eyebrow">WARDROBE / EVERYDAY</p>
+        <h2>服を整える。<br /><em>日々が整う。</em></h2>
+        <p>持っている服を一覧で見て、選んで、記録する。<br />毎日のクローゼットをもっと使いやすく。</p>
+        <button className="button button-light" onClick={onAdd}><Icon name="plus" size={19} /> アイテムを追加 <Icon name="arrow" size={17} /></button>
       </div>
       <div className="hero-art" aria-hidden="true">
         <div className="closet-illustration">
@@ -250,8 +251,9 @@ function Settings({ service, onReload, onNotice, busy, setBusy }: {
     finally { setBusy(false); }
   }
   return <>
-    <div className="page-intro"><div><p className="eyebrow">YOUR DATA, YOUR CHOICE</p><h2>設定とプライバシー</h2><p>あなたのクローゼットは、あなたのもの。</p></div></div>
-    <section className="settings-highlight"><div className="settings-highlight-icon"><Icon name="shield" size={27} /></div><div><h3>データはこの端末のブラウザに保存されます</h3><p>Clozyはアカウント不要です。写真や着用履歴をサーバーに送信しません。ブラウザを消去するとデータが失われることがあるため、定期的にバックアップしてください。</p></div></section>
+    <div className="page-intro"><div><p className="eyebrow">YOUR SETTINGS</p><h2>設定とプライバシー</h2><p>保存先とアカウントを自分で選べます。</p></div></div>
+    <CloudAccount service={service} onReload={onReload} />
+    <section className="settings-highlight"><div className="settings-highlight-icon"><Icon name="shield" size={27} /></div><div><h3>データはこの端末のブラウザに保存されます</h3><p>Clozyはアカウントなしでも使えます。通常は端末内に保存し、ログイン後にクラウド保存を選択したときだけバックアップを送信します。ブラウザデータを消去する前にバックアップしてください。</p></div></section>
     <div className="settings-card"><div><h3>パスキーでアプリをロック {protectedByPasskey ? '・有効' : ''}</h3><p>端末の顔・指紋・PINで本人確認します。再読み込み時と、1分以上バックグラウンドにした時にロックします。サーバー認証やデータ暗号化ではなく、ブラウザの保存内容を直接操作できる人からは保護できません。パスキーはバックアップに含まれません。</p>{!supportsPasskey() && <p>HTTPSとWebAuthnに対応したブラウザが必要です。開発時はIPアドレスではなくlocalhostで開いてください。</p>}</div><button className="button button-outline" disabled={busy || !supportsPasskey()} onClick={() => void changePasskey()}>{protectedByPasskey ? '本人確認して解除' : 'パスキーを登録'}</button>{protectedByPasskey && <button className="button button-primary" disabled={busy} onClick={() => window.dispatchEvent(new Event('clozy-lock'))}>今すぐロック</button>}</div>
     <div className="settings-card"><div><h3>データをバックアップ</h3><p>写真・服の情報・着用履歴をまとめてJSONファイルに保存します。ファイルは暗号化されません。</p></div><button className="button button-outline" onClick={() => void download()} disabled={busy}><Icon name="download" size={18} /> エクスポート</button></div>
     <div className="settings-card"><div><h3>データを復元</h3><p>以前のバックアップから復元します。現在のデータはすべて置き換わります。</p></div><label className={'button button-outline file-label ' + (busy ? 'disabled' : '')}><Icon name="upload" size={18} /> インポート<input type="file" accept="application/json,.json" disabled={busy} onChange={e => { void restore(e.target.files?.[0]); e.target.value = ''; }} /></label></div>
@@ -302,10 +304,10 @@ export default function App() {
     <aside className="sidebar" aria-label="メインナビゲーション">
       <button className="brand" onClick={() => changeView('home')} aria-label="Clozy ホームへ"><span className="brand-mark"><Icon name="hanger" size={24} /></span><span>clozy<span className="brand-dot">.</span></span></button>
       <div className="sidebar-group"><p className="sidebar-label">MY WARDROBE</p><nav>{nav.map(item => <button key={item.key} className={'nav-link ' + (view === item.key ? 'active' : '')} aria-current={view === item.key ? 'page' : undefined} onClick={() => changeView(item.key)}><Icon name={item.icon} size={20} /><span>{item.title}</span>{view === item.key && <span className="nav-active-dot" />}</button>)}</nav></div>
-      <div className="sidebar-bottom"><div className="privacy-card"><span><Icon name="shield" size={19} /></span><strong>Private by design</strong><p>あなたのデータは<br />このブラウザの中だけに。</p></div><span className="sidebar-version">CLOZY · YOUR SPACE</span></div>
+      <div className="sidebar-bottom"><div className="privacy-card"><span><Icon name="shield" size={19} /></span><strong>Private by design</strong><p>通常は端末内で保存。<br />クラウド保存は任意。</p></div><span className="sidebar-version">CLOZY · YOUR SPACE</span></div>
     </aside>
     <div className="main-shell">
-      <header className="topbar"><div className="mobile-brand"><span className="brand-mark"><Icon name="hanger" size={19} /></span><strong>clozy<span className="brand-dot">.</span></strong></div><div className="breadcrumb"><span>MY WARDROBE</span><Icon name="right" size={15} /><strong>{title}</strong></div><div className="topbar-right"><span className="local-badge"><Icon name="shield" size={15} /> ローカル保存</span><button className="mobile-settings" type="button" aria-label="設定を開く" aria-current={view === 'settings' ? 'page' : undefined} onClick={() => changeView('settings')}><Icon name="settings" size={21} /></button><span className="topbar-avatar" aria-label="あなたのクローゼット">C</span></div></header>
+      <header className="topbar"><div className="mobile-brand"><span className="brand-mark"><Icon name="hanger" size={19} /></span><strong>clozy<span className="brand-dot">.</span></strong></div><div className="breadcrumb"><span>MY WARDROBE</span><Icon name="right" size={15} /><strong>{title}</strong></div><div className="topbar-right"><span className="local-badge"><Icon name="shield" size={15} /> 端末内保存</span><button className="mobile-settings" type="button" aria-label="設定を開く" aria-current={view === 'settings' ? 'page' : undefined} onClick={() => changeView('settings')}><Icon name="settings" size={21} /></button><span className="topbar-avatar" aria-label="あなたのクローゼット">C</span></div></header>
       <main className="main-content" id="main-content" tabIndex={-1}>
         {notice && <div className={'notice ' + notice.kind} role={notice.kind === 'error' ? 'alert' : 'status'}><span>{notice.message}</span><button type="button" onClick={() => setNotice(null)} aria-label="通知を閉じる"><Icon name="close" size={16} /></button></div>}
         {loading ? <div className="loading-state" role="status">クローゼットを読み込んでいます…</div> : loadFailed ? <EmptyState title="保存データを読み込めませんでした" description="データは削除していません。別のタブを閉じ、ブラウザの保存設定を確認してから再読み込みしてください。" onAdd={() => window.location.reload()} action="再読み込み" /> : <>
