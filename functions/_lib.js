@@ -1,4 +1,3 @@
-import { pbkdf2 } from 'node:crypto';
 // Shared Cloudflare Pages helpers; never return database errors to a browser.
 export const response = (data, status = 200, headers = {}) => new Response(JSON.stringify(data), {
   status, headers: { 'Content-Type': 'application/json; charset=utf-8',
@@ -13,15 +12,8 @@ export const encode = value => encoder.encode(value);
 export const hex = data => [...new Uint8Array(data)].map(b => b.toString(16).padStart(2, '0')).join('');
 export const randomHex = size => { const b = new Uint8Array(size); crypto.getRandomValues(b); return hex(b); };
 export const digest = async value => hex(await crypto.subtle.digest('SHA-256', encode(value)));
-export async function derive(password, salt) {
-  const saltBytes = Uint8Array.from(salt.match(/.{2}/g), value => parseInt(value, 16));
-  return new Promise((resolve, reject) => {
-    pbkdf2(password, saltBytes, 210000, 32, 'sha256', (error, result) => {
-      if (error) reject(error);
-      else resolve(hex(result));
-    });
-  });
-}
+export const verifierValid = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
+export const saltValid = value => typeof value === 'string' && /^[a-f0-9]{32}$/.test(value);
 export function equal(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
   let diff = 0;
