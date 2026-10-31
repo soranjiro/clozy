@@ -10,7 +10,7 @@ The user explicitly requested autonomous **editing** and production publication,
 2. The controller rejects files outside the authorized source/docs paths, symlinks, history changes, and obvious secret patterns. These checks are **not** a full security audit or sandbox.
 3. Independently run diff checks, typecheck, unit tests, build, browser smoke tests, and dependency audit.
 4. Refuse publication if production `main` changed concurrently. Never force-push/rebase/reset.
-5. Commit, push fast-forward to `main`, and wait for GitHub CI and Cloudflare deployment to succeed before the next cycle.
+5. Commit to a fresh cycle branch, open a PR, wait for CI/CodeQL, squash-merge through the existing branch-protection rules, then wait for production CI and Cloudflare deployment. Run the browser smoke against the production URL in an ephemeral context before the next cycle. Never bypass required PR/check rules.
 6. Preserve the worktree/logs and stop on any failure, deadline, signal, or no meaningful work remaining. A deployment already triggered can finish after stopping. There is no automated destructive rollback.
 
 The worker is a local process with the current OS user's privileges, **not a sandbox**. Pi's disabled extensions/MCP and editing instructions are not an OS permission boundary. Logs/sessions are outside the public repository, under a private `clozy-autopilot-*` directory in the OS temporary directory. No wardrobe, photos, account secrets or production browser profiles are needed. Sleep or termination can interrupt automation. A stale `.git/clozy-autopilot.lock` must only be removed after checking its PID.
@@ -21,7 +21,7 @@ The worker is a local process with the current OS user's privileges, **not a san
 npm run improve:auto -- --publish --hours 5 --max-cycles 20 --provider PROVIDER --model MODEL
 ```
 
-Use the same authenticated provider/model as the current session. The start message and `.git/clozy-autopilot.lock` give the PID, runtime directory and deadline. Runtime `status.json` records the current phase, published count and last result. `agent-N.log` and private sessions record editing; `verify-N.log` records checks; `deploy-SHA.log` records CI/deployment. Stop with `kill PID` or Ctrl+C. The worktree is kept for inspection; do not delete it while running.
+Use the same authenticated provider/model as the current session. The start message and `.git/clozy-autopilot.lock` give the PID, runtime directory and deadline. Runtime `status.json` records the current phase, published count and last result. Each cycle opens a public PR before attempting a protected squash merge. `agent-N.log` and private sessions record editing; `verify-N.log` records checks; `deploy-SHA.log` records CI/deployment. Stop with `kill PID` or Ctrl+C. The worktree is kept for inspection; do not delete it while running.
 
 The operator's original checkout is **not** updated by autonomous publication. After the loop stops, inspect its status and use `git fetch origin && git pull --ff-only` only with a clean checkout. Do not run multiple publishers concurrently.
 

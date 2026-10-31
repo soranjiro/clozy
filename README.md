@@ -59,7 +59,7 @@ The watcher checks once immediately, then only when source/configuration changes
 
 ## Autonomous editing and production publication
 
-Separate from the watcher, the explicitly opt-in controller actually launches Pi to edit code, independently verifies it, and publishes passing commits through the existing production CI:
+Separate from the watcher, the explicitly opt-in controller actually launches Pi to edit code, independently verifies it, and publishes through PR → CI/CodeQL → protected squash merge → production CI/deployment → live smoke:
 
 ```bash
 npm run improve:auto -- --publish --hours 5 --max-cycles 20 --provider PROVIDER --model MODEL

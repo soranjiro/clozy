@@ -21,7 +21,8 @@ if (!provider || !model) throw new Error('--provider と --model が必要です
 const id = new Date().toISOString().replace(/[:.]/g, '-');
 const runtime = join(tmpdir(), `clozy-autopilot-${id}`);
 const worktree = join(runtime, 'worktree');
-const branch = `auto/improve-${id}`;
+const branchPrefix = `auto/improve-${id}`;
+let branch = `${branchPrefix}-1`;
 const deadline = Date.now() + hours * 3600_000;
 let current;
 let stopped = false;
@@ -118,12 +119,38 @@ try {
     if (/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{30,}|sk-[A-Za-z0-9]{32,}/.test(diff)) throw new Error('秘密情報の可能性がある変更を検出。公開を停止します。');
     await git('commit', '-m', `feat: autonomous wardrobe improvement cycle ${cycle}`);
     const sha = await git('rev-parse', 'HEAD');
-    await state('publishing', sha);
-    await git('push', 'origin', 'HEAD:main');
-    await waitForDeployment(sha);
+    await state('opening-pr', sha);
+    await git('push', '-u', 'origin', branch);
+    const pr = await command('gh', ['pr', 'create', '--repo', 'soranjiro/clozy', '--base', 'main', '--head', branch, '--title', `feat: autonomous wardrobe improvement ${cycle}`, '--body', `User-authorized autonomous improvement. Source/docs-only changes; independently passed typecheck, unit tests, build, browser smoke and dependency audit. See docs/AUTOPILOT.md and commit ${sha}. Production publication still requires protected-branch checks and squash merge.`], worktree, `pr-${cycle}`);
+    await state('checking-pr', pr);
+    let checksReady = false;
+    for (let attempt = 0; attempt < 30 && !stopped; attempt++) {
+      const result = JSON.parse(await command('gh', ['pr', 'view', pr, '--repo', 'soranjiro/clozy', '--json', 'statusCheckRollup'], worktree, `pr-checks-${cycle}`));
+      const names = result.statusCheckRollup.map(check => check.name ?? check.context ?? '');
+      if (names.includes('verify') && names.some(name => name.includes('Analyze JavaScript'))) { checksReady = true; break; }
+      await sleep(10_000);
+    }
+    if (!checksReady) throw new Error('PRのCI/CodeQLが開始されませんでした: ' + pr);
+    await command('gh', ['pr', 'checks', pr, '--repo', 'soranjiro/clozy', '--watch', '--fail-fast', '--interval', '10'], worktree, `pr-gates-${cycle}`);
+    await git('fetch', 'origin', 'main');
+    if (await git('rev-parse', 'origin/main') !== before) throw new Error('PR検証中にmainが更新されました。自動マージせず停止: ' + pr);
+    await state('merging', pr);
+    await command('gh', ['pr', 'merge', pr, '--repo', 'soranjiro/clozy', '--squash'], worktree, `merge-${cycle}`);
+    const merged = JSON.parse(await command('gh', ['pr', 'view', pr, '--repo', 'soranjiro/clozy', '--json', 'state,mergeCommit'], worktree, `merged-${cycle}`));
+    if (merged.state !== 'MERGED' || !merged.mergeCommit?.oid) throw new Error('PRのマージを確認できません: ' + pr);
+    const mergedSha = merged.mergeCommit.oid;
+    await state('publishing', mergedSha);
+    await waitForDeployment(mergedSha);
+    await command('env', ['CLOZY_URL=https://clozy.pages.dev', 'npm', 'run', 'test:browser'], worktree, `production-smoke-${cycle}`);
     published++;
-    await state('deployed', sha);
-    if (cycle < cycles && !stopped) await sleep(30_000);
+    await state('deployed', mergedSha);
+    if (cycle < cycles && !stopped) {
+      await git('fetch', 'origin', 'main');
+      if (await git('rev-parse', 'origin/main') !== mergedSha) throw new Error('本番mainが更新されたため次サイクルを停止します。');
+      branch = `${branchPrefix}-${cycle + 1}`;
+      await git('switch', '-c', branch, mergedSha);
+      await sleep(30_000);
+    }
   }
   await state(stopped ? 'stopped' : 'finished', `${published}件の本番デプロイ成功。ワークツリーとログは保存しています。`);
 } catch (error) {
