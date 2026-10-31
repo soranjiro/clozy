@@ -60,23 +60,23 @@ export default function WardrobeScene({ onBrowse }: { onBrowse: () => void }) {
     <div className="wardrobe-door wardrobe-door-left" aria-hidden="true"><span className="wardrobe-handle" /></div>
     <div className="wardrobe-door wardrobe-door-right" aria-hidden="true"><span className="wardrobe-handle" /></div>
     <div className="wardrobe-copy">
-      <p className="wardrobe-overline">YOUR PERSONAL CLOSET</p>
+      
       <h1>Clozy</h1>
-      <p className="wardrobe-headline">クローゼットから、<br />心地よい毎日へ。</p>
-      <p className="wardrobe-description">持っている服が、もっと好きになる。<br />あなたの服を、あなたらしく整えよう。</p>
+      <p className="wardrobe-headline">お気に入りの服で、<br />今日をはじめよう。</p>
+      
     </div>
-    {opened && <button type="button" className="wardrobe-browse" onClick={onBrowse}>
-      クローゼットの中の服を見る <Icon name="arrow" size={17} />
+    {opened && <button type="button" className="wardrobe-browse" aria-label="クローゼットの中の服を見る" onClick={onBrowse}>
+      服を見る <Icon name="arrow" size={17} />
     </button>}
     <div className="wardrobe-stage-controls">
       <button type="button" className="wardrobe-door-toggle" aria-pressed={opened}
         aria-label={opened ? 'クローゼットの扉を閉じる' : 'クローゼットの扉を開く'} onClick={toggle}>
-        <Icon name="hanger" size={17} />{opened ? '扉を閉じる' : '扉を開く'}
+        <Icon name="hanger" size={17} />{opened ? '閉じる' : '開く'}
       </button>
-      <button type="button" className="wardrobe-scroll-cue" onClick={() => {
+      <button type="button" className="wardrobe-scroll-cue" aria-label="下にスクロールして服を見る" onClick={() => {
         setOverride('open');
         document.getElementById('home-contents')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
-      }}><Icon name="arrow" size={16} />下にスクロールして服を見る</button>
+      }}><Icon name="arrow" size={16} />下へ</button>
     </div>
   </section>;
 }
