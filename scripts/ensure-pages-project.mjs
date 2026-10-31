@@ -5,7 +5,7 @@ if (!accountId || !token) {
   throw new Error('Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN in GitHub Actions repository secrets.');
 }
 
-const projectName = 'clozy-soranjiro';
+const projectName = 'clozy';
 const endpoint = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(accountId)}/pages/projects`;
 const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 const response = await fetch(`${endpoint}/${projectName}`, { headers });

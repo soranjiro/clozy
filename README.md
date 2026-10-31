@@ -42,9 +42,9 @@ Module imports must follow `web -> application -> domain`; `storage` implements 
 
 ## Deployment
 
-Cloudflare Pages is deployed through [GitHub Actions](.github/workflows/ci.yml), using the Direct Upload project `clozy-soranjiro`. The workflow creates this project on first deployment with `main` as its production branch.
+Cloudflare Pages is deployed through [GitHub Actions](.github/workflows/ci.yml), using the Direct Upload project `clozy`. The workflow creates this project on first deployment with `main` as its production branch.
 
-- Push/merge to `main`: deploy the verified build to production (`https://clozy-soranjiro.pages.dev`, once the project is created).
+- Push/merge to `main`: deploy the verified build to production (`https://clozy.pages.dev`, once the project is created).
 - Open/update a PR against `main`: deploy to a separate `pr-N` branch alias. Find the URL in the PR's deployment/environment link or the Actions job summary. Updates to the same PR keep the same alias.
 - Typecheck, tests, build and dependency audit must pass before either deployment. The exact tested build artifact is uploaded; it is not rebuilt for deployment.
 - There is no staging environment. Fork and Dependabot PRs run checks without deployment credentials or previews.
