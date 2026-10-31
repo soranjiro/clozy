@@ -105,3 +105,12 @@ For implementation priorities and integration limitations: [improvement plan](do
 
 ## Migration note
 Legacy repositories are archived. No legacy credentials, JWTs, image files or databases are imported automatically.
+
+## Wardrobe usability update (2026-10-31)
+
+- Warm walnut wardrobe, category shelves, hanging silhouettes and full-photo display. No remote visual assets.
+- Registration templates, save-and-add-another, and editable name-based category hints for bulk photos/names. Hints do not inspect images.
+- Select clothes for a single transactional seasonal storage update; only selected, currently visible items change. Restore them with the same controls. Photos, notes and wear records are retained.
+- Replace one outfit candidate while keeping the others; inspect wear counts and last recorded date up to the selected day.
+- Analyze the last 30/90 days or all history through today; future plans are excluded. Cost per wear and never-worn counts use lifetime records through today.
+- ZOZO product links/search remain available; automatic purchase-history synchronization is not implemented.

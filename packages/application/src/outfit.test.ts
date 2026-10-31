@@ -11,10 +11,25 @@ function repository() {
   return {
     snapshot: vi.fn(async () => ({ clothing: [], wears: [] })), getImage: vi.fn(async () => undefined),
     saveClothing: vi.fn(async () => {}), deleteClothing: vi.fn(async () => {}), saveWear: vi.fn(async () => {}),
+    setArchived: vi.fn(async (_ids: string[], _archived: boolean, _at: string) => {}),
     saveWears: vi.fn(async (_entries: WearEntry[]) => {}), deleteWear: vi.fn(async () => {}), replaceAll: vi.fn(async () => {})
   } satisfies WardrobeRepository;
 }
 describe('outfit recording and metadata backup', () => {
+  it('deduplicates seasonal selection into one update and supports reversal', async () => {
+    const repo = repository(); const service = new ClozyService(repo);
+    await service.archive([item, item], true);
+    expect(repo.setArchived).toHaveBeenCalledWith([id], true, expect.any(String));
+    await service.archive([item], false);
+    expect(repo.setArchived).toHaveBeenLastCalledWith([id], false, expect.any(String));
+    expect(repo.saveClothing).not.toHaveBeenCalled();
+    expect(repo.replaceAll).not.toHaveBeenCalled();
+  });
+  it('rejects malformed seasonal selections before writing', async () => {
+    const repo = repository();
+    await expect(new ClozyService(repo).archive([{ ...item, id: 'bad' }], true)).rejects.toThrow();
+    expect(repo.setArchived).not.toHaveBeenCalled();
+  });
   it('writes the whole outfit in one repository operation without duplicate items', async () => {
     const repo = repository();
     const service = new ClozyService(repo);

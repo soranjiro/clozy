@@ -54,3 +54,18 @@ export function wardrobeAnalysis(items: Clothing[], wears: WearEntry[]) {
 export function zozoSearchUrl(query: string): string {
   return 'https://zozo.jp/search/?p_keyv=' + encodeURIComponent(query.trim());
 }
+
+// Name/filename hints only. Every result remains editable before registration.
+export function inferCategory(name: string, fallback: Category = 'トップス'): Category {
+  const text = name.normalize('NFKC').toLowerCase();
+  const hints: [Category, RegExp][] = [
+    ['ワンピース', /ワンピース|ドレス|one.?piece|dress/],
+    ['アウター', /コート|ジャケット|ブルゾン|ダウン|coat|jacket/],
+    ['ボトムス', /パンツ|スカート|デニム|ジーンズ|pants|skirt|jeans/],
+    ['シューズ', /靴|スニーカー|ブーツ|サンダル|ローファー|shoes|sneakers|boots/],
+    ['バッグ', /バッグ|リュック|トート|bag|backpack/],
+    ['アクセサリー', /ネックレス|ピアス|リング|帽子|マフラー|ベルト|necklace/],
+    ['トップス', /シャツ|ニット|セーター|カーディガン|パーカー|shirt|knit|sweater/]
+  ];
+  return hints.find(([, pattern]) => pattern.test(text))?.[0] ?? fallback;
+}

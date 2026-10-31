@@ -8,6 +8,7 @@ import type { IconName } from './Icon';
 import GarmentForm from './GarmentForm';
 import BulkAdd from './BulkAdd';
 import Planning from './Planning';
+import { ClosetCollection, ClosetScene, DisplayHanger, GarmentSilhouette } from './ClosetDisplay';
 import { hasPasskey, supportsPasskey, registerPasskey, removePasskey, passkeyError } from './passkey';
 
 type View = 'home' | 'wardrobe' | 'planning' | 'calendar' | 'insights' | 'settings';
@@ -35,18 +36,20 @@ function GarmentImage({ service, item }: { service: ClozyService; item: Clothing
     let objectUrl: string | undefined;
     void service.image(item.id).then(blob => {
       if (!cancelled && blob) { objectUrl = URL.createObjectURL(blob); setUrl(objectUrl); }
-    }).catch(() => setUrl(undefined));
+    }).catch(() => { if (!cancelled) setUrl(undefined); });
     return () => { cancelled = true; if (objectUrl) URL.revokeObjectURL(objectUrl); };
-  }, [item.id, item.imageId, service]);
+  }, [item.id, item.imageId, item.updatedAt, service]);
   return url
     ? <img className="garment-photo" src={url} alt={item.name} loading="lazy" />
-    : <div className={'garment-placeholder category-' + CATEGORIES.indexOf(item.category)} aria-hidden="true"><Icon name="hanger" size={56} /></div>;
+    : <div className="garment-placeholder"><GarmentSilhouette item={item} /><span className="visual-fallback-label">写真なし · イメージ</span></div>;
 }
 function GarmentCard({ item, service, onEdit, onFavorite, busy }: {
   item: Clothing; service: ClozyService; onEdit: (item: Clothing) => void; onFavorite: (item: Clothing) => void; busy: boolean
 }) {
-  return <article className="garment-card">
+  const shelved = ['シューズ', 'バッグ', 'アクセサリー'].includes(item.category);
+  return <article className={'garment-card ' + (item.archived ? 'is-stored ' : '') + (shelved ? 'is-shelved ' : '') + (item.imageId ? 'has-photo' : '')}>
     <div className="garment-media">
+      {!shelved && <DisplayHanger />}
       <button className="garment-open" type="button" onClick={() => onEdit(item)} aria-label={item.name + 'を編集'}>
         <GarmentImage item={item} service={service} />
       </button>
@@ -75,23 +78,12 @@ function Home({ items, wears, service, onAdd, onGo, onEdit, onFavorite, busy }: 
   return <>
     <div className="hero">
       <div className="hero-copy">
-        <p className="eyebrow hero-eyebrow">WELCOME TO YOUR CLOSET</p>
-        <h2>好きな服と、<br /><em>心地よい毎日を。</em></h2>
-        <p>しまう、見つける、着る。<br />あなたの一着一着に、ちゃんと居場所を。</p>
-        <button className="button button-light" onClick={onAdd}><Icon name="plus" size={19} /> 最初の一着をしまう <Icon name="arrow" size={17} /></button>
+        <p className="eyebrow hero-eyebrow">THE ART OF YOUR EVERYDAY</p>
+        <h2>好きな服に、<br /><em>とっておきの場所を。</em></h2>
+        <p>扉を開くたび、少しうれしくなる。<br />あなただけの、小さなドレッシングルーム。</p>
+        <div className="hero-actions"><button className="button button-light" onClick={() => onGo('wardrobe')}>クローゼットを開く <Icon name="arrow" size={17} /></button><button className="hero-add" onClick={onAdd}><Icon name="plus" size={16} /> 服を登録</button></div>
       </div>
-      <div className="hero-art" aria-hidden="true">
-        <div className="closet-illustration">
-          <span className="closet-top" /><span className="closet-rail" />
-          <div className="closet-hangers">
-            <span className="closet-outfit outfit-one"><span className="outfit-hook" /><span className="outfit-piece" /></span>
-            <span className="closet-outfit outfit-two"><span className="outfit-hook" /><span className="outfit-piece" /></span>
-            <span className="closet-outfit outfit-three"><span className="outfit-hook" /><span className="outfit-piece" /></span>
-          </div>
-          <span className="closet-shelf" /><span className="closet-drawer" />
-        </div>
-        <span className="art-label">a place for every piece.</span>
-      </div>
+      <ClosetScene />
     </div>
     <div className="metric-grid">
       <div className="metric"><div className="metric-head"><span>登録アイテム</span><span className="metric-icon lavender"><Icon name="hanger" size={19} /></span></div><strong>{items.length}<small> 着</small></strong><p>自分だけのコレクション</p></div>
@@ -101,7 +93,7 @@ function Home({ items, wears, service, onAdd, onGo, onEdit, onFavorite, busy }: 
     <div className="quick-actions"><button onClick={() => onGo('planning')}><Icon name="sparkles" size={24} /><span><strong>今日、何を着よう？</strong><small>手持ちから候補を選ぶ</small></span><Icon name="right" size={18} /></button><button onClick={() => onGo('wardrobe')}><Icon name="hanger" size={24} /><span><strong>クローゼットを整える</strong><small>まとめて登録・季節で絞り込み</small></span><Icon name="right" size={18} /></button></div>
     <section className="content-section">
       <div className="section-head"><div><p className="eyebrow">RECENTLY ADDED</p><h3>最近追加したアイテム</h3></div><button className="section-link" onClick={() => onGo('wardrobe')}>すべて見る <Icon name="arrow" size={17} /></button></div>
-      {featured.length ? <div className="garment-grid">{featured.map(i => <GarmentCard key={i.id} item={i} service={service} onEdit={onEdit} onFavorite={onFavorite} busy={busy} />)}</div> : <EmptyState title="最初の1着からはじめよう" description="クローゼットに服を登録すると、ここにコレクションが並びます。" onAdd={onAdd} />}
+      <ClosetCollection count={featured.length} label="最近追加した服のクローゼット" preview>{featured.length ? featured.map(i => <GarmentCard key={i.id} item={i} service={service} onEdit={onEdit} onFavorite={onFavorite} busy={busy} />) : <EmptyState title="最初の1着からはじめよう" description="大切な服に、ひとつずつ居場所を。写真がなくても名前だけで登録できます。" onAdd={onAdd} />}</ClosetCollection>
     </section>
     <section className="content-section bottom-section">
       <div className="section-head"><div><p className="eyebrow">STYLE JOURNAL</p><h3>最近の着用記録</h3></div><button className="section-link" onClick={() => onGo('calendar')}>カレンダーへ <Icon name="arrow" size={17} /></button></div>
@@ -111,15 +103,18 @@ function Home({ items, wears, service, onAdd, onGo, onEdit, onFavorite, busy }: 
     </section>
   </>;
 }
-function Wardrobe({ items, service, onAdd, onBulk, onEdit, onFavorite, busy }: {
-  items: Clothing[]; service: ClozyService; onAdd: () => void; onBulk: () => void; onEdit: (item: Clothing) => void; onFavorite: (item: Clothing) => void; busy: boolean
+function Wardrobe({ items, service, onAdd, onBulk, onEdit, onFavorite, onArchive, busy }: {
+  items: Clothing[]; service: ClozyService; onAdd: () => void; onBulk: () => void; onEdit: (item: Clothing) => void; onFavorite: (item: Clothing) => void; onArchive: (items: Clothing[], archived: boolean) => Promise<boolean>; busy: boolean
 }) {
+  const [selecting, setSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<Category | 'すべて'>('すべて');
   const [onlyFavorite, setOnlyFavorite] = useState(false);
   const [sort, setSort] = useState('newest');
   const [season, setSeason] = useState('すべて');
   const [storage, setStorage] = useState('すべて');
+  const [groupByCategory, setGroupByCategory] = useState(true);
   const shown = filterClothing(items, query, category, onlyFavorite).filter(item =>
     (season === 'すべて' || inSeason(item, season as typeof SEASONS[number])) &&
     (storage === 'すべて' || (storage === '収納中' ? item.archived : !item.archived))).sort((a, b) =>
@@ -128,14 +123,25 @@ function Wardrobe({ items, service, onAdd, onBulk, onEdit, onFavorite, busy }: {
     sort === 'updated' ? b.updatedAt.localeCompare(a.updatedAt) : b.createdAt.localeCompare(a.createdAt));
   const filtered = Boolean(query || category !== 'すべて' || onlyFavorite || season !== 'すべて' || storage !== 'すべて');
   const reset = () => { setQuery(''); setCategory('すべて'); setOnlyFavorite(false); setSeason('すべて'); setStorage('すべて'); };
+  const selectedItems = shown.filter(item => selectedIds.includes(item.id));
+  async function archiveSelection(archived: boolean) {
+    if (busy || !selectedItems.length) return;
+    if (await onArchive(selectedItems, archived)) setSelectedIds([]);
+  }
+  const renderItem = (item: Clothing) => <div className="selectable-garment" key={item.id}>{selecting && <label className="garment-select check-row"><input type="checkbox" checked={selectedIds.includes(item.id)} disabled={busy} onChange={e => setSelectedIds(ids => e.target.checked ? [...ids, item.id] : ids.filter(id => id !== item.id))} />{item.name}を選択</label>}<GarmentCard key={item.id} item={item} service={service} onEdit={onEdit} onFavorite={onFavorite} busy={busy} /></div>;
+  const groups = (['アウター', 'トップス', 'ワンピース', 'ボトムス', 'シューズ', 'バッグ', 'アクセサリー', 'その他'] as const).map(c => {
+    const group = shown.filter(item => item.category === c);
+    return { category: c, count: group.length, children: group.map(renderItem) };
+  }).filter(group => group.count > 0);
   return <>
-    <div className="page-intro"><div><p className="eyebrow">MY WARDROBE</p><h2>クローゼット</h2><p>お気に入りも、季節のお洋服も。ここがすべての定位置。</p></div><div className="planning-actions"><button className="button button-outline" onClick={onBulk}>まとめて登録</button><button className="button button-primary" onClick={onAdd}><Icon name="plus" size={18} /> 1着ずつ登録</button></div></div>
+    <div className="page-intro"><div><p className="eyebrow">YOUR PERSONAL DRESSING ROOM</p><h2>クローゼット</h2><p>お気に入りを掛けて、季節をしまう。あなただけのコレクション。</p></div><div className="planning-actions"><button className="button button-outline" onClick={onBulk}>まとめて登録</button><button className="button button-primary" onClick={onAdd}><Icon name="plus" size={18} /> 1着ずつ登録</button></div></div>
     <div className="toolbar"><label className="search-box"><Icon name="search" size={19} /><span className="sr-only">服を検索</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="名前・ブランド・カラーで検索" /></label><button className={'filter-fav ' + (onlyFavorite ? 'selected' : '')} aria-pressed={onlyFavorite} onClick={() => setOnlyFavorite(!onlyFavorite)}><Icon name="heart" size={18} /> お気に入り</button></div>
     <div className="category-pills" aria-label="カテゴリーで絞り込み">{(['すべて', ...CATEGORIES] as const).map(c => <button key={c} className={'pill ' + (category === c ? 'active' : '')} aria-pressed={category === c} onClick={() => setCategory(c)}>{c}</button>)}</div>
     <div className="planning-controls"><label className="sort-control">季節<select value={season} onChange={e => setSeason(e.target.value)}>{['すべて', ...SEASONS].map(s => <option key={s}>{s}</option>)}</select></label><label className="sort-control">衣替え<select value={storage} onChange={e => setStorage(e.target.value)}>{['すべて', '着用中', '収納中'].map(s => <option key={s}>{s}</option>)}</select></label></div>
-    <div className="collection-summary"><span className="results-count" role="status">{shown.length} / {items.length} アイテム</span><label className="sort-control">並べ替え <select value={sort} onChange={e => setSort(e.target.value)}><option value="newest">登録が新しい順</option><option value="oldest">登録が古い順</option><option value="updated">更新が新しい順</option><option value="name">名前順</option></select></label>{filtered && <button className="section-link" onClick={reset}>絞り込みを解除</button>}</div>
-    {shown.length ? <div className="garment-grid wardrobe-grid">{shown.map(i => <GarmentCard key={i.id} item={i} service={service} onEdit={onEdit} onFavorite={onFavorite} busy={busy} />)}</div> :
-      <EmptyState title={items.length ? '条件に合う服が見つかりません' : 'クローゼットはまだ空っぽです'} description={items.length ? '検索ワードやフィルターを変更してください。' : '服を追加して、あなたのコレクションを作りましょう。'} onAdd={items.length ? reset : onAdd} action={items.length ? '絞り込みを解除' : '服を登録する'} />}
+    <div className="collection-summary"><span className="results-count" role="status">{shown.length} / {items.length} アイテム</span><label className="sort-control">並べ方<select value={groupByCategory ? 'category' : 'all'} onChange={e => setGroupByCategory(e.target.value === 'category')}><option value="category">カテゴリー別の棚</option><option value="all">すべて一緒に並べる</option></select></label><label className="sort-control">並べ替え <select value={sort} onChange={e => setSort(e.target.value)}><option value="newest">登録が新しい順</option><option value="oldest">登録が古い順</option><option value="updated">更新が新しい順</option><option value="name">名前順</option></select></label>{filtered && <button className="section-link" onClick={reset}>絞り込みを解除</button>}</div>
+    <section className="seasonal-tools" aria-label="まとめて衣替え"><div className="planning-actions"><button className="button button-outline" disabled={busy} onClick={() => { setSelecting(!selecting); setSelectedIds([]); }}>{selecting ? '衣替えの選択を終了' : 'まとめて衣替え'}</button>{selecting && <><button className="button button-ghost" disabled={busy || !shown.length} onClick={() => setSelectedIds(shown.map(item => item.id))}>表示中の服をすべて選択</button><button className="button button-ghost" disabled={busy} onClick={() => setSelectedIds([])}>選択解除</button></>}</div>{selecting && <><p role="status">表示中の{shown.length}着のうち{selectedItems.length}着を選択。絞り込みで隠れた服は変更しません。写真と着用記録は残ります。</p><div className="planning-actions"><button className="button button-primary" disabled={busy || !selectedItems.length} onClick={() => void archiveSelection(true)}>選んだ服を収納する</button><button className="button button-outline" disabled={busy || !selectedItems.length} onClick={() => void archiveSelection(false)}>選んだ服を着用中に戻す</button></div></>}</section>
+    <ClosetCollection count={shown.length} label="登録した服のクローゼット" groups={groupByCategory ? groups : undefined}>{shown.length ? shown.map(renderItem) :
+      <EmptyState title={items.length ? '条件に合う服が見つかりません' : 'クローゼットはまだ空っぽです'} description={items.length ? '検索ワードやフィルターを変更してください。' : '最初の1着を掛けて、あなただけのクローゼットを育てましょう。'} onAdd={items.length ? reset : onAdd} action={items.length ? '絞り込みを解除' : '服を登録する'} />}</ClosetCollection>
   </>;
 }
 function CalendarView({ items, wears, busy, onToggle, onAdd }: {
@@ -181,20 +187,30 @@ function CalendarView({ items, wears, busy, onToggle, onAdd }: {
   </>;
 }
 function Insights({ items, wears, onEdit }: { items: Clothing[]; wears: WearEntry[]; onEdit: (item: Clothing) => void }) {
-  const analysis = wardrobeAnalysis(items, wears);
-  const counts = getWearCounts(wears);
+  const [period, setPeriod] = useState('all');
+  const today = todayLocal();
+  const start = new Date(today + 'T12:00:00');
+  start.setDate(start.getDate() - (period === '30' ? 29 : 89));
+  const since = dateKey(start);
+  const recordedWears = wears.filter(wear => wear.date <= today);
+  const periodWears = recordedWears.filter(wear => period === 'all' || wear.date >= since);
+  const analysis = wardrobeAnalysis(items, recordedWears);
+  const counts = getWearCounts(periodWears);
+  const lifetimeCounts = getWearCounts(recordedWears);
   const ranking = items.filter(i => counts.has(i.id)).sort((a,b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0)).slice(0, 5);
   const categories = CATEGORIES.map(category => ({ category, count: items.filter(item => item.category === category).length })).filter(row => row.count > 0);
   const max = Math.max(1, ...categories.map(row => row.count));
   return <>
     <div className="page-intro"><div><p className="eyebrow">YOUR STYLE IN NUMBERS</p><h2>スタイル分析</h2><p>持っている服と、着ている服。数字から見つけるわたしらしさ。</p></div></div>
+    <div className="planning-controls"><label className="sort-control">着用集計の期間<select value={period} onChange={e => setPeriod(e.target.value)}><option value="all">今日までの全期間</option><option value="30">最近30日</option><option value="90">最近90日</option></select></label><p className="panel-description">着用回数・ランキングは選択期間、未着用と1回あたりの金額は今日までの全記録で計算します。未来の記録は含めません。</p></div>
     <div className="metric-grid">
       <div className="metric"><div className="metric-head"><span>総アイテム数</span><span className="metric-icon lavender"><Icon name="hanger" /></span></div><strong>{items.length}<small> 着</small></strong></div>
-      <div className="metric"><div className="metric-head"><span>着用記録</span><span className="metric-icon mint"><Icon name="calendar" /></span></div><strong>{wears.length}<small> 回</small></strong></div>
+      <div className="metric"><div className="metric-head"><span>着用記録</span><span className="metric-icon mint"><Icon name="calendar" /></span></div><strong>{periodWears.length}<small> 回</small></strong></div>
       <div className="metric"><div className="metric-head"><span>着用した服</span><span className="metric-icon peach"><Icon name="sparkles" /></span></div><strong>{counts.size}<small> 着</small></strong></div>
     </div>
+    <section className="seasonal-tools"><p>選択期間に着た服の割合：{items.length ? Math.round(counts.size / items.length * 100) : 0}%（{counts.size} / {items.length}着）。まずは眠っている服を見直してみましょう。</p></section>
     <div className="metric-grid"><div className="metric"><div className="metric-head">まだ着ていない服</div><strong>{analysis.unworn.length}<small> 着</small></strong><p>収納中の服を除く・記録ベース</p></div><div className="metric"><div className="metric-head">衣替えで収納中</div><strong>{analysis.archivedCount}<small> 着</small></strong><p>削除せず着用履歴も残します</p></div><div className="metric"><div className="metric-head">登録した購入金額</div><strong className="money-value">¥{analysis.totalPurchasePrice.toLocaleString('ja-JP')}</strong><p>{analysis.pricedCount}着の金額入力分のみ</p></div></div>
-    <div className="insight-grid content-section"><section className="insight-panel"><p className="eyebrow">REDISCOVER YOUR CLOSET</p><h3>次に着てみたい服</h3>{analysis.unworn.length ? <div className="outfit-list">{analysis.unworn.slice(0, 8).map(item => <button className="wear-option" key={item.id} onClick={() => onEdit(item)}><span><strong>{item.name}</strong><small>{item.category} · 着用記録なし</small></span><Icon name="right" size={18} /></button>)}</div> : <p className="panel-empty">着用中の服はすべて記録済み、またはまだ服が登録されていません。</p>}</section><section className="insight-panel"><p className="eyebrow">COST PER WEAR</p><h3>1回着るあたりの金額</h3><p className="panel-description">購入金額 ÷ 着用記録数。金額未入力・未着用の服は含めません。高い順に表示します。</p>{analysis.costPerWear.length ? <div className="outfit-list">{analysis.costPerWear.slice(0, 5).map(({ item, cost }) => <button className="wear-option" key={item.id} onClick={() => onEdit(item)}><span><strong>{item.name}</strong><small>{counts.get(item.id)}回着用</small></span><strong>¥{Math.round(cost).toLocaleString('ja-JP')} / 回</strong></button>)}</div> : <p className="panel-empty">購入金額と着用記録を入れると表示されます。</p>}</section></div>
+    <div className="insight-grid content-section"><section className="insight-panel"><p className="eyebrow">REDISCOVER YOUR CLOSET</p><h3>次に着てみたい服</h3>{analysis.unworn.length ? <div className="outfit-list">{analysis.unworn.slice(0, 8).map(item => <button className="wear-option" key={item.id} onClick={() => onEdit(item)}><span><strong>{item.name}</strong><small>{item.category} · 着用記録なし</small></span><Icon name="right" size={18} /></button>)}</div> : <p className="panel-empty">着用中の服はすべて記録済み、またはまだ服が登録されていません。</p>}</section><section className="insight-panel"><p className="eyebrow">COST PER WEAR</p><h3>1回着るあたりの金額</h3><p className="panel-description">購入金額 ÷ 着用記録数。金額未入力・未着用の服は含めません。高い順に表示します。</p>{analysis.costPerWear.length ? <div className="outfit-list">{analysis.costPerWear.slice(0, 5).map(({ item, cost }) => <button className="wear-option" key={item.id} onClick={() => onEdit(item)}><span><strong>{item.name}</strong><small>{lifetimeCounts.get(item.id)}回着用</small></span><strong>¥{Math.round(cost).toLocaleString('ja-JP')} / 回</strong></button>)}</div> : <p className="panel-empty">購入金額と着用記録を入れると表示されます。</p>}</section></div>
     <div className="insight-grid content-section">
       <section className="insight-panel"><p className="eyebrow">COLLECTION BREAKDOWN</p><h3>カテゴリー別アイテム</h3>
         {categories.length ? <div className="category-bars">{categories.map(row => <div className="bar-row" key={row.category}><div><span>{row.category}</span><strong>{row.count}着</strong></div><progress value={row.count} max={max}>{row.count}</progress></div>)}</div> : <p className="panel-empty">アイテムを登録すると分析できます。</p>}
@@ -310,7 +326,7 @@ export default function App() {
         {notice && <div className={'notice ' + notice.kind} role={notice.kind === 'error' ? 'alert' : 'status'}><span>{notice.message}</span><button type="button" onClick={() => setNotice(null)} aria-label="通知を閉じる"><Icon name="close" size={16} /></button></div>}
         {loading ? <div className="loading-state" role="status">クローゼットを読み込んでいます…</div> : loadFailed ? <EmptyState title="保存データを読み込めませんでした" description="データは削除していません。別のタブを閉じ、ブラウザの保存設定を確認してから再読み込みしてください。" onAdd={() => window.location.reload()} action="再読み込み" /> : <>
           {view === 'home' && <Home items={items} wears={wears} service={service} onAdd={() => setSelected('new')} onGo={changeView} onEdit={setSelected} onFavorite={i => void execute(() => service.favorite(i), 'お気に入りを更新しました。')} busy={busy} />}
-          {view === 'wardrobe' && <Wardrobe items={items} service={service} onAdd={() => setSelected('new')} onBulk={() => setBulkOpen(true)} onEdit={setSelected} onFavorite={i => void execute(() => service.favorite(i), 'お気に入りを更新しました。')} busy={busy} />}
+          {view === 'wardrobe' && <Wardrobe items={items} service={service} onAdd={() => setSelected('new')} onBulk={() => setBulkOpen(true)} onArchive={(chosen, archived) => execute(() => service.archive(chosen, archived), archived ? '選んだ服を収納しました。選択して着用中に戻せます。' : '選んだ服を着用中に戻しました。')} onEdit={setSelected} onFavorite={i => void execute(() => service.favorite(i), 'お気に入りを更新しました。')} busy={busy} />}
           {view === 'planning' && <Planning items={items} wears={wears} busy={busy} onAdd={() => setSelected('new')} onEdit={setSelected} onRecord={(outfit, date) => void execute(() => service.recordOutfit(outfit, date, wears), '組み合わせを着用記録に追加しました。')} />}
           {view === 'calendar' && <CalendarView items={items} wears={wears} busy={busy} onToggle={(item, date) => void execute(() => service.toggleWear(item, date, wears), '着用記録を更新しました。')} onAdd={() => setSelected('new')} />}
           {view === 'insights' && <Insights items={items} wears={wears} onEdit={setSelected} />}
@@ -322,6 +338,6 @@ export default function App() {
     <nav className="mobile-nav" aria-label="モバイルナビゲーション">{nav.filter(item => item.key !== 'settings').map(item => <button key={item.key} className={view === item.key ? 'active' : ''} aria-current={view === item.key ? 'page' : undefined} onClick={() => changeView(item.key)}><Icon name={item.icon} size={21} /><span>{item.title}</span></button>)}</nav>
     <button className="mobile-add" type="button" onClick={() => setSelected('new')} aria-label="アイテムを追加"><Icon name="plus" size={18} /> 服を追加</button>
     {bulkOpen && <BulkAdd service={service} items={items} onClose={() => setBulkOpen(false)} onSaved={reload} />}
-    {selected && <GarmentForm key={selected === 'new' ? 'new' : selected.id} service={service} current={selected === 'new' ? undefined : selected} onClose={() => setSelected(null)} onSaved={async () => { await reload(); setSelected(null); setNotice({ kind: 'success', message: 'アイテムを保存しました。' }); }} onDelete={remove} busy={busy} />}
+    {selected && <GarmentForm key={selected === 'new' ? 'new' : selected.id} service={service} current={selected === 'new' ? undefined : selected} onClose={() => setSelected(null)} onSaved={async (keepOpen) => { await reload(); if (!keepOpen) setSelected(null); setNotice({ kind: 'success', message: 'アイテムを保存しました。' }); }} onDelete={remove} busy={busy} />}
   </div>;
 }
