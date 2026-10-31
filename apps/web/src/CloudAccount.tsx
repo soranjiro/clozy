@@ -53,7 +53,7 @@ export default function CloudAccount({ service, onReload }: {
   function remove() {
     const secret = window.prompt('アカウント削除のためパスワードを入力');
     if (!secret || !window.confirm('クラウド上のアカウントとバックアップを削除します。元に戻せません。続けますか？')) return;
-    void run(async () => { await deleteCloudAccount(secret); setSession(null); setNotice('アカウントを削除しました'); });
+    void run(async () => { await deleteCloudAccount(session!.user.email, secret); setSession(null); setNotice('アカウントを削除しました'); });
   }
   return <section className="account-section" aria-labelledby="account-title">
     <div className="section-head"><div><p className="eyebrow">ACCOUNT</p><h3 id="account-title">アカウントとクラウド保存</h3></div></div>
