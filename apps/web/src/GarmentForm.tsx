@@ -137,7 +137,7 @@ export default function GarmentForm({
           </div>
         </div>
         <fieldset className="season-field"><legend>着る季節</legend><div className="season-tiles">{SEASONS.map((season,i) => <button key={season} type="button" className="season-tile" aria-pressed={fields.seasons?.includes(season) ?? false} onClick={() => change('seasons', fields.seasons?.includes(season) ? fields.seasons.filter(s => s !== season) : [...(fields.seasons ?? []), season])}>
-              <Icon name={(['flower','sun','leaf','snowflake'] as const)[i]} size={25}/><span>{season}</span>
+              <Icon name={(['flower','sun','leaf','snowflake'] as const)[i] ?? 'sun'} size={25}/><span>{season}</span>
             </button>)}</div></fieldset>
         <label className="check-row archive-toggle"><input type="checkbox" checked={fields.archived ?? false} onChange={e => change('archived', e.target.checked)} /> <Icon name="box" size={19} /> 収納中</label>
         <div className="field-grid"><div className="field"><label htmlFor="cloth-price">購入金額（円・任意）</label><input id="cloth-price" type="number" min="0" max="100000000" step="1" inputMode="numeric" value={fields.purchasePrice ?? ''} onChange={e => change('purchasePrice', e.target.value === '' ? undefined : Number(e.target.value))} placeholder="例：3990" /></div><div className="field"><label htmlFor="cloth-url">商品URL（任意）</label><input id="cloth-url" type="url" maxLength={2048} value={fields.sourceUrl ?? ''} onChange={e => change('sourceUrl', e.target.value)} placeholder="https://zozo.jp/…" /></div></div>
