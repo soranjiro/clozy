@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import Icon from './Icon';
 
 const clothes = [
@@ -44,13 +45,13 @@ export default function WardrobeScene({ onBrowse }: { onBrowse: () => void }) {
   function toggle() { setOverride(opened ? 'closed' : 'open'); }
   return <section className="wardrobe-stage" ref={scene}
     aria-label="クローゼットの扉を開くインタラクティブなホーム画面"
-    style={{ '--door-open': reveal } as React.CSSProperties}
+    style={{ '--door-open': reveal } as CSSProperties}
     data-open={opened ? 'true' : 'false'}>
     <div className="wardrobe-stage-interior" aria-hidden="true">
       <div className="cabinet-top"><div className="cabinet-box" /><div className="cabinet-towels"><i /><i /><i /></div></div>
       <div className="cabinet-rail" />
       <div className="cabinet-clothes">
-        {clothes.map((cloth, index) => <div className={'cabinet-cloth ' + cloth.tone} key={cloth.name} style={{ '--cloth-order': index } as React.CSSProperties}>
+        {clothes.map((cloth, index) => <div className={'cabinet-cloth ' + cloth.tone} key={cloth.name} style={{ '--cloth-order': index } as CSSProperties}>
           <span className="cabinet-hook" /><span className="cabinet-hanger" /><span className="cabinet-fabric" />
         </div>)}
       </div>
