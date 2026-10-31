@@ -38,7 +38,7 @@ npm run verify                        # typecheck, tests, build, browser smoke
 - Unworn/archived counts, known purchase totals and cost-per-wear insights; purchase prices are optional.
 
 ## Data and privacy
-By default, your data stays in **this browser profile**, unencrypted. Clearing browser data may delete it. When you deliberately use **cloud backup**, the browser uploads the versioned JSON snapshot (including encoded images) to a private Cloudflare R2 bucket under your signed-in account; it is not end-to-end encrypted. Downloading a backup replaces the current device's data after confirmation. The cloud backup size limit is 32 MiB; local JSON export remains available up to 75 MiB. Cross-device automatic sync and guaranteed offline support are not included. Cloud accounts presently use email/password without email verification, password reset, MFA, or rate-limiting on registration; keep a safe local export and use a unique strong password.
+By default, your data stays in **this browser profile**, unencrypted. Clearing browser data may delete it. When you deliberately use **cloud backup**, the browser uploads the versioned JSON snapshot (including encoded images) to a private Cloudflare R2 bucket under your signed-in account; it is not end-to-end encrypted. Downloading a backup replaces the current device's data after confirmation. The cloud backup size limit is 32 MiB; local JSON export remains available up to 75 MiB. Cross-device automatic sync and guaranteed offline support are not included. Cloud accounts use Firebase Authentication (project `clozy-6166b`) with verified email and password reset. The API validates the signed ID token and checks live account status before every cloud request. Keep a safe local export and use a unique strong password.
 
 ## Local passkey lock
 
@@ -46,7 +46,7 @@ The optional passkey lock remains local-only, **not a server-authenticated accou
 
 The app locks on reload, on explicit lock, and after at least one minute in the background. Unlocking is memory-only; there is no persistent login token. Passkey metadata is separate from wardrobe backups and deleting wardrobe data does not disable the lock. To disable it normally, verify the registered passkey in Settings. No account recovery is provided: keep a wardrobe backup and an OS-synced passkey or another OS-supported access method.
 
-**This is an accidental-access UI guard, not an encryption/security boundary against someone controlling your browser.** IndexedDB and backups remain plaintext. Developer tools, modified JavaScript, extensions or deletion of local lock metadata can bypass it. Cloud account authentication is separate; the local passkey alone does not encrypt data or authenticate cloud sessions. Each preview/production origin has separate registration and data. Real authenticator/browser compatibility still needs device testing.
+**This is an accidental-access UI guard, not an encryption/security boundary against someone controlling your browser.** IndexedDB and backups remain plaintext. Developer tools, modified JavaScript, extensions or deletion of local lock metadata can bypass it. Cloud account authentication is separate; the local passkey alone does not encrypt data or authenticate cloud sessions. Firebase identity is shared across preview/production; D1 and R2 storage remain isolated. Real authenticator/browser compatibility still needs device testing.
 
 ## Bounded local verification automation
 
@@ -109,8 +109,9 @@ Legacy repositories are archived. No legacy credentials, JWTs, image files or da
 
 ## Cloud account lifecycle
 
-- `docs/migrations/0001_cloud_accounts.sql` defines the isolated `clozy-v2` and `clozy-v2-preview` D1 schema. The Cloudflare Pages project binds `DB` and the private `BACKUPS` R2 bucket. Never attach the old database as a fallback.
+- `docs/migrations/0001_cloud_accounts.sql` and `0002_firebase.sql` define the isolated `clozy-v2` and `clozy-v2-preview` D1 schema. The Cloudflare Pages project binds `DB` and the private `BACKUPS` R2 bucket. Never attach the old database as a fallback.
 - Sessions are random opaque HttpOnly Secure SameSite=Lax cookies, stored as SHA-256 digests. The browser derives a salted PBKDF2-SHA256 password-equivalent verifier (210,000 iterations) over HTTPS, and the server stores only its SHA-256 digest; protect the verifier like a password. This is not a PAKE or end-to-end encryption. State-changing endpoints require a same-origin `Origin` header. Failed logins are throttled per email; registration has per-IP-hash throttling; add Cloudflare Turnstile/network-level anti-automation controls before wide public sign-ups.
+- Legacy register/login/salt endpoints return 410. Firebase credentials never go to D1. `firebase_backups.uid` and `users/<encoded UID>/` R2 keys separate accounts. The old users/sessions/backups tables are retained for recovery and never authenticate requests.
 - Registration/login and manual cloud backup are optional. Cloud backup revisions use conditional writes to prevent silent concurrent overwrites. Data is stored in a per-account, unlisted R2 object and exposed only through an authenticated same-origin endpoint.
 - Account deletion also deletes its active sessions and currently referenced backup. Explicit logout does not clear this device's local wardrobe; clear it independently on shared devices.
 - **Not yet supported:** email verification, password resets, MFA, automatic per-item sync, encrypted backups where Cloudflare cannot read their contents, self-service account recovery. Do not describe this as finished enterprise-grade identity infrastructure.
