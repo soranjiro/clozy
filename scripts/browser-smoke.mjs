@@ -35,7 +35,8 @@ try {
   await page.getByRole('button', { name: '下にスクロールして服を見る' }).click();
   assert.equal(await page.locator('.wardrobe-stage').getAttribute('data-open'), 'true', 'scroll cue opens doors');
   assert.equal(await page.locator('.home-greeting').count(), 1);
-  await page.getByRole('navigation').getByRole('button', { name: 'クローゼット' }).click();
+  await page.getByRole('button', { name: 'クローゼットの中の服を見る' }).click();
+  await page.getByRole('heading', { name: 'クローゼット' }).waitFor();
   await page.getByRole('button', { name: 'まとめて登録', exact: true }).click();
   await page.getByLabel('写真なしで名前から追加').fill('白いシャツ\n黒のパンツ\n白いスニーカー');
   await page.getByRole('button', { name: '名前をリストに追加' }).click();
@@ -91,6 +92,11 @@ try {
   await page.getByRole('navigation', { name: 'モバイルナビゲーション' }).getByRole('button', { name: 'ホーム', exact: true }).click();
   await page.locator('.wardrobe-stage').waitFor();
   assert.equal(await page.locator('.wardrobe-stage').isVisible(), true, 'mobile first view contains wardrobe doors');
+  const headerAdd = page.getByRole('button', { name: '服を追加', exact: true });
+  assert.equal(await headerAdd.isVisible(), true, 'new mobile header add action must remain accessible');
+  const addBounds = await headerAdd.boundingBox();
+  const doorBounds = await page.getByRole('button', { name: 'クローゼットの扉を開く' }).boundingBox();
+  assert(addBounds && doorBounds && addBounds.y + addBounds.height <= doorBounds.y, 'add action must not overlap closet opening controls');
   const before = await page.locator('.wardrobe-stage').getAttribute('style');
   await page.evaluate(() => window.scrollTo(0, 280));
   await page.waitForTimeout(250);
@@ -118,6 +124,13 @@ try {
   await page.getByRole('button', { name: '1着を登録', exact: true }).waitFor({ state: 'visible' });
   await page.getByRole('dialog').getByRole('button', { name: '閉じる', exact: true }).last().click();
   assert.equal(await page.locator('.garment-card').count(), 4, 'retry must not duplicate the successful photo row');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.getByRole('navigation', { name: 'モバイルナビゲーション' }).getByRole('button', { name: 'ホーム', exact: true }).click();
+  await page.evaluate(() => window.scrollTo(0, 300));
+  await page.waitForTimeout(60);
+  assert.equal(await page.locator('.wardrobe-stage').getAttribute('data-open'), 'false', 'reduced-motion scrolling should not animate doors');
+  await page.getByRole('button', { name: 'クローゼットの扉を開く' }).click();
+  assert.equal(await page.locator('.wardrobe-stage').getAttribute('data-open'), 'true', 'reduced-motion manual opening must work');
   assert.deepEqual(errors, []);
   console.log('PASS: bulk names/photos, corrupt-photo partial retry without duplication, metadata edit, outfit recording, cost analysis, seasonal storage, shopping links, virtual passkey registration/unlock/reload, mobile layout; no page errors');
 } finally { await browser?.close(); server?.kill('SIGTERM'); }
