@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Clozy — クローゼット</title>
+  <rect width="64" height="64" rx="14" fill="#faf7f1"/>
+  <rect x="7" y="5" width="50" height="54" rx="5" fill="#503521"/>
+  <rect x="11" y="9" width="42" height="46" rx="2" fill="#c69e6a"/>
+  <rect x="13" y="11" width="18" height="42" rx="1" fill="#93633e"/>
+  <rect x="33" y="11" width="18" height="42" rx="1" fill="#825637"/>
+  <path d="M17 15v34m10-34v34m10-34v34m10-34v34" stroke="#c69e6a" stroke-opacity=".48" stroke-width="1.5"/>
+  <path d="M32 10v44" stroke="#503521" stroke-width="2"/>
+  <rect x="26" y="29" width="3" height="10" rx="1.5" fill="#f0d6a5"/>
+  <rect x="35" y="29" width="3" height="10" rx="1.5" fill="#f0d6a5"/>
+</svg>
