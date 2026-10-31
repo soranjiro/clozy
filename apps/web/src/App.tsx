@@ -9,6 +9,7 @@ import GarmentForm from './GarmentForm';
 import BulkAdd from './BulkAdd';
 import Planning from './Planning';
 import CloudAccount from './CloudAccount';
+import WardrobeScene from './WardrobeScene';
 import { hasPasskey, supportsPasskey, registerPasskey, removePasskey, passkeyError } from './passkey';
 
 type View = 'home' | 'wardrobe' | 'planning' | 'calendar' | 'insights' | 'settings';
@@ -74,32 +75,18 @@ function Home({ items, wears, service, onAdd, onGo, onEdit, onFavorite, busy }: 
   const featured = [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 4);
   const recent = [...wears].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
   return <>
-    <div className="hero">
-      <div className="hero-copy">
-        <p className="eyebrow hero-eyebrow">WARDROBE / EVERYDAY</p>
-        <h2>服を整える。<br /><em>日々が整う。</em></h2>
-        <p>持っている服を一覧で見て、選んで、記録する。<br />毎日のクローゼットをもっと使いやすく。</p>
-        <button className="button button-light" onClick={onAdd}><Icon name="plus" size={19} /> アイテムを追加 <Icon name="arrow" size={17} /></button>
-      </div>
-      <div className="hero-art" aria-hidden="true">
-        <div className="closet-illustration">
-          <span className="closet-top" /><span className="closet-rail" />
-          <div className="closet-hangers">
-            <span className="closet-outfit outfit-one"><span className="outfit-hook" /><span className="outfit-piece" /></span>
-            <span className="closet-outfit outfit-two"><span className="outfit-hook" /><span className="outfit-piece" /></span>
-            <span className="closet-outfit outfit-three"><span className="outfit-hook" /><span className="outfit-piece" /></span>
-          </div>
-          <span className="closet-shelf" /><span className="closet-drawer" />
-        </div>
-        <span className="art-label">a place for every piece.</span>
-      </div>
-    </div>
+    <WardrobeScene onBrowse={() => onGo('wardrobe')} />
+    <div className="home-contents" id="home-contents">
+      <div className="home-greeting"><div><p className="eyebrow">TODAY IN YOUR CLOSET</p>
+        <h2>今日も、好きな服と。</h2>
+        <p>服を見つける、組み合わせる、記録する。毎日のクローゼットへようこそ。</p>
+      </div><span>{niceDate(todayLocal())}</span></div>
     <div className="metric-grid">
       <div className="metric"><div className="metric-head"><span>登録アイテム</span><span className="metric-icon lavender"><Icon name="hanger" size={19} /></span></div><strong>{items.length}<small> 着</small></strong><p>自分だけのコレクション</p></div>
       <div className="metric"><div className="metric-head"><span>お気に入り</span><span className="metric-icon peach"><Icon name="heart" size={19} /></span></div><strong>{items.filter(i => i.favorite).length}<small> 着</small></strong><p>とっておきのアイテム</p></div>
       <div className="metric"><div className="metric-head"><span>着用記録</span><span className="metric-icon mint"><Icon name="calendar" size={19} /></span></div><strong>{wears.length}<small> 回</small></strong><p>これまでのスタイル履歴</p></div>
     </div>
-    <div className="quick-actions"><button onClick={() => onGo('planning')}><Icon name="sparkles" size={24} /><span><strong>今日、何を着よう？</strong><small>手持ちから候補を選ぶ</small></span><Icon name="right" size={18} /></button><button onClick={() => onGo('wardrobe')}><Icon name="hanger" size={24} /><span><strong>クローゼットを整える</strong><small>まとめて登録・季節で絞り込み</small></span><Icon name="right" size={18} /></button></div>
+    <div className="quick-actions"><button onClick={() => onGo('planning')}><Icon name="hanger" size={24} /><span><strong>今日、何を着よう？</strong><small>手持ちから候補を選ぶ</small></span><Icon name="right" size={18} /></button><button onClick={() => onGo('wardrobe')}><Icon name="hanger" size={24} /><span><strong>クローゼットを整える</strong><small>まとめて登録・季節で絞り込み</small></span><Icon name="right" size={18} /></button></div>
     <section className="content-section">
       <div className="section-head"><div><p className="eyebrow">RECENTLY ADDED</p><h3>最近追加したアイテム</h3></div><button className="section-link" onClick={() => onGo('wardrobe')}>すべて見る <Icon name="arrow" size={17} /></button></div>
       {featured.length ? <div className="garment-grid">{featured.map(i => <GarmentCard key={i.id} item={i} service={service} onEdit={onEdit} onFavorite={onFavorite} busy={busy} />)}</div> : <EmptyState title="最初の1着からはじめよう" description="クローゼットに服を登録すると、ここにコレクションが並びます。" onAdd={onAdd} />}
@@ -110,6 +97,7 @@ function Home({ items, wears, service, onAdd, onGo, onEdit, onFavorite, busy }: 
         {recent.length ? recent.map(w => { const item = items.find(i => i.id === w.clothingId); return <div className="activity-row" key={w.id}><div className="activity-dot"><Icon name="check" size={15} /></div><div><strong>{item?.name ?? '削除済みの服'}</strong><p>{niceDate(w.date)}に着用</p></div><span>{counts.get(w.clothingId) ?? 0}回</span></div>; }) : <div className="activity-empty">カレンダーから今日のコーディネートを記録できます。</div>}
       </div>
     </section>
+    </div>
   </>;
 }
 function Wardrobe({ items, service, onAdd, onBulk, onEdit, onFavorite, busy }: {
@@ -130,9 +118,23 @@ function Wardrobe({ items, service, onAdd, onBulk, onEdit, onFavorite, busy }: {
   const filtered = Boolean(query || category !== 'すべて' || onlyFavorite || season !== 'すべて' || storage !== 'すべて');
   const reset = () => { setQuery(''); setCategory('すべて'); setOnlyFavorite(false); setSeason('すべて'); setStorage('すべて'); };
   return <>
-    <div className="page-intro"><div><p className="eyebrow">MY WARDROBE</p><h2>クローゼット</h2><p>お気に入りも、季節のお洋服も。ここがすべての定位置。</p></div><div className="planning-actions"><button className="button button-outline" onClick={onBulk}>まとめて登録</button><button className="button button-primary" onClick={onAdd}><Icon name="plus" size={18} /> 1着ずつ登録</button></div></div>
+    <div className="page-intro"><div><p className="eyebrow">YOUR PERSONAL WARDROBE</p><h2>クローゼット</h2><p>ハンガーから棚へ。しまった服をすぐに見つけられます。</p></div><div className="planning-actions"><button className="button button-outline" onClick={onBulk}>まとめて登録</button><button className="button button-primary" onClick={onAdd}><Icon name="plus" size={18} /> 1着ずつ登録</button></div></div>
+    <div className="shelf-section" aria-label="クローゼットの棚から絞り込む">
+      <div className="shelf-section-title"><span>WARDROBE SHELVES</span><span>棚から探す</span></div>
+      <div className="shelf-choices">
+        {(['すべて','トップス','ボトムス','アウター'] as const).map((name,index) =>
+          <button type="button" className="shelf-choice" key={name} aria-pressed={category === name}
+            onClick={() => setCategory(name)}>
+            <Icon name={index === 3 ? 'hanger' : index === 2 ? 'menu' : 'hanger'} size={35} />
+            <span>{name === 'すべて' ? 'すべての服' : name}</span>
+            <small>{name === 'すべて' ? items.length : items.filter(item => item.category === name).length}着</small>
+          </button>)}
+      </div>
+    </div>
+    <div className="wardrobe-controls">
     <div className="toolbar"><label className="search-box"><Icon name="search" size={19} /><span className="sr-only">服を検索</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="名前・ブランド・カラーで検索" /></label><button className={'filter-fav ' + (onlyFavorite ? 'selected' : '')} aria-pressed={onlyFavorite} onClick={() => setOnlyFavorite(!onlyFavorite)}><Icon name="heart" size={18} /> お気に入り</button></div>
     <div className="category-pills" aria-label="カテゴリーで絞り込み">{(['すべて', ...CATEGORIES] as const).map(c => <button key={c} className={'pill ' + (category === c ? 'active' : '')} aria-pressed={category === c} onClick={() => setCategory(c)}>{c}</button>)}</div>
+    </div>
     <div className="planning-controls"><label className="sort-control">季節<select value={season} onChange={e => setSeason(e.target.value)}>{['すべて', ...SEASONS].map(s => <option key={s}>{s}</option>)}</select></label><label className="sort-control">衣替え<select value={storage} onChange={e => setStorage(e.target.value)}>{['すべて', '着用中', '収納中'].map(s => <option key={s}>{s}</option>)}</select></label></div>
     <div className="collection-summary"><span className="results-count" role="status">{shown.length} / {items.length} アイテム</span><label className="sort-control">並べ替え <select value={sort} onChange={e => setSort(e.target.value)}><option value="newest">登録が新しい順</option><option value="oldest">登録が古い順</option><option value="updated">更新が新しい順</option><option value="name">名前順</option></select></label>{filtered && <button className="section-link" onClick={reset}>絞り込みを解除</button>}</div>
     {shown.length ? <div className="garment-grid wardrobe-grid">{shown.map(i => <GarmentCard key={i.id} item={i} service={service} onEdit={onEdit} onFavorite={onFavorite} busy={busy} />)}</div> :
@@ -156,7 +158,11 @@ function CalendarView({ items, wears, busy, onToggle, onAdd }: {
   const selectedWears = wears.filter(w => w.date === selected);
   const worn = new Set(selectedWears.map(w => w.clothingId));
   return <>
-    <div className="page-intro"><div><p className="eyebrow">STYLE JOURNAL</p><h2>着用カレンダー</h2><p>今日のコーデを記録して、あなたのスタイルを振り返ろう。</p></div></div>
+    <div className="closet-banner">
+      <div><p className="eyebrow">STYLE JOURNAL</p><h2>着用カレンダー</h2><p>一日一着。着た服が、日々の記録になります。</p></div>
+      <div className="closet-banner-art" aria-hidden="true"><span /><span /><span /></div>
+    </div>
+    <div className="calendar-day-review" role="status"><span>{niceDate(selected)}</span><span>{selectedWears.length}着の記録</span><span>日付を選ぶと下の一覧が切り替わります</span></div>
     <div className="calendar-layout">
       <section className="calendar-panel" aria-label="着用日カレンダー">
         <div className="calendar-head"><h3>{month.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' })}</h3><div><button className="button button-ghost" onClick={() => { const now = new Date(); setMonth(new Date(now.getFullYear(), now.getMonth(), 1)); setSelected(todayLocal()); }}>今日</button><button className="icon-button" aria-label="前の月" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}><Icon name="left" /></button><button className="icon-button" aria-label="次の月" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}><Icon name="right" /></button></div></div>
@@ -188,7 +194,10 @@ function Insights({ items, wears, onEdit }: { items: Clothing[]; wears: WearEntr
   const categories = CATEGORIES.map(category => ({ category, count: items.filter(item => item.category === category).length })).filter(row => row.count > 0);
   const max = Math.max(1, ...categories.map(row => row.count));
   return <>
-    <div className="page-intro"><div><p className="eyebrow">YOUR STYLE IN NUMBERS</p><h2>スタイル分析</h2><p>持っている服と、着ている服。数字から見つけるわたしらしさ。</p></div></div>
+    <div className="closet-banner">
+      <div><p className="eyebrow">YOUR WARDROBE JOURNAL</p><h2>スタイル分析</h2><p>よく着る服、眠っている服。自分のクローゼットを知る。</p></div>
+      <div className="closet-banner-art" aria-hidden="true"><span /><span /><span /></div>
+    </div>
     <div className="metric-grid">
       <div className="metric"><div className="metric-head"><span>総アイテム数</span><span className="metric-icon lavender"><Icon name="hanger" /></span></div><strong>{items.length}<small> 着</small></strong></div>
       <div className="metric"><div className="metric-head"><span>着用記録</span><span className="metric-icon mint"><Icon name="calendar" /></span></div><strong>{wears.length}<small> 回</small></strong></div>
@@ -251,7 +260,10 @@ function Settings({ service, onReload, onNotice, busy, setBusy }: {
     finally { setBusy(false); }
   }
   return <>
-    <div className="page-intro"><div><p className="eyebrow">YOUR SETTINGS</p><h2>設定とプライバシー</h2><p>保存先とアカウントを自分で選べます。</p></div></div>
+    <div className="closet-banner">
+      <div><p className="eyebrow">YOUR SPACE, YOUR CHOICE</p><h2>設定とプライバシー</h2><p>クローゼットの鍵とデータの保存先を整えます。</p></div>
+      <div className="closet-banner-art" aria-hidden="true"><span /><span /><span /></div>
+    </div>
     <CloudAccount service={service} onReload={onReload} />
     <section className="settings-highlight"><div className="settings-highlight-icon"><Icon name="shield" size={27} /></div><div><h3>データはこの端末のブラウザに保存されます</h3><p>Clozyはアカウントなしでも使えます。通常は端末内に保存し、ログイン後にクラウド保存を選択したときだけバックアップを送信します。ブラウザデータを消去する前にバックアップしてください。</p></div></section>
     <div className="settings-card"><div><h3>パスキーでアプリをロック {protectedByPasskey ? '・有効' : ''}</h3><p>端末の顔・指紋・PINで本人確認します。再読み込み時と、1分以上バックグラウンドにした時にロックします。サーバー認証やデータ暗号化ではなく、ブラウザの保存内容を直接操作できる人からは保護できません。パスキーはバックアップに含まれません。</p>{!supportsPasskey() && <p>HTTPSとWebAuthnに対応したブラウザが必要です。開発時はIPアドレスではなくlocalhostで開いてください。</p>}</div><button className="button button-outline" disabled={busy || !supportsPasskey()} onClick={() => void changePasskey()}>{protectedByPasskey ? '本人確認して解除' : 'パスキーを登録'}</button>{protectedByPasskey && <button className="button button-primary" disabled={busy} onClick={() => window.dispatchEvent(new Event('clozy-lock'))}>今すぐロック</button>}</div>
