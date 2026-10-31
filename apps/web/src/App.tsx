@@ -131,12 +131,13 @@ function Wardrobe({ items, service, onAdd, onBulk, onEdit, onFavorite, busy }: {
       <EmptyState title={items.length ? '条件に合う服が見つかりません' : 'クローゼットはまだ空っぽです'} description={items.length ? '検索ワードやフィルターを変更してください。' : '服を追加して、あなたのコレクションを作りましょう。'} onAdd={items.length ? reset : onAdd} action={items.length ? '絞り込みを解除' : '服を登録する'} />}
   </>;
 }
-function CalendarView({ items, wears, busy, onToggle, onAdd }: {
-  items: Clothing[]; wears: WearEntry[]; busy: boolean; onToggle: (item: Clothing, date: string) => void; onAdd: () => void
+function CalendarView({ items, wears, busy, onToggle, onAdd, service }: {
+  items: Clothing[]; wears: WearEntry[]; busy: boolean; onToggle: (item: Clothing, date: string) => void; onAdd: () => void; service: ClozyService
 }) {
   const [month, setMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
   const [selected, setSelected] = useState(todayLocal);
   const [query, setQuery] = useState('');
+  const [mode, setMode] = useState<'month' | 'week' | 'list'>('month');
   const available = filterClothing(items, query, 'すべて', false);
   const dateCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -144,7 +145,13 @@ function CalendarView({ items, wears, busy, onToggle, onAdd }: {
     return counts;
   }, [wears]);
   const firstWeekday = (month.getDay() + 6) % 7;
-  const cells = Array.from({ length: 42 }, (_, i) => new Date(month.getFullYear(), month.getMonth(), i + 1 - firstWeekday));
+  const allCells = Array.from({ length: 42 }, (_, i) => new Date(month.getFullYear(), month.getMonth(), i + 1 - firstWeekday));
+  const selectedDay = new Date(selected + 'T12:00:00');
+  const weekStart = new Date(selectedDay); weekStart.setDate(selectedDay.getDate() - (selectedDay.getDay() + 6) % 7);
+  const cells = mode === 'week' ? Array.from({length:7}, (_, i) => new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i)) : allCells;
+  const itemIndex = new Map(items.map(item => [item.id, item]));
+  const firstWorn = new Map<string, Clothing>();
+  for (const wear of wears) { const item = itemIndex.get(wear.clothingId); if (item && !firstWorn.has(wear.date)) firstWorn.set(wear.date, item); }
   const selectedWears = wears.filter(w => w.date === selected);
   const worn = new Set(selectedWears.map(w => w.clothingId));
   return <>
@@ -155,23 +162,27 @@ function CalendarView({ items, wears, busy, onToggle, onAdd }: {
     <div className="calendar-day-review" role="status"><span>{niceDate(selected)}</span><span>{selectedWears.length}着</span></div>
     <div className="calendar-layout">
       <section className="calendar-panel" aria-label="着用日カレンダー">
+        <div className="calendar-mode" role="group" aria-label="カレンダー表示">{([["month","月"],["week","週"],["list","リスト"]] as const).map(([key,label])=><button key={key} type="button" aria-pressed={mode === key} onClick={() => setMode(key)}>{label}</button>)}</div>
         <div className="calendar-head"><h3>{month.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' })}</h3><div><button className="button button-ghost" onClick={() => { const now = new Date(); setMonth(new Date(now.getFullYear(), now.getMonth(), 1)); setSelected(todayLocal()); }}>今日</button><button className="icon-button" aria-label="前の月" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}><Icon name="left" /></button><button className="icon-button" aria-label="次の月" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}><Icon name="right" /></button></div></div>
-        <div className="calendar-grid">
+        {mode !== 'list' ? <div className="calendar-grid">
           {['月','火','水','木','金','土','日'].map(day => <span className="weekday" key={day}>{day}</span>)}
           {cells.map(day => {
             const key = dateKey(day);
             const count = dateCounts.get(key) ?? 0;
             return <button key={key} className={'day-cell ' + (day.getMonth() !== month.getMonth() ? 'outside ' : '') + (key === todayLocal() ? 'today ' : '') + (key === selected ? 'selected ' : '')} aria-pressed={key === selected} aria-label={niceDate(key) + (count ? '、着用' + count + '件' : '')} onClick={() => { setSelected(key); if (day.getMonth() !== month.getMonth()) setMonth(new Date(day.getFullYear(), day.getMonth(), 1)); }}>
-              <span>{day.getDate()}</span>{count > 0 && <i aria-hidden="true" className="wear-dot" />}
+              <span>{day.getDate()}</span>{firstWorn.has(key) ? <GarmentThumb item={firstWorn.get(key)!} service={service} className="calendar-mini"/> : count > 0 ? <i aria-hidden="true" className="wear-dot" /> : null}
             </button>;
           })}
-        </div>
+        </div> : <div className="calendar-list">{[...new Set(wears.map(w=>w.date))].sort().reverse().filter(day=>day.startsWith(dateKey(month).slice(0,7))).map(day =>
+          <button key={day} type="button" onClick={() => setSelected(day)} className="calendar-list-row">
+            <span>{niceDate(day)}</span><span className="calendar-list-images">{wears.filter(w=>w.date===day).slice(0,4).map(w=>{ const item=itemIndex.get(w.clothingId); return item ? <GarmentThumb key={w.id} item={item} service={service}/> : null; })}</span><Icon name="right" size={18}/>
+          </button>)}</div>}
       </section>
       <section className="wear-panel">
         <p className="eyebrow">OUTFIT OF THE DAY</p><h3>{niceDate(selected)}</h3><p className="wear-hint">着た服を選択</p>
         {items.length > 0 && <label className="search-box wear-search"><Icon name="search" size={18} /><span className="sr-only">記録する服を検索</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="記録する服を検索" /></label>}
         {items.length > 0 && !available.length && <p className="panel-empty" role="status">条件に合う服はありません。</p>}
-        {items.length ? <div className="wear-options">{available.map(item => <button key={item.id} className={'wear-option ' + (worn.has(item.id) ? 'worn' : '')} aria-pressed={worn.has(item.id)} onClick={() => onToggle(item, selected)} disabled={busy}><span className="wear-option-icon"><Icon name="hanger" size={19} /></span><span><strong>{item.name}</strong><small>{item.category}</small></span><span className="wear-check">{worn.has(item.id) && <Icon name="check" size={14} />}</span></button>)}</div> : <EmptyState title="服を追加しましょう" description="記録したい服をクローゼットへ登録してください。" onAdd={onAdd} />}
+        {items.length ? <div className="wear-options">{available.map(item => <button key={item.id} className={'wear-option ' + (worn.has(item.id) ? 'worn' : '')} aria-pressed={worn.has(item.id)} onClick={() => onToggle(item, selected)} disabled={busy}><GarmentThumb item={item} service={service} className="wear-mini"/><span><strong>{item.name}</strong><small>{item.category}</small></span><span className="wear-check">{worn.has(item.id) && <Icon name="check" size={14} />}</span></button>)}</div> : <EmptyState title="服を追加しましょう" description="記録したい服をクローゼットへ登録してください。" onAdd={onAdd} />}
         {items.length > 0 && <p className="wear-summary">{selectedWears.length ? selectedWears.length + '着を記録しました' : 'まだ着用記録はありません'}</p>}
       </section>
     </div>
@@ -320,7 +331,7 @@ export default function App() {
           {view === 'home' && <Home items={items} wears={wears} service={service} onAdd={() => setSelected('new')} onGo={changeView} onEdit={setSelected} onFavorite={i => void execute(() => service.favorite(i), 'お気に入りを更新しました。')} busy={busy} />}
           {view === 'wardrobe' && <Wardrobe items={items} service={service} onAdd={() => setSelected('new')} onBulk={() => setBulkOpen(true)} onEdit={setSelected} onFavorite={i => void execute(() => service.favorite(i), 'お気に入りを更新しました。')} busy={busy} />}
           {view === 'planning' && <Planning items={items} wears={wears} service={service} busy={busy} onAdd={() => setSelected('new')} onEdit={setSelected} onRecord={(outfit, date) => void execute(() => service.recordOutfit(outfit, date, wears), '組み合わせを着用記録に追加しました。')} />}
-          {view === 'calendar' && <CalendarView items={items} wears={wears} busy={busy} onToggle={(item, date) => void execute(() => service.toggleWear(item, date, wears), '着用記録を更新しました。')} onAdd={() => setSelected('new')} />}
+          {view === 'calendar' && <CalendarView items={items} wears={wears} service={service} busy={busy} onToggle={(item, date) => void execute(() => service.toggleWear(item, date, wears), '着用記録を更新しました。')} onAdd={() => setSelected('new')} />}
           {view === 'insights' && <Insights items={items} wears={wears} onEdit={setSelected} />}
           {view === 'settings' && <Settings service={service} onReload={reload} onNotice={setNotice} busy={busy} setBusy={setBusy} />}
         </>}
