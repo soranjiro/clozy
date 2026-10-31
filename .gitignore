@@ -9,3 +9,5 @@ coverage/
 .DS_Store
 *.log
 *.tsbuildinfo
+.npm-cache/
+.wrangler/

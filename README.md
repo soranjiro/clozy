@@ -41,9 +41,25 @@ docs/                  Requirements, DDD architecture, ADR, threat model
 Module imports must follow `web -> application -> domain`; `storage` implements the application repository port. No submodules.
 
 ## Deployment
-Vercel: import `soranjiro/clozy` as a project, set **Root Directory = repository root**, and use `vercel.json` (output: `apps/web/dist`). Connecting the Vercel project requires repository owner action. On Git integration, Vercel can deploy each merged commit automatically. GitHub Actions runs typecheck, unit tests, build, and dependency audit on PRs/pushes.
 
-Cloudflare Pages alternative: build command `npm run build`, output `apps/web/dist`; the generated `_headers` file carries production security headers. Do not expose the development server publicly.
+Cloudflare Pages is deployed through [GitHub Actions](.github/workflows/ci.yml), using the Direct Upload project `clozy-soranjiro`. The workflow creates this project on first deployment with `main` as its production branch.
+
+- Push/merge to `main`: deploy the verified build to production (`https://clozy-soranjiro.pages.dev`, once the project is created).
+- Open/update a PR against `main`: deploy to a separate `pr-N` branch alias. Find the URL in the PR's deployment/environment link or the Actions job summary. Updates to the same PR keep the same alias.
+- Typecheck, tests, build and dependency audit must pass before either deployment. The exact tested build artifact is uploaded; it is not rebuilt for deployment.
+- There is no staging environment. Fork and Dependabot PRs run checks without deployment credentials or previews.
+- `workflow_dispatch` on `main` can retry production deployment manually.
+
+Required **repository Actions secrets** in `soranjiro/clozy`:
+
+| Secret | Value |
+| --- | --- |
+| `CLOUDFLARE_ACCOUNT_ID` | Target Cloudflare account ID |
+| `CLOUDFLARE_API_TOKEN` | API token scoped to that account with **Cloudflare Pages: Edit** |
+
+Never commit token values. GitHub supplies `GITHUB_TOKEN` automatically for deployment links. Do not enable a second Cloudflare Git integration for this project: Actions owns deployment and verification.
+
+The output directory is `apps/web/dist`; `_headers` carries security headers. Wardrobe data is stored per browser origin, so production and each PR preview have separate local data. Preview URLs are publicly accessible. Do not expose the development server publicly.
 
 For product scope, acceptance criteria and non-goals: [requirements](docs/requirements.md). For DDD design: [architecture](docs/architecture.md). For privacy/security risks: [security](docs/security.md).
 
