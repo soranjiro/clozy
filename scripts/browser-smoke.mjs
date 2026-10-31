@@ -25,7 +25,7 @@ try {
   page.on('dialog', d => d.accept());
   await page.goto(base);
   await page.getByRole('heading', { name: '最初の1着からはじめよう' }).waitFor();
-  assert.equal(await page.locator('.closet-illustration .closet-outfit').count(), 3, 'wardrobe visual must render');
+  assert.equal(await page.locator('.scene-hanging > span').count(), 3, 'wardrobe visual must render');
   await page.getByRole('navigation').getByRole('button', { name: 'クローゼット' }).click();
   await page.getByRole('button', { name: 'まとめて登録', exact: true }).click();
   await page.getByLabel('写真なしで名前から追加').fill('白いシャツ\n黒のパンツ\n白いスニーカー');
@@ -140,6 +140,21 @@ try {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `closet overflow at ${width}px`);
     await page.screenshot({ path: `/tmp/clozy-closet-${width}.png`, fullPage: true });
   }
+  await page.getByRole('navigation', { name: 'モバイルナビゲーション' }).getByRole('button', { name: '服選び', exact: true }).click();
+  const before = await page.locator('.planning-panel .wear-option strong').allTextContents();
+  const top = before.find(name => name === '白いシャツ' || name === '追加の服');
+  assert.ok(top);
+  await page.getByRole('button', { name: top + 'だけ入れ替える', exact: true }).click();
+  const after = await page.locator('.planning-panel .wear-option strong').allTextContents();
+  assert.notEqual(after[0], before[0], 'one candidate must change');
+  assert.deepEqual(after.slice(1), before.slice(1), 'other candidates must remain');
+  await page.getByLabel('着る日', { exact: false }).fill('2099-01-01');
+  await page.getByRole('button', { name: 'この組み合わせを着用記録', exact: true }).click();
+  await page.getByRole('button', { name: 'この日は記録済み', exact: true }).waitFor();
+  await page.getByRole('navigation', { name: 'モバイルナビゲーション' }).getByRole('button', { name: 'スタイル分析', exact: true }).click();
+  await page.getByText('¥3,000 / 回', { exact: true }).waitFor();
+  await page.getByRole('combobox', { name: '着用集計の期間', exact: true }).selectOption('30');
+  await page.getByText('¥3,000 / 回', { exact: true }).waitFor();
   assert.deepEqual(errors, []);
   console.log('PASS: bulk names/photos, corrupt-photo partial retry without duplication, metadata edit, outfit recording, cost analysis, seasonal storage, shopping links, virtual passkey registration/unlock/reload, category/all closet displays, uncropped photos, 320/390px mobile layout; no page errors');
 } finally { await browser?.close(); server?.kill('SIGTERM'); }

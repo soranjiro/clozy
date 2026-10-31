@@ -27,6 +27,12 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
+      - name: Save browser verification screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-screenshots
+          path: /tmp/clozy-*.png
+          retention-days: 3
       - run: npm audit --audit-level=high
       - name: Save verified site
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
