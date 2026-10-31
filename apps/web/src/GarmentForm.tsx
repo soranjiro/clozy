@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { CATEGORIES } from '@clozy/domain';
+import { CATEGORIES, SEASONS } from '@clozy/domain';
 import type { Clothing, ClothingInput } from '@clozy/domain';
 import { processPhoto } from '@clozy/storage';
 import type { ClozyService } from '@clozy/application';
 import Icon from './Icon';
 
 const defaults: ClothingInput = {
-  name: '', category: 'トップス', color: '', brand: '', size: '', notes: '', favorite: false
+  name: '', category: 'トップス', color: '', brand: '', size: '', notes: '', favorite: false, seasons: [...SEASONS], archived: false
 };
 function useExistingPhoto(service: ClozyService, id: string | undefined) {
   const [url, setUrl] = useState<string>();
@@ -17,7 +17,7 @@ function useExistingPhoto(service: ClozyService, id: string | undefined) {
     let objectUrl: string | undefined;
     void service.image(id).then(blob => {
       if (blob && !cancelled) { objectUrl = URL.createObjectURL(blob); setUrl(objectUrl); }
-    });
+    }).catch(() => { if (!cancelled) setUrl(undefined); });
     return () => { cancelled = true; if (objectUrl) URL.revokeObjectURL(objectUrl); };
   }, [service, id]);
   return url;
@@ -35,8 +35,11 @@ export default function GarmentForm({
   const dialog = useRef<HTMLDialogElement>(null);
   const [fields, setFields] = useState<ClothingInput>(current ? {
     name: current.name, category: current.category, brand: current.brand, color: current.color,
-    size: current.size, notes: current.notes, favorite: current.favorite
+    size: current.size, notes: current.notes, favorite: current.favorite,
+    seasons: current.seasons ?? [...SEASONS], archived: current.archived ?? false,
+    sourceUrl: current.sourceUrl, purchasePrice: current.purchasePrice
   } : defaults);
+  const [dirty, setDirty] = useState(false);
   const [photo, setPhoto] = useState<Blob>();
   const [photoMode, setPhotoMode] = useState<'keep' | 'set' | 'remove'>('keep');
   const [preview, setPreview] = useState<string>();
@@ -54,13 +57,23 @@ export default function GarmentForm({
     setPreview(url);
     return () => URL.revokeObjectURL(url);
   }, [photo]);
+  function close() {
+    if (busy || pending) return;
+    if (!dirty || window.confirm('保存していない変更を破棄しますか？')) dialog.current?.close();
+  }
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); };
+    if (dirty) window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
   function change<K extends keyof ClothingInput>(key: K, value: ClothingInput[K]) {
+    setDirty(true);
     setFields(prev => ({ ...prev, [key]: value }));
   }
   async function selectPhoto(file: File | undefined) {
     if (!file) return;
     setPending(true); setError('');
-    try { const blob = await processPhoto(file); setPhoto(blob); setPhotoMode('set'); }
+    try { const blob = await processPhoto(file); setPhoto(blob); setPhotoMode('set'); setDirty(true); }
     catch (e) { setError(e instanceof Error ? e.message : '画像を処理できません'); }
     finally { setPending(false); }
   }
@@ -77,10 +90,10 @@ export default function GarmentForm({
   }
   const shown = photoMode === 'remove' ? undefined : preview ?? existing;
   return (
-    <dialog ref={dialog} className="editor-dialog" onClose={onClose} aria-labelledby="editor-title">
+    <dialog ref={dialog} className="editor-dialog" onClose={() => { if (!dialog.current?.open) onClose(); }} onCancel={e => { e.preventDefault(); close(); }} aria-labelledby="editor-title">
       <div className="dialog-head">
         <div><p className="eyebrow">MY WARDROBE</p><h2 id="editor-title">{current ? 'アイテムを編集' : '新しい服を登録'}</h2></div>
-        <button type="button" className="icon-button" onClick={() => dialog.current?.close()} aria-label="閉じる"><Icon name="close" /></button>
+        <button type="button" className="icon-button" disabled={pending || busy} onClick={close} aria-label="閉じる"><Icon name="close" /></button>
       </div>
       <form className="editor-form" onSubmit={e => void submit(e)}>
         <div className="photo-field">
@@ -92,9 +105,9 @@ export default function GarmentForm({
             <p>写真は端末内で圧縮し、撮影位置などのメタデータを除去します。</p>
             <label className="button button-outline file-label">
               <Icon name="upload" size={16} /> 写真を選ぶ
-              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => void selectPhoto(e.target.files?.[0])} disabled={pending || busy} />
+              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => { void selectPhoto(e.target.files?.[0]); e.target.value = ''; }} disabled={pending || busy} />
             </label>
-            {shown && <button type="button" className="text-button" onClick={() => { setPhoto(undefined); setPhotoMode('remove'); }}>画像を削除</button>}
+            {shown && <button type="button" className="text-button" disabled={busy || pending} onClick={() => { setPhoto(undefined); setPhotoMode('remove'); setDirty(true); }}>画像を削除</button>}
           </div>
         </div>
         <div className="field">
@@ -116,11 +129,14 @@ export default function GarmentForm({
             <label className="check-row"><input id="cloth-favorite" type="checkbox" checked={fields.favorite} onChange={e => change('favorite', e.target.checked)} /> マイフェイバリットに追加</label>
           </div>
         </div>
+        <fieldset className="season-field"><legend>着る季節（複数選択）</legend><div className="category-pills">{SEASONS.map(season => <button key={season} type="button" className={'pill ' + (fields.seasons?.includes(season) ? 'active' : '')} aria-pressed={fields.seasons?.includes(season) ?? false} onClick={() => change('seasons', fields.seasons?.includes(season) ? fields.seasons.filter(s => s !== season) : [...(fields.seasons ?? []), season])}>{season}</button>)}</div></fieldset>
+        <label className="check-row archive-toggle"><input type="checkbox" checked={fields.archived ?? false} onChange={e => change('archived', e.target.checked)} /> 衣替えで収納中（コーデ提案から除外）</label>
+        <div className="field-grid"><div className="field"><label htmlFor="cloth-price">購入金額（円・任意）</label><input id="cloth-price" type="number" min="0" max="100000000" step="1" inputMode="numeric" value={fields.purchasePrice ?? ''} onChange={e => change('purchasePrice', e.target.value === '' ? undefined : Number(e.target.value))} placeholder="例：3990" /></div><div className="field"><label htmlFor="cloth-url">商品URL（任意）</label><input id="cloth-url" type="url" maxLength={2048} value={fields.sourceUrl ?? ''} onChange={e => change('sourceUrl', e.target.value)} placeholder="https://zozo.jp/…" /></div></div>
         <div className="field"><label htmlFor="cloth-notes">メモ</label><textarea id="cloth-notes" rows={3} maxLength={500} value={fields.notes} onChange={e => change('notes', e.target.value)} placeholder="お気に入りの着こなしや購入時の思い出など" /></div>
         {error && <p className="form-error" role="alert">{error}</p>}
         <div className="dialog-actions">
           {current && <button type="button" disabled={busy || pending} className="button button-danger-outline" onClick={() => void onDelete(current)}><Icon name="trash" size={17} /> 削除</button>}
-          <button type="button" className="button button-ghost" onClick={() => dialog.current?.close()}>キャンセル</button>
+          <button type="button" className="button button-ghost" disabled={pending || busy} onClick={close}>キャンセル</button>
           <button type="submit" className="button button-primary" disabled={busy || pending}><Icon name="check" size={17} />{pending ? '処理中…' : '保存する'}</button>
         </div>
       </form>

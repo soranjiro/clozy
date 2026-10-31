@@ -25,6 +25,8 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
       - run: npm audit --audit-level=high
       - name: Save verified site
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
