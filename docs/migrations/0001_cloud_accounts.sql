@@ -16,3 +16,6 @@ CREATE TABLE IF NOT EXISTS backups (
   object_key TEXT NOT NULL, revision INTEGER NOT NULL, bytes INTEGER NOT NULL,
   updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS registration_limits (
+  ip_hash TEXT PRIMARY KEY, attempts INTEGER NOT NULL, window_start INTEGER NOT NULL
+);
