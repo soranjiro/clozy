@@ -45,3 +45,8 @@ The application should resemble a cared-for wooden wardrobe, not a marketing das
 **Check:** CI typecheck, unit tests, build, browser e2e, mobile width and scroll-state assertions, Cloudflare preview API lifecycle and CodeQL.
 **Act:** inspect failing checks, correct real issues, rerun all checks, merge only if clean. Verify production deployment SHA, Cloudflare Pages status and site response.
 Further work after this iteration: actual iOS/Android device QA for visual keyboard, real photo quality, WCAG contrast and motion. Avoid claiming tests not actually run.
+
+## PDCA iteration 2 (post-production first-viewport review)
+- **Check:** First production version passed Playwright, Cloudflare preview API tests and CodeQL, and Pages confirmed a successful main deployment. Layout review identified possible overlap between a floating global add button and the wardrobe's bottom controls on small phones. The visible open wardrobe also lacked a direct action to enter the clothing list.
+- **Act:** Move the global add control into the mobile header (44×44px, always reachable, no viewport overlay) and add the `クローゼットの中の服を見る` action only while doors are open. Preserve normal scrolling and add explicit reduced-motion and non-overlap e2e assertions.
+- **Follow-up:** Check actual iOS Safari and Android touch scrolling with assistive technology; the CI browser uses Chromium only. Track design polish separately from correctness tests.
