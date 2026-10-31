@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { CATEGORIES, SEASONS } from '@clozy/domain';
+import { CATEGORIES, SEASONS, inferCategory } from '@clozy/domain';
 import type { Clothing, ClothingInput } from '@clozy/domain';
 import { processPhoto } from '@clozy/storage';
 import type { ClozyService } from '@clozy/application';
@@ -28,7 +28,7 @@ export default function GarmentForm({
   service: ClozyService;
   current?: Clothing;
   onClose: () => void;
-  onSaved: () => Promise<void>;
+  onSaved: (keepOpen?: boolean) => Promise<void>;
   onDelete: (item: Clothing) => Promise<void>;
   busy: boolean;
 }) {
@@ -39,6 +39,8 @@ export default function GarmentForm({
     seasons: current.seasons ?? [...SEASONS], archived: current.archived ?? false,
     sourceUrl: current.sourceUrl, purchasePrice: current.purchasePrice
   } : defaults);
+  const [addAnother, setAddAnother] = useState(false);
+  const [savedMessage, setSavedMessage] = useState('');
   const [dirty, setDirty] = useState(false);
   const [photo, setPhoto] = useState<Blob>();
   const [photoMode, setPhotoMode] = useState<'keep' | 'set' | 'remove'>('keep');
@@ -84,7 +86,14 @@ export default function GarmentForm({
     try {
       if (current) await service.edit(current, fields, photoMode, photo);
       else await service.add(fields, photo);
-      await onSaved();
+      setDirty(false);
+      if (!current && addAnother) {
+        setFields({ ...defaults, category: fields.category, seasons: fields.seasons ? [...fields.seasons] : [...SEASONS] });
+        setPhoto(undefined); setPhotoMode('keep');
+        setSavedMessage(fields.name + 'を登録しました。次の服を登録できます。');
+        await onSaved(true);
+        document.getElementById('cloth-name')?.focus();
+      } else await onSaved();
     } catch (e) { setError(e instanceof Error ? e.message : '保存できませんでした'); }
     finally { setPending(false); }
   }
@@ -102,7 +111,7 @@ export default function GarmentForm({
           </div>
           <div className="photo-instructions">
             <strong>お気に入りの1枚を</strong>
-            <p>写真は端末内で圧縮し、撮影位置などのメタデータを除去します。</p>
+            <p>写真は端末内で圧縮し、撮影位置などのメタデータを除去します。透明背景のPNG・WebPなら、木目に服がそのまま馴染みます。背景の自動切り抜きは行いません。</p>
             <label className="button button-outline file-label">
               <Icon name="upload" size={16} /> 写真を選ぶ
               <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => { void selectPhoto(e.target.files?.[0]); e.target.value = ''; }} disabled={pending || busy} />
@@ -110,6 +119,8 @@ export default function GarmentForm({
             {shown && <button type="button" className="text-button" disabled={busy || pending} onClick={() => { setPhoto(undefined); setPhotoMode('remove'); setDirty(true); }}>画像を削除</button>}
           </div>
         </div>
+        {!current && <div className="registration-shortcuts"><p className="panel-description">名前だけでも登録できます。よく使う服から始めましょう。</p><div className="category-pills">{(['Tシャツ', 'シャツ', 'ニット', 'パンツ', 'スカート', 'ワンピース', 'コート', 'スニーカー'] as const).map(name => <button type="button" className="pill" key={name} disabled={busy || pending} onClick={() => { change('name', name); change('category', inferCategory(name)); }}>＋ {name}</button>)}</div></div>}
+        {savedMessage && <p role="status">{savedMessage}</p>}
         <div className="field">
           <label htmlFor="cloth-name">アイテム名 <span aria-hidden="true" className="required">*</span></label>
           <input id="cloth-name" required maxLength={80} value={fields.name} onChange={e => change('name', e.target.value)} placeholder="例：白のリネンシャツ" autoFocus />
@@ -134,6 +145,7 @@ export default function GarmentForm({
         <div className="field-grid"><div className="field"><label htmlFor="cloth-price">購入金額（円・任意）</label><input id="cloth-price" type="number" min="0" max="100000000" step="1" inputMode="numeric" value={fields.purchasePrice ?? ''} onChange={e => change('purchasePrice', e.target.value === '' ? undefined : Number(e.target.value))} placeholder="例：3990" /></div><div className="field"><label htmlFor="cloth-url">商品URL（任意）</label><input id="cloth-url" type="url" maxLength={2048} value={fields.sourceUrl ?? ''} onChange={e => change('sourceUrl', e.target.value)} placeholder="https://zozo.jp/…" /></div></div>
         <div className="field"><label htmlFor="cloth-notes">メモ</label><textarea id="cloth-notes" rows={3} maxLength={500} value={fields.notes} onChange={e => change('notes', e.target.value)} placeholder="お気に入りの着こなしや購入時の思い出など" /></div>
         {error && <p className="form-error" role="alert">{error}</p>}
+        {!current && <label className="check-row"><input type="checkbox" checked={addAnother} disabled={busy || pending} onChange={e => setAddAnother(e.target.checked)} />保存後に続けて登録する</label>}
         <div className="dialog-actions">
           {current && <button type="button" disabled={busy || pending} className="button button-danger-outline" onClick={() => void onDelete(current)}><Icon name="trash" size={17} /> 削除</button>}
           <button type="button" className="button button-ghost" disabled={pending || busy} onClick={close}>キャンセル</button>

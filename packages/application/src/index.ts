@@ -10,6 +10,7 @@ export interface WardrobeRepository {
   snapshot(): Promise<Snapshot>;
   getImage(id: string): Promise<Blob | undefined>;
   saveClothing(item: Clothing, image?: Blob, removeOldImage?: boolean): Promise<void>;
+  setArchived(ids: string[], archived: boolean, updatedAt: string): Promise<void>;
   deleteClothing(id: string): Promise<void>;
   saveWear(entry: WearEntry): Promise<void>;
   saveWears(entries: WearEntry[]): Promise<void>;
@@ -100,6 +101,11 @@ export class ClozyService {
   }
   async favorite(current: Clothing): Promise<void> {
     await this.repo.saveClothing(validateClothing({ ...current, favorite: !current.favorite, updatedAt: new Date().toISOString() }));
+  }
+  async archive(items: Clothing[], archived: boolean): Promise<void> {
+    const ids = [...new Set(items.map(item => item.id))];
+    if (ids.some(id => !validId(id))) throw new DomainError('衣服IDが不正です');
+    await this.repo.setArchived(ids, archived, new Date().toISOString());
   }
   remove(id: string): Promise<void> { return this.repo.deleteClothing(id); }
   clearAll(): Promise<void> { return this.repo.replaceAll({ clothing: [], wears: [] }, []); }

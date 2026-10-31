@@ -36,6 +36,13 @@ try {
   await page.getByText('3着登録済み / 0着未登録。', { exact: false }).waitFor();
   await page.getByRole('dialog').getByRole('button', { name: '閉じる', exact: true }).last().click();
   assert.equal(await page.locator('.garment-card').count(), 3);
+  assert.equal(await page.locator('.closet-compartment').count(), 3, 'default grouping follows category shelves');
+  assert.equal(await page.locator('.is-shelved .display-hanger').count(), 0, 'shoes belong on shelves, not hangers');
+  await page.getByRole('combobox', { name: /並べ方/ }).selectOption('all');
+  assert.equal(await page.locator('.closet-compartment').count(), 0);
+  assert.equal(await page.locator('.garment-card').count(), 3, 'changing display must not hide clothes');
+  await page.screenshot({ path: '/tmp/clozy-closet-desktop.png', fullPage: true });
+  await page.getByRole('combobox', { name: /並べ方/ }).selectOption('category');
   await page.getByRole('button', { name: '白いシャツ', exact: true }).click();
   await page.getByLabel('購入金額').fill('3000');
   await page.getByLabel('商品URL').fill('https://zozo.jp/shop/example/');
@@ -95,6 +102,38 @@ try {
   await page.getByRole('button', { name: '1着を登録', exact: true }).waitFor({ state: 'visible' });
   await page.getByRole('dialog').getByRole('button', { name: '閉じる', exact: true }).last().click();
   assert.equal(await page.locator('.garment-card').count(), 4, 'retry must not duplicate the successful photo row');
+  // Deliberate bulk selection respects the current filter, and is reversible.
+  await page.getByRole('button', { name: 'まとめて衣替え', exact: true }).click();
+  await page.getByRole('button', { name: '表示中の服をすべて選択', exact: true }).click();
+  await page.getByRole('searchbox', { name: '服を検索', exact: true }).fill('黒のパンツ');
+  await page.getByRole('button', { name: '選んだ服を収納する', exact: true }).click();
+  await page.getByText('選んだ服を収納しました。', { exact: false }).waitFor();
+  assert.equal(await page.locator('.garment-card.is-stored').count(), 1);
+  await page.getByRole('searchbox', { name: '服を検索', exact: true }).fill('');
+  assert.equal(await page.locator('.garment-card.is-stored').count(), 2, 'hidden selections stay unchanged');
+  await page.getByRole('button', { name: '表示中の服をすべて選択', exact: true }).click();
+  await page.getByRole('button', { name: '選んだ服を着用中に戻す', exact: true }).click();
+  await page.getByText('選んだ服を着用中に戻しました。', { exact: false }).waitFor();
+  assert.equal(await page.locator('.garment-card.is-stored').count(), 0);
+  await page.getByRole('button', { name: '衣替えの選択を終了', exact: true }).click();
+  // Templates and save-and-add-another reset the name but retain category.
+  await page.getByRole('button', { name: '1着ずつ登録', exact: true }).click();
+  await page.getByRole('button', { name: '＋ コート', exact: true }).click();
+  assert.equal(await page.getByLabel('カテゴリー', { exact: true }).inputValue(), 'アウター');
+  await page.getByRole('checkbox', { name: '保存後に続けて登録する', exact: true }).check();
+  await page.getByRole('button', { name: '保存する', exact: true }).click();
+  await page.getByText('コートを登録しました。次の服を登録できます。', { exact: true }).waitFor();
+  assert.equal(await page.getByLabel('アイテム名', { exact: false }).inputValue(), '');
+  assert.equal(await page.getByLabel('カテゴリー', { exact: true }).inputValue(), 'アウター');
+  await page.getByRole('dialog').getByRole('button', { name: '閉じる', exact: true }).click();
+  assert.equal(await page.locator('.garment-card').count(), 5);
+  await page.locator('.garment-photo').waitFor();
+  assert.equal(await page.locator('.garment-photo').evaluate(image => getComputedStyle(image).objectFit), 'contain', 'keep the whole uploaded garment visible');
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `closet overflow at ${width}px`);
+    await page.screenshot({ path: `/tmp/clozy-closet-${width}.png`, fullPage: true });
+  }
   assert.deepEqual(errors, []);
-  console.log('PASS: bulk names/photos, corrupt-photo partial retry without duplication, metadata edit, outfit recording, cost analysis, seasonal storage, shopping links, virtual passkey registration/unlock/reload, mobile layout; no page errors');
+  console.log('PASS: bulk names/photos, corrupt-photo partial retry without duplication, metadata edit, outfit recording, cost analysis, seasonal storage, shopping links, virtual passkey registration/unlock/reload, category/all closet displays, uncropped photos, 320/390px mobile layout; no page errors');
 } finally { await browser?.close(); server?.kill('SIGTERM'); }

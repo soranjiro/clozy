@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 480 480">
+  <defs>
+    <linearGradient id="wood" x2="1" y2="0"><stop stop-color="#796044"/><stop offset=".24" stop-color="#967958"/><stop offset=".55" stop-color="#87694a"/><stop offset=".8" stop-color="#a08560"/><stop offset="1" stop-color="#796044"/></linearGradient>
+    <pattern id="grain" width="120" height="480" patternUnits="userSpaceOnUse">
+      <g fill="none" stroke="#3c2917" stroke-opacity=".18" stroke-width=".65">
+        <path d="M4-20C-8 60 22 110 10 190S-2 350 4 500M14-20C2 60 32 110 20 190S8 350 14 500M23-20C11 60 41 110 29 190S17 350 23 500M36-20C28 60 53 110 44 190S32 350 36 500M48-20C37 60 62 110 56 190S44 350 48 500M66-20C53 60 78 110 74 190S58 350 66 500M79-20C69 60 94 110 87 190S71 350 79 500M91-20C83 60 108 110 99 190S83 350 91 500M107-20C99 60 124 110 115 190S99 350 107 500"/>
+        <path d="M58 120C25 175 73 219 52 280M62 121C34 175 80 219 58 280M68 119C44 175 87 219 64 280M73 115C54 175 94 219 71 280" stroke-opacity=".26"/>
+      </g>
+      <g fill="none" stroke="#dfc39a" stroke-opacity=".16" stroke-width="1.1"><path d="M31-10C15 70 51 130 38 230S25 380 31 490M86-10C70 70 106 130 93 230S80 380 86 490"/></g>
+    </pattern>
+  </defs>
+  <path fill="url(#wood)" d="M0 0h480v480H0z"/>
+  <path fill="url(#grain)" d="M0 0h480v480H0z"/>
+</svg>

@@ -62,6 +62,19 @@ export class IndexedDbRepository implements WardrobeRepository {
       if (image) tx.objectStore('images').put({ id: item.id, blob: image });
     });
   }
+  async setArchived(ids: string[], archived: boolean, updatedAt: string): Promise<void> {
+    const db = await this.db;
+    await transact(db, ['clothing'], tx => {
+      const store = tx.objectStore('clothing');
+      for (const id of ids) {
+        const req = store.get(id) as IDBRequest<Clothing | undefined>;
+        req.onsuccess = () => {
+          if (!req.result) { tx.abort(); return; }
+          store.put({ ...req.result, archived, updatedAt });
+        };
+      }
+    });
+  }
   async deleteClothing(id: string): Promise<void> {
     const db = await this.db;
     await transact(db, ['clothing', 'images', 'wears'], tx => {
