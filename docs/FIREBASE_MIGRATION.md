@@ -40,3 +40,7 @@ Rollback: retain the migration archives and original stores. Reverting the appli
 ## Verification
 
 Vitest covers signed tokens, live account status, server-side backup references, deterministic migration, UID isolation and stale revisions. The existing browser smoke tests cover wardrobe editing, photos, wears, passkey and mobile layout. Preview API smoke checks invalid tokens and old cookies without creating users. `scripts/firebase-preview-test.mjs` exercises real signed Firebase tokens with disposable verified fixture accounts and removes those accounts after testing.
+
+## Firebase email action hosting
+
+The default Firebase email action widget depends on the project's Hosting metadata. Before the first Hosting release, `/__/firebase/init.json` returned 404 and password reset emails contained an empty `apiKey` parameter. Deploy the minimal `firebase-auth-hosting` site with `firebase deploy --only hosting` when provisioning this project. Its root redirects to the Cloudflare app; reserved `/__/auth/` and `/__/firebase/` routes remain handled by Firebase. After deployment, verify that `init.json` returns the current Web SDK key and that newly generated email action links contain a nonempty, matching key. Do not reuse a previously broken email link.

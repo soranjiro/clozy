@@ -11,3 +11,5 @@ coverage/
 *.tsbuildinfo
 .npm-cache/
 .wrangler/
+
+.firebase/

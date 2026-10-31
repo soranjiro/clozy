@@ -3,5 +3,21 @@
     "providers": {
       "emailPassword": true
     }
+  },
+  "hosting": {
+    "site": "clozy-6166b",
+    "public": "firebase-auth-hosting",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "redirects": [
+      {
+        "source": "/",
+        "destination": "https://clozy.pages.dev",
+        "type": 302
+      }
+    ]
   }
 }
