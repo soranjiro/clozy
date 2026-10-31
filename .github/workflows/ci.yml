@@ -25,6 +25,8 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - run: node --check functions/_lib.js && for file in functions/api/*.js; do node --check "$file"; done
+      - run: npx wrangler pages functions build functions --outfile /tmp/clozy-pages-worker.mjs
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - run: npm audit --audit-level=high
@@ -76,6 +78,11 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           command: pages deploy apps/web/dist --project-name=clozy --branch=${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'main' }}
+      - name: Test isolated preview API
+        if: github.event_name == 'pull_request'
+        env:
+          CLOZY_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: node scripts/api-smoke.mjs
       - name: Show deployment URL
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}

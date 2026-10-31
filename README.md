@@ -1,6 +1,6 @@
 # Clozy — あなたらしいクローゼット
 
-A privacy-first Japanese wardrobe manager rebuilt from the archived Clozy product. No account, API key or server-side database required.
+A Japanese wardrobe manager with local-first storage and optional Cloudflare account-backed manual backups. Local use never requires an account.
 
 ## Run locally
 
@@ -26,6 +26,7 @@ npm run verify                        # typecheck, tests, build, browser smoke
 - Clothes: add/edit/delete, JPEG/PNG/WebP photo with EXIF-stripping re-encode, category filters, search, favorites.
 - Wear history: log outfits on a local calendar date; inspect usage statistics.
 - Privacy: IndexedDB local storage, versioned JSON backup including photos, validated atomic restore, destructive confirmations.
+- Optional account: Cloudflare Pages Functions, isolated D1 credentials/sessions, and private per-user R2 backup objects; revision-aware manual backup and restore. This is not automatic or bidirectional synchronization.
 - Japanese-first accessible/responsive UI; no third-party scripts, fonts or tracking.
 - Full-width/half-width normalized multi-term search, name/registration/update sorting, filter reset, searchable outfit picker and calendar jump to today.
 - Optional local passkey app lock (Settings → パスキーを登録), explicit lock and automatic lock after one minute in the background. ES256 assertions verify challenge, origin, RP ID hash, user presence, user verification and signature.
@@ -37,15 +38,15 @@ npm run verify                        # typecheck, tests, build, browser smoke
 - Unworn/archived counts, known purchase totals and cost-per-wear insights; purchase prices are optional.
 
 ## Data and privacy
-Your data stays in **this browser profile**, but it is **not encrypted**. Clearing browser data may delete it. Backups are plaintext JSON; store them securely. The first visit requires loading static assets from the hosting provider. Cross-device sync, accounts and guaranteed offline support are not included.
+By default, your data stays in **this browser profile**, unencrypted. Clearing browser data may delete it. When you deliberately use **cloud backup**, the browser uploads the versioned JSON snapshot (including encoded images) to a private Cloudflare R2 bucket under your signed-in account; it is not end-to-end encrypted. Downloading a backup replaces the current device's data after confirmation. The cloud backup size limit is 32 MiB; local JSON export remains available up to 75 MiB. Cross-device automatic sync and guaranteed offline support are not included. Cloud accounts presently use email/password without email verification, password reset, MFA, or rate-limiting on registration; keep a safe local export and use a unique strong password.
 
 ## Local passkey lock
 
-This remains a local-only app, **not a server-authenticated account system**. Register a passkey in Settings over HTTPS (or localhost). Registration asks for an assertion to verify the key before saving its public key in this browser. Face/fingerprint/PIN verification is handled by your OS; Clozy receives no biometrics. Existing wardrobes are not forced through registration.
+The optional passkey lock remains local-only, **not a server-authenticated account credential**. Cloud accounts use separate server-side email/password authentication. Register a passkey in Settings over HTTPS (or localhost). Registration asks for an assertion to verify the key before saving its public key in this browser. Face/fingerprint/PIN verification is handled by your OS; Clozy receives no biometrics. Existing wardrobes are not forced through registration.
 
 The app locks on reload, on explicit lock, and after at least one minute in the background. Unlocking is memory-only; there is no persistent login token. Passkey metadata is separate from wardrobe backups and deleting wardrobe data does not disable the lock. To disable it normally, verify the registered passkey in Settings. No account recovery is provided: keep a wardrobe backup and an OS-synced passkey or another OS-supported access method.
 
-**This is an accidental-access UI guard, not an encryption/security boundary against someone controlling your browser.** IndexedDB and backups remain plaintext. Developer tools, modified JavaScript, extensions or deletion of local lock metadata can bypass it. Cross-device accounts, authoritative server-side authentication and encrypted storage require a separate design. Each preview/production origin has separate registration and data. Real authenticator/browser compatibility still needs device testing.
+**This is an accidental-access UI guard, not an encryption/security boundary against someone controlling your browser.** IndexedDB and backups remain plaintext. Developer tools, modified JavaScript, extensions or deletion of local lock metadata can bypass it. Cloud account authentication is separate; the local passkey alone does not encrypt data or authenticate cloud sessions. Each preview/production origin has separate registration and data. Real authenticator/browser compatibility still needs device testing.
 
 ## Bounded local verification automation
 
@@ -82,7 +83,7 @@ Module imports must follow `web -> application -> domain`; `storage` implements 
 
 ## Deployment
 
-Cloudflare Pages is deployed through [GitHub Actions](.github/workflows/ci.yml), using the Direct Upload project `clozy`. The workflow creates this project on first deployment with `main` as its production branch.
+Cloudflare Pages is deployed through [GitHub Actions](.github/workflows/ci.yml), using the Direct Upload project `clozy`. The same-origin backend consists of Pages Functions under `functions/api/` with **separate production and preview** D1/R2 bindings in `wrangler.jsonc`. The workflow creates this project on first deployment with `main` as its production branch.
 
 - Push/merge to `main`: deploy the verified build to production (`https://clozy.pages.dev`, once the project is created).
 - Open/update a PR against `main`: deploy to a separate `pr-N` branch alias. Find the URL in the PR's deployment/environment link or the Actions job summary. Updates to the same PR keep the same alias.
@@ -99,9 +100,18 @@ Required **repository Actions secrets** in `soranjiro/clozy`:
 
 Never commit token values. GitHub supplies `GITHUB_TOKEN` automatically for deployment links. Do not enable a second Cloudflare Git integration for this project: Actions owns deployment and verification.
 
-The output directory is `apps/web/dist`; `_headers` carries security headers. Wardrobe data is stored per browser origin, so production and each PR preview have separate local data. Preview URLs are publicly accessible. Do not expose the development server publicly.
+The output directory is `apps/web/dist`; `_headers` carries security headers. Wardrobe data is stored per browser origin, so production and each PR preview have separate local data. Cloud production and preview storage are isolated. Preview URLs are publicly accessible. The archived `clozy` D1, `clothimage` R2 and `backend` Worker are untouched. Do not expose the development server publicly.
 
 For implementation priorities and integration limitations: [improvement plan](docs/AUTOPILOT.md). For privacy/security risks: [security policy](SECURITY.md).
 
 ## Migration note
 Legacy repositories are archived. No legacy credentials, JWTs, image files or databases are imported automatically.
+
+## Cloud account lifecycle
+
+- `docs/migrations/0001_cloud_accounts.sql` defines the isolated `clozy-v2` and `clozy-v2-preview` D1 schema. The Cloudflare Pages project binds `DB` and the private `BACKUPS` R2 bucket. Never attach the old database as a fallback.
+- Sessions are random opaque HttpOnly Secure SameSite=Lax cookies, stored as SHA-256 digests. The browser derives a salted PBKDF2-SHA256 password-equivalent verifier (210,000 iterations) over HTTPS, and the server stores only its SHA-256 digest; protect the verifier like a password. This is not a PAKE or end-to-end encryption. State-changing endpoints require a same-origin `Origin` header. Failed logins are throttled per email; registration has per-IP-hash throttling; add Cloudflare Turnstile/network-level anti-automation controls before wide public sign-ups.
+- Registration/login and manual cloud backup are optional. Cloud backup revisions use conditional writes to prevent silent concurrent overwrites. Data is stored in a per-account, unlisted R2 object and exposed only through an authenticated same-origin endpoint.
+- Account deletion also deletes its active sessions and currently referenced backup. Explicit logout does not clear this device's local wardrobe; clear it independently on shared devices.
+- **Not yet supported:** email verification, password resets, MFA, automatic per-item sync, encrypted backups where Cloudflare cannot read their contents, self-service account recovery. Do not describe this as finished enterprise-grade identity infrastructure.
+- Legacy `clozy.vercel.app` is not used by this repository. `vercel.json` was removed. Deleting the Vercel project itself requires checking its actual owner and integrations.

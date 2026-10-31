@@ -740,3 +740,172 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .metric strong { font-size: 25px; }
   .calendar-panel,.wear-panel,.insight-panel { padding: 11px; }
 }
+
+
+/* V2 visual language: editorial wardrobe index, not a dashboard of cards. */
+:root {
+  --ink:#272622;--muted:#69665d;--line:#ddd9cf;--surface:#fbfaf7;
+  --violet:#544638;--violet-deep:#332a22;
+  background:#f7f5f0;
+}
+body {background:#f7f5f0;color:var(--ink);}
+.sidebar { background:#f3f0e9; box-shadow:none; border-right:1px solid #d7d0c4; }
+.sidebar::before { display:none; }
+.brand { color:#29251f; padding:0 10px; }
+.brand-mark { background:none;color:#695744;box-shadow:none;border:1px solid #bdb09f; }
+.brand-dot { color:#76624c; }
+.sidebar-label { color:#776c60; }
+.nav-link { color:#62594f; border-radius:0; border:0; border-bottom:1px solid transparent; }
+.nav-link.active { color:#29231d; background:transparent; border-color:#827461; box-shadow:none; }
+.nav-link:hover:not(.active) { background:#e9e3d9; color:#2d2a26; }
+.nav-active-dot { background:#6b5843; }
+.privacy-card { background:transparent; border:1px solid #d3cabd; color:#4f483e; border-radius:0; }
+.privacy-card p {color:#625a50;}
+.sidebar-version {color:#867b6d;}
+.topbar {background:#f7f5f0;border-color:var(--line);}
+.topbar-avatar {border-radius:0;background:#e8e1d7;}
+.local-badge {border-radius:0;background:transparent;color:#566450;padding:0;font-weight:500;}
+.main-content { max-width:1240px;padding-top:45px; }
+.eyebrow {color:#7f7669;letter-spacing:.15em;font-weight:650;}
+.hero {
+  min-height:226px;border:0;border-top:1px solid #afa598;border-bottom:1px solid #afa598;
+  border-radius:0;background:transparent;box-shadow:none;
+}
+.hero::before,.hero::after {display:none;}
+.hero-copy {padding:27px 0 27px;max-width:100%;color:var(--ink);}
+.hero h2 {color:var(--ink);font-size:clamp(30px,3.6vw,47px);line-height:1.3;font-weight:600;letter-spacing:-.055em;}
+.hero h2 em {color:#635242;font-style:normal;}
+.hero-copy > p:not(.eyebrow) {color:#5f5a52;margin-bottom:20px;}
+.hero-eyebrow {color:#827567;}
+.hero-art {display:none;}
+.button {border-radius:2px;font-weight:600;box-shadow:none;}
+.button-primary,.button-light {background:#4c4339;color:#fff;}
+.button-primary:hover:not(:disabled),.button-light:hover {background:#302b25;}
+.button-outline {background:transparent;border-color:#b5aca0;color:#40382e;}
+.button-outline:hover:not(:disabled) {background:#eae4db;}
+.button-ghost {color:#50493f;}
+.metric-grid {grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:26px 0 40px;border-block:1px solid var(--line);}
+.metric {
+  border:0;border-radius:0;background:transparent;box-shadow:none;
+  padding:21px 20px 20px;border-right:1px solid var(--line);
+}
+.metric:first-child {padding-left:0;}
+.metric:last-child {border-right:0;}
+.metric-head {color:#665d52;font-size:12px;font-weight:500;}
+.metric-icon {display:none;}
+.metric strong {font-size:31px;font-weight:600;}
+.metric p {color:var(--muted);}
+.content-section {margin-top:40px;}
+.section-head {border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:0;}
+.section-head h3 {font-size:19px;font-weight:600;}
+.section-link {color:#4f483f;}
+.quick-actions {display:block;border-block:1px solid var(--line);}
+.quick-actions button {
+  display:flex;width:100%;padding:18px 2px;border:0;border-bottom:1px solid var(--line);
+  border-radius:0;background:transparent;box-shadow:none;transform:none;
+}
+.quick-actions button:last-child {border-bottom:0;}
+.quick-actions button:hover {border-color:var(--line);background:#eeebe5;transform:none;}
+.quick-actions strong {font-weight:600;}
+.quick-actions small {color:var(--muted);}
+.garment-grid,.wardrobe-grid {display:block;gap:0;}
+.garment-card {
+  display:flex;align-items:center;gap:22px;padding:13px 0;min-height:118px;
+  background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;
+  box-shadow:none;transform:none;
+}
+.garment-card:hover {border-color:#b3aa9c;transform:none;box-shadow:none;background:#efede6;}
+.garment-media {width:88px;height:88px;aspect-ratio:auto;flex:0 0 88px;border:1px solid #e0dacf;background:#eee9e1;}
+.garment-photo,.garment-placeholder {height:100%;width:100%;object-fit:cover;}
+.garment-placeholder {background:#eae4da;color:#807462;}
+.garment-placeholder::before {display:none;}
+.favorite-button {right:1px;top:auto;bottom:1px;border-radius:0;width:44px;height:44px;box-shadow:none;background:#f7f5f0e8;}
+.garment-details {flex:1;min-width:0;padding:3px 0;}
+.category-label {font-size:11px;color:#6e675d;font-weight:500;}
+.garment-name {font-size:16px;color:var(--ink);font-weight:600;white-space:normal;margin:6px 0;}
+.garment-details p {font-size:12px;color:var(--muted);}
+.empty-state {border:0;border-bottom:1px solid var(--line);background:transparent;border-radius:0;}
+.empty-icon {border-radius:0;background:#e9e3d8;color:#736352;}
+.activity-panel,.calendar-panel,.wear-panel,.insight-panel,.settings-card,.settings-highlight {
+  background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;box-shadow:none;
+}
+.activity-row {border-color:var(--line);}
+.activity-dot {border-radius:0;background:#e8ebe1;}
+.page-intro {border-bottom:1px solid var(--line);padding-bottom:20px;}
+.page-intro h2 {font-weight:600;font-size:clamp(28px,3.4vw,40px);}
+.toolbar {margin-top:23px;}
+.search-box,.filter-fav,.sort-control select,.planning-controls input[type=date] {
+  border-radius:2px;background:#fbfaf7;border-color:#cfc8bc;
+}
+.category-pills {gap:0;border-bottom:1px solid var(--line);margin-top:17px;}
+.pill {border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:#625b52;padding:12px 16px;}
+.pill.active {background:transparent;color:#2f2822;border-bottom-color:#4f4337;}
+.collection-summary {margin-top:19px;}
+.calendar-layout {gap:22px;}
+.calendar-panel,.wear-panel,.insight-panel {padding:20px 0;}
+.calendar-panel {border-top:1px solid var(--line);}
+.day-cell {border-radius:0;background:transparent;min-height:56px;}
+.day-cell.today:not(.selected) {border-color:#8d7760;}
+.day-cell.selected {background:#564a3c;}
+.day-cell:hover:not(.selected) {background:#e9e4d9;}
+.wear-option {background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;}
+.wear-option.worn {background:#e9e6df;}
+.wear-option-icon {border-radius:0;background:#e7e0d6;}
+.wear-check {border-radius:0;}
+.insight-grid {gap:28px;}
+.insight-panel {min-height:0;}
+.settings-highlight {padding:20px 0;}
+.settings-highlight-icon {border-radius:0;background:#e8ded2;color:#5a4a3b;}
+.settings-card {padding:21px 0;margin:0;}
+.notice {border-radius:0;}
+.editor-dialog {border-radius:4px;background:#fbfaf7;}
+.dialog-head {border-bottom-color:var(--line);}
+.photo-preview,.bulk-thumbnail {border-radius:2px;}
+.field input:not([type=checkbox]),.field select,.field textarea,.bulk-row input,.bulk-row select {border-radius:2px;}
+.lock-screen {background:#f7f5f0;}
+.lock-card {border:1px solid var(--line);border-radius:0;background:#fbfaf7;box-shadow:none;}
+.account-section {border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:22px 0 38px;padding:24px 0 28px;}
+.account-section .section-head {border:0;padding-bottom:8px;}
+.account-help {font-size:12px;line-height:1.8;color:var(--muted);max-width:680px;}
+.account-form {display:grid;gap:16px;max-width:450px;}
+.account-form label {display:grid;gap:8px;font-size:12px;font-weight:600;color:#51483e;}
+.account-form input {min-height:46px;padding:10px 12px;border:1px solid #ccc2b4;border-radius:2px;background:#fff;}
+.account-tabs {display:flex;gap:18px;border-bottom:1px solid var(--line);margin:8px 0 4px;}
+.account-tabs button {background:transparent;border:0;border-bottom:2px solid transparent;padding:12px 2px;color:var(--muted);}
+.account-tabs button[aria-pressed=true] {border-color:#4b4034;color:#302922;font-weight:650;}
+.account-details {display:grid;gap:12px;}
+.account-line {display:flex;flex-wrap:wrap;gap:8px 24px;padding:14px 0;border-bottom:1px solid var(--line);font-size:13px;}
+.account-line span {min-width:155px;color:var(--muted);}
+.account-line strong {overflow-wrap:anywhere;font-weight:600;}
+.account-actions {display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;}
+.account-delete {border:0;border-bottom:1px solid #ad7771;background:transparent;color:#a04a43;width:fit-content;padding:8px 0;}
+.account-message {color:#456547;font-size:13px;}
+@media(max-width:850px) {
+  .topbar {background:#f7f5f0;}
+  .mobile-settings {background:transparent;border-radius:0;}
+  .mobile-nav {background:#f7f5f0;border-color:var(--line);box-shadow:0 -2px 7px #2b282210;}
+  .mobile-nav button {border-radius:0;}
+  .mobile-nav button.active {background:transparent;color:#33291f;border-top:2px solid #65513f;}
+  .mobile-add {background:#4c4339;border-radius:3px;box-shadow:0 3px 14px #32291d38;}
+  .hero-copy {max-width:100%;}
+}
+@media(max-width:600px) {
+  .hero {min-height:0;}
+  .hero-copy {padding:27px 0 29px;}
+  .hero h2 {font-size:29px;}
+  .metric-grid {margin:20px 0 34px;}
+  .metric {padding:16px 10px;}
+  .metric:first-child {padding-left:0;}
+  .metric strong {font-size:25px;}
+  .metric p {display:none;}
+  .section-head h3 {font-size:18px;}
+  .garment-card {gap:14px;min-height:97px;padding:10px 0;}
+  .garment-media {height:76px;width:76px;flex-basis:76px;}
+  .garment-name {font-size:14px;}
+  .garment-details p {font-size:11px;}
+  .page-intro {padding-bottom:17px;}
+  .calendar-panel,.wear-panel,.insight-panel {padding:12px 0;}
+  .day-cell {min-height:44px;}
+  .account-section {margin-top:18px;padding-top:18px;}
+  .account-actions .button {flex:1 1 100%;}
+}
