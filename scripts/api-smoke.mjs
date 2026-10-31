@@ -7,6 +7,16 @@ assert(!['https://clozy.pages.dev', 'https://main.clozy.pages.dev'].includes(bas
 const origin = new URL(base).origin;
 const email = 'qa-' + crypto.randomUUID() + '@example.invalid';
 const password = crypto.randomUUID() + '-local-only';
+const hex = bytes => [...bytes].map(v => v.toString(16).padStart(2, '0')).join('');
+const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
+async function derive(password, salt) {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bytes = Uint8Array.from(salt.match(/.{2}/g), v => parseInt(v, 16));
+  return hex(new Uint8Array(await crypto.subtle.deriveBits({
+    name: 'PBKDF2', salt: bytes, iterations: 210000, hash: 'SHA-256'
+  }, key, 256)));
+}
+const verifier = await derive(password, salt);
 let cookie = '';
 async function req(path, method = 'GET', payload, headers = {}) {
   const response = await fetch(origin + '/api/' + path, {
@@ -27,7 +37,7 @@ for (let attempt = 0; attempt < 15; attempt++) {
   await new Promise(resolve => setTimeout(resolve, 1000));
 }
 assert(ready, 'Pages Functions / D1 must be available on preview');
-let test = await req('register', 'POST', { email, password });
+let test = await req('register', 'POST', { email, salt, verifier });
 assert.equal(test.response.status, 200, 'register: ' + JSON.stringify(test.json));
 assert.equal(test.json.user.email, email);
 test = await req('me');
@@ -45,9 +55,9 @@ test = await req('logout', 'POST', {});
 assert.equal(test.response.status, 200, 'logout');
 test = await req('me');
 assert.equal(test.response.status, 401, 'session invalidated');
-test = await req('login', 'POST', { email, password });
+test = await req('login', 'POST', { email, verifier });
 assert.equal(test.response.status, 200, 'login');
-test = await req('account', 'DELETE', { password });
+test = await req('account', 'DELETE', { verifier });
 assert.equal(test.response.status, 200, 'delete user and cloud backup');
 test = await req('me');
 assert.equal(test.response.status, 401, 'account deleted');
