@@ -2,5 +2,35 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "clozy",
   "pages_build_output_dir": "./apps/web/dist",
-  "compatibility_date": "2026-10-31"
+  "compatibility_date": "2026-10-31",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "clozy-v2",
+      "database_id": "6c007911-64b3-47eb-b7be-06a43d12d609"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BACKUPS",
+      "bucket_name": "clozy-private-v2"
+    }
+  ],
+  "env": {
+    "preview": {
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "clozy-v2-preview",
+          "database_id": "9e9e4db1-109f-4ddd-88d2-d36bb8c4f8f1"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "BACKUPS",
+          "bucket_name": "clozy-private-preview"
+        }
+      ]
+    }
+  }
 }
