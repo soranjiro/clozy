@@ -1,4 +1,4 @@
-import { response, reject, emailValid, passwordValid, derive, randomHex, digest, cookie, readJson, metadata } from '../_lib.js';
+import { response, reject, emailValid, verifierValid, saltValid, randomHex, digest, cookie, readJson, metadata } from '../_lib.js';
 export async function onRequestPost({ request, env }) {
   if (request.headers.get('Origin') !== new URL(request.url).origin) return reject('送信元が不正です', 403);
   if (!request.headers.get('Content-Type')?.startsWith('application/json')) return reject('JSONが必要です', 415);
@@ -18,11 +18,11 @@ export async function onRequestPost({ request, env }) {
     step = 'read-input';
     const input = await readJson(request);
     const email = String(input?.email || '').trim().toLowerCase();
-    if (!emailValid(email) || !passwordValid(input?.password)) return reject('メールと12文字以上のパスワードが必要です');
+    if (!emailValid(email) || !verifierValid(input?.verifier) || !saltValid(input?.salt)) return reject('メールと12文字以上のパスワードが必要です');
     if (await env.DB.prepare('SELECT id FROM users WHERE email=?').bind(email).first()) return reject('このメールは登録済みです', 409);
-    const salt = randomHex(16), id = crypto.randomUUID();
+    const salt = input.salt, id = crypto.randomUUID();
     step = 'derive';
-    const passwordHash = await derive(input.password, salt);
+    const passwordHash = await digest(input.verifier);
     step = 'insert-user';
     await env.DB.prepare('INSERT INTO users(id,email,password_hash,salt,created_at) VALUES(?,?,?,?,?)')
       .bind(id,email,passwordHash,salt,new Date().toISOString()).run();
