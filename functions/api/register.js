@@ -4,6 +4,16 @@ export async function onRequestPost({ request, env }) {
   if (!request.headers.get('Content-Type')?.startsWith('application/json')) return reject('JSONが必要です', 415);
   if (!env.DB || !env.BACKUPS) return reject('クラウド保存は設定中です', 503);
   try {
+    // Store only an IP digest; bound registrations per source per hour.
+    const ip = request.headers.get('CF-Connecting-IP') || 'local-preview';
+    const ipKey = await digest(ip);
+    const now = Date.now();
+    const previous = await env.DB.prepare('SELECT attempts,window_start FROM registration_limits WHERE ip_hash=?').bind(ipKey).first();
+    const windowStart = previous && now - previous.window_start < 3600000 ? previous.window_start : now;
+    const count = windowStart === now ? 1 : (previous?.attempts || 0) + 1;
+    if (count > 5) return reject('登録回数の上限です。時間をおいてお試しください', 429);
+    await env.DB.prepare('INSERT INTO registration_limits(ip_hash,attempts,window_start) VALUES(?,?,?) ON CONFLICT(ip_hash) DO UPDATE SET attempts=excluded.attempts,window_start=excluded.window_start')
+      .bind(ipKey,count,windowStart).run();
     const input = await readJson(request);
     const email = String(input?.email || '').trim().toLowerCase();
     if (!emailValid(email) || !passwordValid(input?.password)) return reject('メールと12文字以上のパスワードが必要です');
