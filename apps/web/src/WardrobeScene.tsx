@@ -65,6 +65,9 @@ export default function WardrobeScene({ onBrowse }: { onBrowse: () => void }) {
       <p className="wardrobe-headline">クローゼットから、<br />心地よい毎日へ。</p>
       <p className="wardrobe-description">持っている服が、もっと好きになる。<br />あなたの服を、あなたらしく整えよう。</p>
     </div>
+    {opened && <button type="button" className="wardrobe-browse" onClick={onBrowse}>
+      クローゼットの中の服を見る <Icon name="arrow" size={17} />
+    </button>}
     <div className="wardrobe-stage-controls">
       <button type="button" className="wardrobe-door-toggle" aria-pressed={opened}
         aria-label={opened ? 'クローゼットの扉を閉じる' : 'クローゼットの扉を開く'} onClick={toggle}>

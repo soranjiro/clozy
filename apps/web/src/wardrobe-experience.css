@@ -313,3 +313,28 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .wardrobe-door,.wardrobe-copy {transition:none!important;}
   .home-contents .content-section {animation:none!important;}
 }
+
+/* PDCA 1: avoid overlapping the hero's two controls with the old floating add action. */
+.mobile-quick-add {display:none;}
+.wardrobe-browse {
+  position:absolute;z-index:5;bottom:88px;right:7%;
+  display:inline-flex;align-items:center;gap:9px;min-height:46px;
+  padding:10px 15px;border:1px solid #e5c79b;color:#392a1a;
+  background:#f8eddeeb;font-size:12px;font-weight:700;
+  box-shadow:0 4px 13px #2b180f55;
+}
+.wardrobe-browse:hover {background:#fff8e8;}
+@media(max-width:850px) {
+  .topbar-right {gap:8px;}
+  .mobile-quick-add {
+    display:inline-grid;place-items:center;
+    width:44px;height:44px;
+    border:1px solid var(--hairline);
+    background:transparent;color:#674a30;
+    border-radius:2px;
+  }
+  .mobile-quick-add:hover {background:#eae2d5;}
+}
+@media(max-width:600px) {
+  .wardrobe-browse {right:6%;bottom:81px;min-height:44px;font-size:11px;padding:8px 12px;}
+}
