@@ -28,7 +28,7 @@ for (let attempt = 0; attempt < 15; attempt++) {
 }
 assert(ready, 'Pages Functions / D1 must be available on preview');
 let test = await req('register', 'POST', { email, password });
-assert.equal(test.response.status, 200, 'register');
+assert.equal(test.response.status, 200, 'register: ' + JSON.stringify(test.json));
 assert.equal(test.json.user.email, email);
 test = await req('me');
 assert.equal(test.response.status, 200, 'session');
