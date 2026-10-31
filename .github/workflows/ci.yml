@@ -88,3 +88,9 @@ jobs:
           ALIAS_URL: ${{ steps.deploy.outputs.pages-deployment-alias-url }}
         run: |
           printf '### Cloudflare Pages\n\n- Deployment: %s\n- Stable URL: %s\n' "$DEPLOYMENT_URL" "$ALIAS_URL" >> "$GITHUB_STEP_SUMMARY"
+      - name: Install browser for deployed-site verification
+        run: npx playwright install --with-deps chromium
+      - name: Verify deployed wardrobe in an ephemeral browser
+        run: npm run test:browser
+        env:
+          CLOZY_URL: ${{ steps.deploy.outputs.deployment-url }}
