@@ -5,6 +5,7 @@ import type { Clothing, ClothingInput } from '@clozy/domain';
 import { processPhoto } from '@clozy/storage';
 import type { ClozyService } from '@clozy/application';
 import Icon from './Icon';
+import { GarmentArt } from './GarmentVisual';
 
 const defaults: ClothingInput = {
   name: '', category: 'トップス', color: '', brand: '', size: '', notes: '', favorite: false, seasons: [...SEASONS], archived: false
@@ -92,19 +93,19 @@ export default function GarmentForm({
   return (
     <dialog ref={dialog} className="editor-dialog" onClose={() => { if (!dialog.current?.open) onClose(); }} onCancel={e => { e.preventDefault(); close(); }} aria-labelledby="editor-title">
       <div className="dialog-head">
-        <div><p className="eyebrow">MY WARDROBE</p><h2 id="editor-title">{current ? 'アイテムを編集' : '新しい服を登録'}</h2></div>
+        <div><h2 id="editor-title">{current ? 'アイテムを編集' : '服を登録'}</h2></div>
         <button type="button" className="icon-button" disabled={pending || busy} onClick={close} aria-label="閉じる"><Icon name="close" /></button>
       </div>
       <form className="editor-form" onSubmit={e => void submit(e)}>
         <div className="photo-field">
           <div className="photo-preview">
-            {shown ? <img src={shown} alt="登録する服の画像プレビュー" /> : <><Icon name="image" size={34} /><span>YOUR PHOTO</span></>}
+            <span className="photo-display-rail" aria-hidden="true" />{shown ? <img src={shown} alt="登録する服の画像プレビュー" /> : <GarmentArt category={fields.category} />}
           </div>
           <div className="photo-instructions">
-            <strong>お気に入りの1枚を</strong>
-            <p>写真は端末内で圧縮し、撮影位置などのメタデータを除去します。</p>
+            <strong>服の写真</strong>
+            
             <label className="button button-outline file-label">
-              <Icon name="upload" size={16} /> 写真を選ぶ
+              <Icon name="camera" size={18} /> 写真を選ぶ
               <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => { void selectPhoto(e.target.files?.[0]); e.target.value = ''; }} disabled={pending || busy} />
             </label>
             {shown && <button type="button" className="text-button" disabled={busy || pending} onClick={() => { setPhoto(undefined); setPhotoMode('remove'); setDirty(true); }}>画像を削除</button>}
@@ -112,13 +113,19 @@ export default function GarmentForm({
         </div>
         <div className="field">
           <label htmlFor="cloth-name">アイテム名 <span aria-hidden="true" className="required">*</span></label>
-          <input id="cloth-name" required maxLength={80} value={fields.name} onChange={e => change('name', e.target.value)} placeholder="例：白のリネンシャツ" autoFocus />
+          <input id="cloth-name" required maxLength={80} value={fields.name} onChange={e => change('name', e.target.value)} placeholder="白のリネンシャツ" autoFocus />
         </div>
-        <div className="field">
+        <div className="field field-category">
           <label htmlFor="cloth-category">カテゴリー</label>
           <select id="cloth-category" value={fields.category} onChange={e => change('category', e.target.value as ClothingInput['category'])}>
             {CATEGORIES.map(value => <option key={value} value={value}>{value}</option>)}
           </select>
+          <div className="category-tiles" role="group" aria-label="カテゴリーを選択">
+            {CATEGORIES.map(value => <button type="button" key={value} className="category-tile" aria-pressed={fields.category === value}
+              onClick={() => change('category',value)}>
+              <GarmentArt category={value} small/><span>{value}</span>
+            </button>)}
+          </div>
         </div>
         <div className="field-grid">
           <div className="field"><label htmlFor="cloth-brand">ブランド</label><input id="cloth-brand" maxLength={80} value={fields.brand} onChange={e => change('brand', e.target.value)} placeholder="例：UNIQLO" /></div>
@@ -126,13 +133,15 @@ export default function GarmentForm({
           <div className="field"><label htmlFor="cloth-size">サイズ</label><input id="cloth-size" maxLength={30} value={fields.size} onChange={e => change('size', e.target.value)} placeholder="例：M" /></div>
           <div className="field toggle-field">
             <label htmlFor="cloth-favorite">お気に入り</label>
-            <label className="check-row"><input id="cloth-favorite" type="checkbox" checked={fields.favorite} onChange={e => change('favorite', e.target.checked)} /> マイフェイバリットに追加</label>
+            <label className="check-row"><input id="cloth-favorite" type="checkbox" checked={fields.favorite} onChange={e => change('favorite', e.target.checked)} /> お気に入り</label>
           </div>
         </div>
-        <fieldset className="season-field"><legend>着る季節（複数選択）</legend><div className="category-pills">{SEASONS.map(season => <button key={season} type="button" className={'pill ' + (fields.seasons?.includes(season) ? 'active' : '')} aria-pressed={fields.seasons?.includes(season) ?? false} onClick={() => change('seasons', fields.seasons?.includes(season) ? fields.seasons.filter(s => s !== season) : [...(fields.seasons ?? []), season])}>{season}</button>)}</div></fieldset>
-        <label className="check-row archive-toggle"><input type="checkbox" checked={fields.archived ?? false} onChange={e => change('archived', e.target.checked)} /> 衣替えで収納中（コーデ提案から除外）</label>
+        <fieldset className="season-field"><legend>着る季節</legend><div className="season-tiles">{SEASONS.map((season,i) => <button key={season} type="button" className="season-tile" aria-pressed={fields.seasons?.includes(season) ?? false} onClick={() => change('seasons', fields.seasons?.includes(season) ? fields.seasons.filter(s => s !== season) : [...(fields.seasons ?? []), season])}>
+              <Icon name={(['flower','sun','leaf','snowflake'] as const)[i]} size={25}/><span>{season}</span>
+            </button>)}</div></fieldset>
+        <label className="check-row archive-toggle"><input type="checkbox" checked={fields.archived ?? false} onChange={e => change('archived', e.target.checked)} /> <Icon name="box" size={19} /> 収納中</label>
         <div className="field-grid"><div className="field"><label htmlFor="cloth-price">購入金額（円・任意）</label><input id="cloth-price" type="number" min="0" max="100000000" step="1" inputMode="numeric" value={fields.purchasePrice ?? ''} onChange={e => change('purchasePrice', e.target.value === '' ? undefined : Number(e.target.value))} placeholder="例：3990" /></div><div className="field"><label htmlFor="cloth-url">商品URL（任意）</label><input id="cloth-url" type="url" maxLength={2048} value={fields.sourceUrl ?? ''} onChange={e => change('sourceUrl', e.target.value)} placeholder="https://zozo.jp/…" /></div></div>
-        <div className="field"><label htmlFor="cloth-notes">メモ</label><textarea id="cloth-notes" rows={3} maxLength={500} value={fields.notes} onChange={e => change('notes', e.target.value)} placeholder="お気に入りの着こなしや購入時の思い出など" /></div>
+        <div className="field"><label htmlFor="cloth-notes">メモ</label><textarea id="cloth-notes" rows={3} maxLength={500} value={fields.notes} onChange={e => change('notes', e.target.value)} placeholder="着こなしのメモ" /></div>
         {error && <p className="form-error" role="alert">{error}</p>}
         <div className="dialog-actions">
           {current && <button type="button" disabled={busy || pending} className="button button-danger-outline" onClick={() => void onDelete(current)}><Icon name="trash" size={17} /> 削除</button>}
