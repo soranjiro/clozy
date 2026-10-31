@@ -25,6 +25,7 @@ try {
   page.on('dialog', d => d.accept());
   await page.goto(base);
   await page.getByRole('heading', { name: '最初の1着からはじめよう' }).waitFor();
+  assert.equal(await page.locator('.closet-illustration .closet-outfit').count(), 3, 'wardrobe visual must render');
   await page.getByRole('navigation').getByRole('button', { name: 'クローゼット' }).click();
   await page.getByRole('button', { name: 'まとめて登録', exact: true }).click();
   await page.getByLabel('写真なしで名前から追加').fill('白いシャツ\n黒のパンツ\n白いスニーカー');
@@ -89,6 +90,11 @@ try {
   await page.getByRole('heading', { name: '何を着よう？' }).waitFor();
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'mobile overflow');
   await page.screenshot({ path: '/tmp/clozy-mobile.png', fullPage: true });
+  assert.equal(await page.getByRole('navigation', { name: 'モバイルナビゲーション' }).getByRole('button').count(), 5, 'five readable mobile tabs');
+  assert.equal(await page.getByRole('button', { name: '設定を開く' }).isVisible(), true);
+  await page.setViewportSize({ width: 320, height: 720 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, '320px mobile overflow');
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('navigation', { name: 'モバイルナビゲーション' }).getByRole('button', { name: 'クローゼット', exact: true }).click();
   await page.getByRole('button', { name: 'まとめて登録', exact: true }).click();
   await page.locator('.bulk-inputs input[type=file]').setInputFiles([
