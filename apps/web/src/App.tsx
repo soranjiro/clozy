@@ -269,10 +269,16 @@ function Settings({ service, onReload, onNotice, busy, setBusy }: {
       <div><h2>設定</h2></div>
       <div className="closet-banner-art" aria-hidden="true"><span /><span /><span /></div>
     </div>
-    <CloudAccount service={service} onReload={onReload} />
-    <section className="settings-highlight"><div className="settings-highlight-icon"><Icon name="shield" size={27} /></div><div><h3>データはこの端末のブラウザに保存されます</h3><p>Clozyはアカウントなしでも使えます。通常は端末内に保存し、ログイン後にクラウド保存を選択したときだけバックアップを送信します。ブラウザデータを消去する前にバックアップしてください。</p></div></section>
-    <div className="settings-card"><div><h3>パスキーでアプリをロック {protectedByPasskey ? '・有効' : ''}</h3><p>端末の顔・指紋・PINで本人確認します。再読み込み時と、1分以上バックグラウンドにした時にロックします。サーバー認証やデータ暗号化ではなく、ブラウザの保存内容を直接操作できる人からは保護できません。パスキーはバックアップに含まれません。</p>{!supportsPasskey() && <p>HTTPSとWebAuthnに対応したブラウザが必要です。開発時はIPアドレスではなくlocalhostで開いてください。</p>}</div><button className="button button-outline" disabled={busy || !supportsPasskey()} onClick={() => void changePasskey()}>{protectedByPasskey ? '本人確認して解除' : 'パスキーを登録'}</button>{protectedByPasskey && <button className="button button-primary" disabled={busy} onClick={() => window.dispatchEvent(new Event('clozy-lock'))}>今すぐロック</button>}</div>
-    <div className="settings-card"><div><h3>データをバックアップ</h3><p>写真・服の情報・着用履歴をまとめてJSONファイルに保存します。ファイルは暗号化されません。</p></div><button className="button button-outline" onClick={() => void download()} disabled={busy}><Icon name="download" size={18} /> エクスポート</button></div>
+    <nav className="settings-hub" aria-label="設定メニュー">
+      {([['settings-account','user','アカウント'],['settings-backup','cloud','バックアップ'],['settings-lock','lock','プライバシー'],['settings-data','box','ローカル保存']] as const).map(([id,icon,title]) =>
+        <button key={id} type="button" onClick={() => document.getElementById(id)?.scrollIntoView({behavior: 'smooth',block:'start'})}>
+          <Icon name={icon} size={23}/><span>{title}</span><Icon name="right" size={18}/>
+        </button>)}
+    </nav>
+    <div id="settings-account"><CloudAccount service={service} onReload={onReload} /></div>
+    <section id="settings-data" className="settings-highlight"><div className="settings-highlight-icon"><Icon name="box" size={27} /></div><div><h3>この端末に保存</h3><p>クラウドへのバックアップは任意です。</p></div></section>
+    <div id="settings-lock" className="settings-card"><div><h3>パスキーでアプリをロック {protectedByPasskey ? '・有効' : ''}</h3><p>端末の顔・指紋・PINで本人確認します。再読み込み時と、1分以上バックグラウンドにした時にロックします。サーバー認証やデータ暗号化ではなく、ブラウザの保存内容を直接操作できる人からは保護できません。パスキーはバックアップに含まれません。</p>{!supportsPasskey() && <p>HTTPSとWebAuthnに対応したブラウザが必要です。開発時はIPアドレスではなくlocalhostで開いてください。</p>}</div><button className="button button-outline" disabled={busy || !supportsPasskey()} onClick={() => void changePasskey()}>{protectedByPasskey ? '本人確認して解除' : 'パスキーを登録'}</button>{protectedByPasskey && <button className="button button-primary" disabled={busy} onClick={() => window.dispatchEvent(new Event('clozy-lock'))}>今すぐロック</button>}</div>
+    <div id="settings-backup" className="settings-card"><div><h3>データをバックアップ</h3><p>写真・服の情報・着用履歴をまとめてJSONファイルに保存します。ファイルは暗号化されません。</p></div><button className="button button-outline" onClick={() => void download()} disabled={busy}><Icon name="download" size={18} /> エクスポート</button></div>
     <div className="settings-card"><div><h3>データを復元</h3><p>以前のバックアップから復元します。現在のデータはすべて置き換わります。</p></div><label className={'button button-outline file-label ' + (busy ? 'disabled' : '')}><Icon name="upload" size={18} /> インポート<input type="file" accept="application/json,.json" disabled={busy} onChange={e => { void restore(e.target.files?.[0]); e.target.value = ''; }} /></label></div>
     <div className="settings-card danger-zone"><div><h3>すべてのデータを削除</h3><p>このブラウザに保存されたClozyのデータを消去します。元には戻せません。</p></div><button className="button button-danger-outline" onClick={() => void clear()} disabled={busy}><Icon name="trash" size={18} /> 全データを削除</button></div>
     <div className="privacy-footnote"><Icon name="shield" size={18} /><p>保存データとバックアップは暗号化されていません。共有端末やブラウザ拡張機能からアクセスされる可能性があります。端末のロックとバックアップの安全な保管を推奨します。</p></div>
