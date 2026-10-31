@@ -9,6 +9,17 @@ const base: ClothingInput = {
   name: '  リネンシャツ  ', category: 'トップス', brand: '', color: '白', size: 'M', notes: '', favorite: false
 };
 describe('wardrobe domain', () => {
+  it('allows multiline notes but rejects control characters', () => {
+    expect(createClothing({ ...base, notes: '購入時のメモ\n洗濯は手洗い\t推奨' }, id, now).notes).toContain('\n');
+    expect(() => createClothing({ ...base, notes: 'bad\u0000note' }, id, now)).toThrow();
+    expect(() => createClothing({ ...base, name: 'bad\nname' }, id, now)).toThrow();
+  });
+  it('matches full-width text and multiple terms across fields', () => {
+    const item = createClothing({ ...base, brand: 'ＵＮＩＱＬＯ', size: 'Ｍ' }, id, now);
+    expect(filterClothing([item], 'uniqlo　白 m', 'すべて', false)).toHaveLength(1);
+    expect(filterClothing([item], 'uniqlo 黒', 'すべて', false)).toHaveLength(0);
+    expect(filterClothing([item], '　 ', 'すべて', false)).toHaveLength(1);
+  });
   it('normalizes values and maintains identity on update', () => {
     const item = createClothing(base, id, now);
     expect(item.name).toBe('リネンシャツ');

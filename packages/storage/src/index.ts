@@ -81,6 +81,10 @@ export class IndexedDbRepository implements WardrobeRepository {
     const db = await this.db;
     await transact(db, ['wears'], tx => { tx.objectStore('wears').put(entry); });
   }
+  async saveWears(entries: WearEntry[]): Promise<void> {
+    const db = await this.db;
+    await transact(db, ['wears'], tx => { for (const entry of entries) tx.objectStore('wears').put(entry); });
+  }
   async deleteWear(id: string): Promise<void> {
     const db = await this.db;
     await transact(db, ['wears'], tx => { tx.objectStore('wears').delete(id); });
@@ -108,7 +112,7 @@ export async function processPhoto(file: File): Promise<Blob> {
     const picture = new Image();
     picture.decoding = 'async';
     picture.src = url;
-    await picture.decode();
+    try { await picture.decode(); } catch { throw new Error('画像を開けませんでした。破損していないJPEG・PNG・WebPの写真を選び直してください'); }
     if (!picture.naturalWidth || !picture.naturalHeight || picture.naturalWidth * picture.naturalHeight > 40_000_000) {
       throw new Error('画像の解像度が大きすぎます');
     }

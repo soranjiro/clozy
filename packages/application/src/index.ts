@@ -12,6 +12,7 @@ export interface WardrobeRepository {
   saveClothing(item: Clothing, image?: Blob, removeOldImage?: boolean): Promise<void>;
   deleteClothing(id: string): Promise<void>;
   saveWear(entry: WearEntry): Promise<void>;
+  saveWears(entries: WearEntry[]): Promise<void>;
   deleteWear(id: string): Promise<void>;
   replaceAll(data: Snapshot, images: ImageRecord[]): Promise<void>;
 }
@@ -71,7 +72,7 @@ export function parseBackup(raw: unknown): { snapshot: Snapshot; images: ImageRe
   const images: ImageRecord[] = value.images.map(rawImage => {
     if (!rawImage || typeof rawImage !== 'object' || Array.isArray(rawImage)) throw new DomainError('画像データが不正です');
     const image = rawImage as Record<string, unknown>;
-    if (!validId(image.id) || imageIds.has(image.id) || !isAllowedBlob(image.type as string) || typeof image.data !== 'string' || image.data.length > MAX_IMAGE_BYTES * 2) {
+    if (!validId(image.id) || !ids.has(image.id) || imageIds.has(image.id) || !isAllowedBlob(image.type as string) || typeof image.data !== 'string' || image.data.length > MAX_IMAGE_BYTES * 2) {
       throw new DomainError('画像のID・形式・容量が不正です');
     }
     imageIds.add(image.id);
@@ -102,6 +103,12 @@ export class ClozyService {
   }
   remove(id: string): Promise<void> { return this.repo.deleteClothing(id); }
   clearAll(): Promise<void> { return this.repo.replaceAll({ clothing: [], wears: [] }, []); }
+  async recordOutfit(items: Clothing[], date: string, existing: WearEntry[]): Promise<void> {
+    const ids = new Set(existing.filter(w => w.date === date).map(w => w.clothingId));
+    const entries = items.filter(item => { if (ids.has(item.id)) return false; ids.add(item.id); return true; })
+      .map(item => createWearEntry(item.id, date, crypto.randomUUID(), new Date().toISOString()));
+    await this.repo.saveWears(entries);
+  }
   async toggleWear(item: Clothing, date: string, existing: WearEntry[]): Promise<void> {
     const found = existing.find(x => x.clothingId === item.id && x.date === date);
     if (found) return this.repo.deleteWear(found.id);
@@ -118,7 +125,9 @@ export class ClozyService {
       images.push({ id: item.id, type: blob.type, data: await asBase64(blob) });
     }
     const backup: Backup = { version: 1, exportedAt: new Date().toISOString(), ...snapshot, images };
-    return JSON.stringify(backup);
+    const json = JSON.stringify(backup);
+    if (new Blob([json]).size > MAX_BACKUP_BYTES) throw new DomainError('バックアップが75MBを超えています。写真や不要な記録を整理してください');
+    return json;
   }
   async importBackup(file: File): Promise<void> {
     if (file.size > MAX_BACKUP_BYTES) throw new DomainError('バックアップファイルは75MB以下にしてください');
