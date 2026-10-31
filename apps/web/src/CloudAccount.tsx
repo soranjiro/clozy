@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { ClozyService } from '@clozy/application';
-import { getSession, signIn, signOut, uploadBackup, restoreBackup, deleteCloudAccount } from './cloud';
+import { getSession, signIn, signOut, uploadBackup, restoreBackup, deleteCloudAccount, resetPassword } from './cloud';
 import type { CloudSession } from './cloud';
 export default function CloudAccount({ service, onReload }: {
   service: ClozyService; onReload: () => Promise<void>;
@@ -18,7 +18,7 @@ export default function CloudAccount({ service, onReload }: {
   useEffect(() => {
     let active = true;
     void getSession().then(s => { if (active) setSession(s); })
-      .catch(e => { if (active && e instanceof Error && e.message !== 'ログインが必要です') setAvailable(false); })
+      .catch(e => { if (active && e instanceof Error && !['ログインが必要です','メール内のリンクで本人確認を完了してください'].includes(e.message)) setAvailable(false); })
       .finally(() => { if (active) setReady(true); });
     return () => { active = false; };
   }, []);
@@ -63,9 +63,9 @@ export default function CloudAccount({ service, onReload }: {
     {ready && available && !session && <form className="account-form" onSubmit={authenticate}>
       <div className="account-tabs"><button type="button" aria-pressed={!register} onClick={() => setRegister(false)}>ログイン</button><button type="button" aria-pressed={register} onClick={() => setRegister(true)}>新規登録</button></div>
       <label>メールアドレス<input type="email" autoComplete="email" required maxLength={254} value={email} onChange={e => setEmail(e.target.value)} /></label>
-      <label>パスワード（12文字以上）<input type="password" autoComplete={register ? 'new-password' : 'current-password'} required minLength={12} maxLength={128} value={password} onChange={e => setPassword(e.target.value)} /></label>
+      <label>パスワード<input type="password" autoComplete={register ? 'new-password' : 'current-password'} required minLength={register ? 12 : 6} maxLength={128} value={password} onChange={e => setPassword(e.target.value)} /></label>
       <button className="button button-primary" type="submit" disabled={busy}>{register ? '新規登録する' : 'ログインする'}</button>
-      <p className="account-help">現在、メール認証とパスワード再設定には対応していません。パスワードを安全に保管してください。</p>
+      <button type="button" className="button button-ghost" disabled={busy || !email} onClick={() => void run(async () => { await resetPassword(email); setNotice('登録済みの場合、再設定メールが届きます'); })}>パスワードを再設定</button>
     </form>}
     {ready && available && session && <div className="account-details">
       <div className="account-line"><span>アカウント</span><strong>{session.user.email}</strong></div>
