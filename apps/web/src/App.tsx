@@ -75,12 +75,23 @@ function Home({ items, wears, service, onAdd, onGo, onEdit, onFavorite, busy }: 
   return <>
     <div className="hero">
       <div className="hero-copy">
-        <p className="eyebrow hero-eyebrow">YOUR PERSONAL WARDROBE</p>
-        <h2>毎日の服選びを、<br /><em>もっと自由に。</em></h2>
-        <p>お気に入りを見つけて、着る楽しみを記録する。<br />あなたらしいクローゼットを、ここから。</p>
-        <button className="button button-light" onClick={onAdd}><Icon name="plus" size={19} /> アイテムを追加 <Icon name="arrow" size={17} /></button>
+        <p className="eyebrow hero-eyebrow">WELCOME TO YOUR CLOSET</p>
+        <h2>好きな服と、<br /><em>心地よい毎日を。</em></h2>
+        <p>しまう、見つける、着る。<br />あなたの一着一着に、ちゃんと居場所を。</p>
+        <button className="button button-light" onClick={onAdd}><Icon name="plus" size={19} /> 最初の一着をしまう <Icon name="arrow" size={17} /></button>
       </div>
-      <div className="hero-art" aria-hidden="true"><div className="art-orbit"><Icon name="hanger" size={100} /></div><span className="art-spark">✳</span><span className="art-label">curate your days.</span></div>
+      <div className="hero-art" aria-hidden="true">
+        <div className="closet-illustration">
+          <span className="closet-top" /><span className="closet-rail" />
+          <div className="closet-hangers">
+            <span className="closet-outfit outfit-one"><span className="outfit-hook" /><span className="outfit-piece" /></span>
+            <span className="closet-outfit outfit-two"><span className="outfit-hook" /><span className="outfit-piece" /></span>
+            <span className="closet-outfit outfit-three"><span className="outfit-hook" /><span className="outfit-piece" /></span>
+          </div>
+          <span className="closet-shelf" /><span className="closet-drawer" />
+        </div>
+        <span className="art-label">a place for every piece.</span>
+      </div>
     </div>
     <div className="metric-grid">
       <div className="metric"><div className="metric-head"><span>登録アイテム</span><span className="metric-icon lavender"><Icon name="hanger" size={19} /></span></div><strong>{items.length}<small> 着</small></strong><p>自分だけのコレクション</p></div>
@@ -118,7 +129,7 @@ function Wardrobe({ items, service, onAdd, onBulk, onEdit, onFavorite, busy }: {
   const filtered = Boolean(query || category !== 'すべて' || onlyFavorite || season !== 'すべて' || storage !== 'すべて');
   const reset = () => { setQuery(''); setCategory('すべて'); setOnlyFavorite(false); setSeason('すべて'); setStorage('すべて'); };
   return <>
-    <div className="page-intro"><div><p className="eyebrow">MY COLLECTION</p><h2>クローゼット</h2><p>着る服も、しまう服も。季節に合わせて整えよう。</p></div><div className="planning-actions"><button className="button button-outline" onClick={onBulk}>まとめて登録</button><button className="button button-primary" onClick={onAdd}><Icon name="plus" size={18} /> 1着ずつ登録</button></div></div>
+    <div className="page-intro"><div><p className="eyebrow">MY WARDROBE</p><h2>クローゼット</h2><p>お気に入りも、季節のお洋服も。ここがすべての定位置。</p></div><div className="planning-actions"><button className="button button-outline" onClick={onBulk}>まとめて登録</button><button className="button button-primary" onClick={onAdd}><Icon name="plus" size={18} /> 1着ずつ登録</button></div></div>
     <div className="toolbar"><label className="search-box"><Icon name="search" size={19} /><span className="sr-only">服を検索</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="名前・ブランド・カラーで検索" /></label><button className={'filter-fav ' + (onlyFavorite ? 'selected' : '')} aria-pressed={onlyFavorite} onClick={() => setOnlyFavorite(!onlyFavorite)}><Icon name="heart" size={18} /> お気に入り</button></div>
     <div className="category-pills" aria-label="カテゴリーで絞り込み">{(['すべて', ...CATEGORIES] as const).map(c => <button key={c} className={'pill ' + (category === c ? 'active' : '')} aria-pressed={category === c} onClick={() => setCategory(c)}>{c}</button>)}</div>
     <div className="planning-controls"><label className="sort-control">季節<select value={season} onChange={e => setSeason(e.target.value)}>{['すべて', ...SEASONS].map(s => <option key={s}>{s}</option>)}</select></label><label className="sort-control">衣替え<select value={storage} onChange={e => setStorage(e.target.value)}>{['すべて', '着用中', '収納中'].map(s => <option key={s}>{s}</option>)}</select></label></div>
@@ -290,11 +301,11 @@ export default function App() {
     <a className="skip-link" href="#main-content">本文へスキップ</a>
     <aside className="sidebar" aria-label="メインナビゲーション">
       <button className="brand" onClick={() => changeView('home')} aria-label="Clozy ホームへ"><span className="brand-mark"><Icon name="hanger" size={24} /></span><span>clozy<span className="brand-dot">.</span></span></button>
-      <div className="sidebar-group"><p className="sidebar-label">MY SPACE</p><nav>{nav.map(item => <button key={item.key} className={'nav-link ' + (view === item.key ? 'active' : '')} aria-current={view === item.key ? 'page' : undefined} onClick={() => changeView(item.key)}><Icon name={item.icon} size={20} /><span>{item.title}</span>{view === item.key && <span className="nav-active-dot" />}</button>)}</nav></div>
-      <div className="sidebar-bottom"><div className="privacy-card"><span><Icon name="shield" size={19} /></span><strong>Private by design</strong><p>あなたのデータは<br />このブラウザの中だけに。</p></div><span className="sidebar-version">CLOZY · v1.0</span></div>
+      <div className="sidebar-group"><p className="sidebar-label">MY WARDROBE</p><nav>{nav.map(item => <button key={item.key} className={'nav-link ' + (view === item.key ? 'active' : '')} aria-current={view === item.key ? 'page' : undefined} onClick={() => changeView(item.key)}><Icon name={item.icon} size={20} /><span>{item.title}</span>{view === item.key && <span className="nav-active-dot" />}</button>)}</nav></div>
+      <div className="sidebar-bottom"><div className="privacy-card"><span><Icon name="shield" size={19} /></span><strong>Private by design</strong><p>あなたのデータは<br />このブラウザの中だけに。</p></div><span className="sidebar-version">CLOZY · YOUR SPACE</span></div>
     </aside>
     <div className="main-shell">
-      <header className="topbar"><div className="mobile-brand"><span className="brand-mark"><Icon name="hanger" size={19} /></span><strong>clozy<span className="brand-dot">.</span></strong></div><div className="breadcrumb"><span>MY SPACE</span><Icon name="right" size={15} /><strong>{title}</strong></div><div className="topbar-right"><span className="local-badge"><Icon name="shield" size={15} /> ローカル保存</span><span className="topbar-avatar" aria-label="あなたのクローゼット">C</span></div></header>
+      <header className="topbar"><div className="mobile-brand"><span className="brand-mark"><Icon name="hanger" size={19} /></span><strong>clozy<span className="brand-dot">.</span></strong></div><div className="breadcrumb"><span>MY WARDROBE</span><Icon name="right" size={15} /><strong>{title}</strong></div><div className="topbar-right"><span className="local-badge"><Icon name="shield" size={15} /> ローカル保存</span><button className="mobile-settings" type="button" aria-label="設定を開く" aria-current={view === 'settings' ? 'page' : undefined} onClick={() => changeView('settings')}><Icon name="settings" size={21} /></button><span className="topbar-avatar" aria-label="あなたのクローゼット">C</span></div></header>
       <main className="main-content" id="main-content" tabIndex={-1}>
         {notice && <div className={'notice ' + notice.kind} role={notice.kind === 'error' ? 'alert' : 'status'}><span>{notice.message}</span><button type="button" onClick={() => setNotice(null)} aria-label="通知を閉じる"><Icon name="close" size={16} /></button></div>}
         {loading ? <div className="loading-state" role="status">クローゼットを読み込んでいます…</div> : loadFailed ? <EmptyState title="保存データを読み込めませんでした" description="データは削除していません。別のタブを閉じ、ブラウザの保存設定を確認してから再読み込みしてください。" onAdd={() => window.location.reload()} action="再読み込み" /> : <>
@@ -306,9 +317,10 @@ export default function App() {
           {view === 'settings' && <Settings service={service} onReload={reload} onNotice={setNotice} busy={busy} setBusy={setBusy} />}
         </>}
       </main>
-      <footer className="page-footer">Clozy — wear what you love. <span>Made with care for your everyday.</span></footer>
+      <footer className="page-footer">Clozy — A place for every piece. <span>Everyday, in your own style.</span></footer>
     </div>
-    <nav className="mobile-nav" aria-label="モバイルナビゲーション">{nav.map(item => <button key={item.key} className={view === item.key ? 'active' : ''} aria-current={view === item.key ? 'page' : undefined} onClick={() => changeView(item.key)}><Icon name={item.icon} size={21} /><span>{item.title}</span></button>)}</nav>
+    <nav className="mobile-nav" aria-label="モバイルナビゲーション">{nav.filter(item => item.key !== 'settings').map(item => <button key={item.key} className={view === item.key ? 'active' : ''} aria-current={view === item.key ? 'page' : undefined} onClick={() => changeView(item.key)}><Icon name={item.icon} size={21} /><span>{item.title}</span></button>)}</nav>
+    <button className="mobile-add" type="button" onClick={() => setSelected('new')} aria-label="アイテムを追加"><Icon name="plus" size={18} /> 服を追加</button>
     {bulkOpen && <BulkAdd service={service} items={items} onClose={() => setBulkOpen(false)} onSaved={reload} />}
     {selected && <GarmentForm key={selected === 'new' ? 'new' : selected.id} service={service} current={selected === 'new' ? undefined : selected} onClose={() => setSelected(null)} onSaved={async () => { await reload(); setSelected(null); setNotice({ kind: 'success', message: 'アイテムを保存しました。' }); }} onDelete={remove} busy={busy} />}
   </div>;
