@@ -30,7 +30,15 @@
           "binding": "BACKUPS",
           "bucket_name": "clozy-private-preview"
         }
-      ]
+      ],
+      "vars": {
+        "FIREBASE_PROJECT_ID": "clozy-6166b",
+        "FIREBASE_WEB_CONFIG": "{\"projectId\":\"clozy-6166b\",\"appId\":\"1:490566218530:web:8c3a9550d7255fcda4ab7b\",\"apiKey\":\"AIzaSyD9u3LsLA9ipDT6GRps-aAdHSp37oR4OQc\",\"authDomain\":\"clozy-6166b.firebaseapp.com\"}"
+      }
     }
+  },
+  "vars": {
+    "FIREBASE_PROJECT_ID": "clozy-6166b",
+    "FIREBASE_WEB_CONFIG": "{\"projectId\":\"clozy-6166b\",\"appId\":\"1:490566218530:web:8c3a9550d7255fcda4ab7b\",\"apiKey\":\"AIzaSyD9u3LsLA9ipDT6GRps-aAdHSp37oR4OQc\",\"authDomain\":\"clozy-6166b.firebaseapp.com\"}"
   }
 }

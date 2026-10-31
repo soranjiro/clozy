@@ -3,7 +3,10 @@ export type CloudUser = { id: string; email: string };
 export type BackupMeta = { revision: number; updated_at: string; bytes: number } | null;
 export type CloudSession = { user: CloudUser; backup: BackupMeta };
 async function call(path: string, init?: RequestInit) {
-  const response = await fetch('/api/' + path, { cache: 'no-store', credentials: 'same-origin', ...init });
+  const user = (await auth()).currentUser;
+  const headers = new Headers(init?.headers);
+  if (user) headers.set('Authorization', 'Bearer ' + await user.getIdToken());
+  const response = await fetch('/api/' + path, { cache: 'no-store', credentials: 'omit', ...init, headers });
   return response;
 }
 async function data(response: Response): Promise<CloudSession> {
@@ -12,40 +15,46 @@ async function data(response: Response): Promise<CloudSession> {
   if (!body.user) throw new Error('ユーザー情報がありません');
   return { user: body.user, backup: body.backup ?? null };
 }
-const hex = (bytes: Uint8Array) => [...bytes].map(byte => byte.toString(16).padStart(2, '0')).join('');
-const newSalt = () => {
-  const value = new Uint8Array(16);
-  crypto.getRandomValues(value);
-  return hex(value);
-};
-async function accountSalt(email: string): Promise<string> {
-  const response = await call('salt?email=' + encodeURIComponent(email));
-  const result = await response.json() as { salt?: string; error?: string };
-  if (!response.ok || !result.salt) throw new Error(result.error || '認証情報を取得できません');
-  return result.salt;
+let authPromise: Promise<import('firebase/auth').Auth> | undefined;
+async function auth() {
+  authPromise ??= (async () => {
+    const r = await fetch('/api/firebase-config', { cache: 'no-store' });
+    if (!r.ok) throw new Error('Firebase の接続を設定中です');
+    const config = await r.json();
+    const { initializeApp } = await import('firebase/app');
+    const { getAuth } = await import('firebase/auth');
+    const instance = getAuth(initializeApp(config));
+    instance.languageCode = 'ja';
+    await instance.authStateReady();
+    return instance;
+  })();
+  return authPromise;
 }
-async function verifier(password: string, salt: string): Promise<string> {
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
-  const saltBytes = Uint8Array.from(salt.match(/.{2}/g) || [], value => parseInt(value, 16));
-  const bits = await crypto.subtle.deriveBits({
-    name: 'PBKDF2', salt: saltBytes, iterations: 210000, hash: 'SHA-256'
-  }, key, 256);
-  return hex(new Uint8Array(bits));
+export async function getSession() {
+  const a = await auth();
+  if (!a.currentUser) throw new Error('ログインが必要です');
+  await a.currentUser.reload();
+  await a.currentUser.getIdToken(true);
+  if (!a.currentUser.emailVerified) throw new Error('メール内のリンクで本人確認を完了してください');
+  return data(await call('me'));
 }
-export const getSession = async () => data(await call('me'));
 export async function signIn(email: string, password: string, register: boolean) {
-  if (password.length < 12 || password.length > 128) throw new Error('12文字以上のパスワードが必要です');
-  const normalized = email.trim().toLowerCase();
-  const salt = register ? newSalt() : await accountSalt(normalized);
-  const proof = await verifier(password, salt);
-  return data(await call(register ? 'register' : 'login', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: normalized, verifier: proof, ...(register ? { salt } : {}) })
-  }));
+  const a = await auth();
+  const { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } = await import('firebase/auth');
+  const result = register ? await createUserWithEmailAndPassword(a,email.trim(),password) : await signInWithEmailAndPassword(a,email.trim(),password);
+  if (!result.user.emailVerified) {
+    await sendEmailVerification(result.user);
+    throw new Error('確認メールを送信しました。リンクを開いた後、もう一度ログインしてください');
+  }
+  return getSession();
+}
+export async function resetPassword(email: string) {
+  const { sendPasswordResetEmail } = await import('firebase/auth');
+  await sendPasswordResetEmail(await auth(),email.trim());
 }
 export async function signOut() {
-  const result = await call('logout', { method: 'POST' });
-  if (!result.ok) throw new Error('ログアウトに失敗しました');
+  const { signOut: firebaseSignOut } = await import('firebase/auth');
+  await firebaseSignOut(await auth());
 }
 export async function uploadBackup(service: ClozyService, revision: number) {
   const backup = await service.exportBackup();
@@ -66,10 +75,12 @@ export async function restoreBackup(service: ClozyService) {
   await service.importBackup(new File([blob], 'clozy-cloud.json', { type: 'application/json' }));
 }
 export async function deleteCloudAccount(email: string, password: string) {
-  const proof = await verifier(password, await accountSalt(email));
-  const response = await call('account', { method: 'DELETE', headers: {
-    'Content-Type': 'application/json'
-  }, body: JSON.stringify({ verifier: proof }) });
+  const a = await auth();
+  if (!a.currentUser) throw new Error('ログインが必要です');
+  const { reauthenticateWithCredential, EmailAuthProvider, signOut: firebaseSignOut } = await import('firebase/auth');
+  await reauthenticateWithCredential(a.currentUser, EmailAuthProvider.credential(email,password));
+  const response = await call('account', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: '{}' });
   const body = await response.json() as { error?: string };
   if (!response.ok) throw new Error(body.error || 'アカウントを削除できません');
+  await firebaseSignOut(a);
 }
