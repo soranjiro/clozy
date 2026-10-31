@@ -36,7 +36,7 @@ try {
   assert.equal(await page.locator('.wardrobe-stage').getAttribute('data-open'), 'true', 'scroll cue opens doors');
   assert.equal(await page.locator('.home-greeting').count(), 1);
   await page.getByRole('button', { name: 'クローゼットの中の服を見る' }).click();
-  await page.getByRole('heading', { name: 'クローゼット' }).waitFor();
+  await page.getByRole('heading', { name: 'クローゼット', exact: true, level: 2 }).waitFor();
   await page.getByRole('button', { name: 'まとめて登録', exact: true }).click();
   await page.getByLabel('写真なしで名前から追加').fill('白いシャツ\n黒のパンツ\n白いスニーカー');
   await page.getByRole('button', { name: '名前をリストに追加' }).click();
