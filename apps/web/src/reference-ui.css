@@ -1,0 +1,401 @@
+
+/* CLOZY / INTERIOR — visual language based on the approved mobile wardrobe boards.
+   Linen UI surfaces, walnut cabinetry, brushed brass, actual garment photography.
+   One Japanese system font, one consistent icon language. */
+:root {
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
+  font-synthesis:none;
+  --ink:#32271f;--muted:#756a5f;--line:#e2d9cd;--surface:#fcfaf6;
+  --violet:#684126;--violet-deep:#4f301d;--linen:#faf7f1;--wood:#825637;
+  color:var(--ink);background:var(--linen);
+}
+html {scroll-behavior:smooth;}
+body,.main-shell {background:var(--linen);}
+:where(.page-intro h2,.section-head h3,.insight-panel h3,.calendar-head h3,.home-greeting h2,.closet-banner h2,.dialog-head h2,.wardrobe-headline) {
+  font-family:inherit!important;font-weight:650;letter-spacing:-.045em;
+}
+.eyebrow {font-size:11px;letter-spacing:.11em;color:#926f4d;}
+.button {border-radius:9px;font-size:13px;}
+.button-primary,.button-light {background:#694024;border-color:#694024;color:#fff9f1;}
+.button-primary:hover:not(:disabled),.button-light:hover {background:#4b2b19;}
+.button-outline {border:1px solid #d3c4b2;background:#f8f4ed;color:#4b3627;}
+.button-ghost {color:#745b49;}
+.topbar {background:#fcfaf7ed;border-bottom:1px solid var(--line);height:68px;}
+.main-content {padding-top:29px;}
+.sidebar {
+  background:linear-gradient(90deg,#38251a,#503521 80%,#3c281b);
+  box-shadow:inset 0 0 19px #160f0760;
+  border-right:1px solid #352117;
+}
+.sidebar::before {border:1px solid #ba996049;}
+.sidebar .nav-link {min-height:55px;border-radius:5px;}
+.sidebar .nav-link.active {background:#ead8bd;color:#472b1a;}
+.sidebar .brand {font:400 35px/1.2 "Avenir Next","Helvetica Neue",Arial,sans-serif;}
+.brand-mark {border:0;background:transparent;box-shadow:none;color:#c69e6a;}
+.sidebar-group {margin-top:55px;}
+.sidebar-label {color:#bda586;}
+.privacy-card {border-radius:5px;background:#563a2b66;}
+.mobile-brand strong {font:500 25px/1.1 "Avenir Next","Helvetica Neue",Arial,sans-serif;}
+.local-badge {background:transparent;color:#75624e;border-radius:0;}
+/* Warm wood has a physical scale: vertical grain, panel edging and brass handles. */
+.wardrobe-stage {
+  height:clamp(510px,72svh,750px);
+  border:10px solid #71482f;border-top-width:16px;border-bottom-width:16px;border-radius:1px;
+  background:#6c4229;box-shadow:0 15px 30px #3f28191c,inset 0 0 26px #24160d;
+}
+.wardrobe-door {
+  background:
+    repeating-linear-gradient(90deg,transparent 0 20px,#2f180d22 21px,transparent 23px,#ffe1a718 25px,transparent 28px,#160c0540 44px,transparent 46px),
+    repeating-linear-gradient(90deg,#815335 0,#9b6c45 9px,#825334 20px,#a4774d 33px,#775035 45px);
+  box-shadow:inset 0 0 22px #2110079c,0 0 14px #27160b88;
+}
+.wardrobe-door::before {
+  inset:5% 5%;border:2px solid #eac69c3f;box-shadow:inset 0 0 0 5px #30190b28,0 0 0 6px #3b211222;
+}
+.wardrobe-handle {background:linear-gradient(90deg,#694221,#f2d8a2 44%,#a46a35 75%,#694524);height:22%;width:8px;border-radius:6px;top:47%;}
+.wardrobe-stage-interior {
+  background:radial-gradient(ellipse at 50% 10%,#f9e2bb55,transparent 65%),
+    repeating-linear-gradient(90deg,#ffffff08 0 1px,transparent 1px 23px),
+    linear-gradient(90deg,#614029 0%,#936742 15%,#ac8159 51%,#785232 84%,#563821);
+}
+.cabinet-top {border-bottom-color:#a97746;}
+.cabinet-bottom {border-top-color:#a27347;}
+.cabinet-clothes {filter:drop-shadow(0 8px 8px #2f190d8c);}
+.wardrobe-copy {inset:13% auto auto 8%;text-shadow:0 3px 9px #27170e8a;}
+.wardrobe-copy h1 {font:400 clamp(47px,6vw,76px)/1.15 "Avenir Next","Helvetica Neue",Arial,sans-serif;letter-spacing:-.04em;margin:0 0 clamp(55px,15svh,170px);}
+.wardrobe-headline {font-size:clamp(24px,3vw,36px);line-height:1.65;font-weight:500!important;}
+.wardrobe-overline {display:none;}
+.wardrobe-description {display:none;}
+.wardrobe-stage-controls {bottom:22px;}
+.wardrobe-door-toggle,.wardrobe-scroll-cue {border:0;background:#3c2416a8;border-radius:30px;padding:10px 18px;font-size:13px;}
+.wardrobe-door-toggle {background:#fff7e9d9;color:#402816;}
+.wardrobe-scroll-cue {background:transparent;color:#fff8ec;}
+.wardrobe-browse {border-radius:30px;background:#fff9ebef;color:#4d3020;border:0;font-size:13px;font-weight:650;bottom:86px;}
+.wardrobe-scroll-cue svg {stroke-width:2.2;}
+.home-contents {scroll-margin-top:69px;}
+.home-greeting {padding:26px 0 17px;}
+.home-greeting h2 {font-size:clamp(21px,2.6vw,30px);margin:0;}
+.home-greeting > span {font-family:inherit;font-size:12px;color:#877460;}
+.home-today {border-top:1px solid #d9cebe;border-bottom:1px solid #d9cebe;display:grid;grid-template-columns:1fr 1fr;margin:0 0 14px;}
+.home-today button {background:transparent;border:0;border-right:1px solid #ded5c9;padding:16px 19px;display:flex;gap:10px;align-items:center;text-align:left;color:#513b2b;min-height:75px;font-size:13px;}
+.home-today button:last-child {border-right:0;}
+.home-today button:hover {background:#eee6da;}
+.home-today button > span:nth-child(2) {font-weight:650;}
+.home-today button > svg:last-child {margin-left:auto;}
+.home-today strong {margin-left:auto;}
+.home-today-items {margin-left:auto;display:flex;align-items:center;gap:3px;overflow:hidden;}
+.home-today-items .garment-thumb {width:39px;height:43px;border:1px solid #ded4c5;}
+.home-today-items > .garment-art {width:36px;height:38px;}
+.home-contents .metric-grid {margin:0 0 16px;grid-template-columns:repeat(3,1fr);}
+.home-contents .metric {padding:18px 12px;}
+.metric {background:transparent!important;box-shadow:none!important;border-color:var(--line)!important;}
+.metric strong {font-family:inherit;font-size:29px;font-weight:600;}
+.metric p {display:none;}
+.metric-head {font-size:12px;}
+.home-contents .quick-actions {display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:5px 0 14px;}
+.home-contents .quick-actions button {border:0;border-right:1px solid var(--line);border-radius:0;padding:15px 11px;gap:9px;}
+.home-contents .quick-actions button:last-child {border:0;}
+.home-contents .quick-actions small {display:none;}
+.home-contents .quick-actions strong {font-size:12px;}
+.home-contents .content-section {margin-top:26px;}
+.section-head {border-color:var(--line);margin-bottom:12px;}
+.section-head h3 {font-size:19px;}
+.section-link {color:#76563a;font-size:12px;}
+/* The item itself is a neatly photographed closet piece, not a status card. */
+.garment-grid.wardrobe-grid {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-bottom:35px;}
+.wardrobe-grid .garment-card {display:block;padding:0;border:0;background:transparent;min-height:0;border-radius:0;overflow:visible;}
+.wardrobe-grid .garment-card:hover {background:transparent;transform:none;}
+.wardrobe-grid .garment-media {width:100%;height:auto;aspect-ratio:.83;position:relative;border:0;border-radius:6px;overflow:hidden;background:#f0ebe3;box-shadow:none;}
+.wardrobe-grid .garment-open {height:100%;width:100%;display:block;}
+.wardrobe-grid .favorite-button {top:auto;bottom:6px;right:6px;width:37px;height:37px;background:#fffaf1d9;border-radius:50%;}
+.wardrobe-grid .garment-details {padding:7px 3px 12px;}
+.wardrobe-grid .garment-name {font-size:13px;margin:2px 0 2px;line-height:1.5;}
+.wardrobe-grid .garment-details p {font-size:11px;min-height:0;color:#746b5f;}
+.wardrobe-grid .category-label {font-size:10px;color:#836c54;letter-spacing:.02em;}
+.wardrobe-grid .product-link {font-size:11px;}
+.garment-thumb {display:flex;width:100%;height:100%;align-items:center;justify-content:center;overflow:hidden;background:linear-gradient(135deg,#f4f0e9,#e9e0d4);}
+.garment-thumb img {width:100%;height:100%;object-fit:cover;}
+.garment-art {display:block;width:76%;height:80%;max-height:95%;filter:drop-shadow(3px 8px 3px #37261721);}
+.garment-art-small {width:34px;height:38px;filter:none;}
+.home-contents .garment-grid:not(.wardrobe-grid) {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;}
+.home-contents .garment-card {display:block;padding:0;border:0;background:transparent;border-radius:0;min-height:0;}
+.home-contents .garment-card:hover {background:transparent;transform:none;}
+.home-contents .garment-media {width:100%;height:auto;aspect-ratio:.85;border:0;border-radius:5px;}
+.home-contents .garment-details {padding:7px 2px;}
+.home-contents .garment-name {font-size:12px;margin:2px 0;}
+.home-contents .category-label {font-size:10px;}
+.home-contents .favorite-button {top:auto;bottom:4px;right:4px;width:35px;height:35px;border-radius:50%;}
+.empty-state {padding:36px 10px;background:transparent;border:1px dashed #c7bcae;border-radius:7px;}
+.empty-icon {border-radius:50%;background:#eee3d5;}
+.empty-state p {line-height:1.7;}
+/* Upper wardrobe is a full-bleed wooden rail, then accessible shelf categories. */
+.page-intro h2 {font-size:clamp(25px,3vw,37px);}
+.page-intro {padding-bottom:15px;margin-bottom:18px;}
+.page-intro p:last-child {display:none;}
+.closet-rail-showcase {
+  position:relative;height:clamp(212px,31vw,340px);overflow:hidden;
+  border:10px solid #855a37;border-top-width:13px;border-bottom-width:11px;margin:0 0 0;
+  background:radial-gradient(ellipse at 50% 0,#f6ddae67,transparent 70%),
+    repeating-linear-gradient(90deg,#ffffff0b 0 2px,transparent 3px 27px),
+    linear-gradient(92deg,#845938,#ad825a 43%,#855a3b);
+  box-shadow:inset 0 0 25px #3b210b77;
+}
+.closet-rail-showcase::before {content:"";position:absolute;top:11%;left:4%;right:4%;height:6px;background:linear-gradient(#f1d3a1,#66432b);border-radius:4px;box-shadow:0 4px 7px #24140d70;}
+.rail-light {position:absolute;top:0;left:8%;right:8%;height:10px;background:#ffe4aa48;filter:blur(9px);}
+.rail-clothes {position:absolute;top:15%;left:5%;right:5%;bottom:21%;display:flex;justify-content:center;gap:1.3%;}
+.rail-cloth {position:relative;flex:1;max-width:12%;filter:drop-shadow(4px 6px 4px #21130c65);}
+.rail-hook {position:absolute;top:-8px;left:50%;height:18px;width:12px;border:2px solid #cba57b;border-bottom:0;border-radius:10px 10px 0 0;transform:translateX(-50%);}
+.rail-cloth .garment-art {width:125%;height:104%;max-height:none;position:absolute;top:7px;left:-12%;}
+.rail-cloth .garment-art g {stroke-opacity:.14;}
+.rail-tone-1,.rail-tone-5 {filter:brightness(.65) drop-shadow(4px 6px 3px #21140a65);}
+.rail-tone-2,.rail-tone-6 {filter:sepia(.26) brightness(.87) drop-shadow(3px 5px 3px #21140a5d);}
+.rail-tone-3,.rail-tone-7 {filter:brightness(.53) saturate(.58) drop-shadow(3px 6px 3px #21140a55);}
+.rail-shelf {position:absolute;bottom:0;left:0;right:0;height:18%;border-top:10px solid #996a43;background:#6d452d;display:flex;gap:12px;align-items:center;padding:8px 12%;}
+.rail-shelf span {width:31%;height:88%;border-radius:7px 7px 2px 2px;background:linear-gradient(#c4ab8b,#8e6e50);box-shadow:3px 4px 5px #2b170c5c;}
+.rail-shelf span:nth-child(2) {background:#615e5b;}
+.rail-shelf span:nth-child(3) {background:#aa8f75;}
+.shelf-section {background:#65432e;border:0;border-bottom:8px solid #a4764c;margin:0 0 18px;padding:0;overflow-x:auto;scrollbar-width:none;}
+.shelf-section::-webkit-scrollbar {display:none;}
+.shelf-choices {display:flex;width:max-content;min-width:100%;justify-content:space-between;background:transparent;gap:0;}
+.shelf-choices::after {display:none;}
+.shelf-choice {min-height:73px;min-width:78px;max-width:115px;gap:4px;border:0;background:transparent;padding:8px 12px;color:#f6e7d2;box-shadow:none;}
+.shelf-choice::before {display:none;}
+.shelf-choice svg {stroke-width:1.2;filter:none;}
+.shelf-choice .garment-art-small {width:28px;height:31px;filter:grayscale(1) brightness(1.9);opacity:.95;}
+.shelf-choice span {font-size:10px;}
+.shelf-choice[aria-pressed=true] {background:#f6e5c6;color:#65402a;box-shadow:inset 0 -3px #af895b;}
+.shelf-choice[aria-pressed=true] .garment-art-small {filter:none;}
+.shelf-choice:hover:not([aria-pressed=true]) {background:#ffffff1c;}
+/* One compact toolbar, no pill avalanche on mobile. */
+.wardrobe-controls {position:sticky;top:68px;background:#faf7f1ee;backdrop-filter:blur(15px);z-index:6;padding:10px 0 0;}
+.wardrobe-controls .category-pills {display:none;}
+.toolbar {flex-wrap:wrap;align-items:center;}
+.search-box {background:#fffdfa;border:1px solid #d7cbb9;border-radius:8px;}
+.search-box input {font-size:13px;}
+.filter-fav {background:#fffdfa;border-color:#d7cbb9;border-radius:8px;}
+.filter-fav.selected {background:#f7e7df;}
+.planning-controls {margin:11px 0;}
+.planning-controls .sort-control select,.sort-control select {background:transparent;border:1px solid #d9cbbb;border-radius:6px;}
+.collection-summary {margin:12px 0;}
+.collection-summary .results-count {font-size:12px;}
+/* Outfit room: garments are true photos or category illustrations on a wooden hanger rail. */
+.closet-banner {min-height:142px;border:0;border-top:8px solid #bb946a;border-bottom:10px solid #805432;border-radius:0;background:
+  repeating-linear-gradient(90deg,transparent 0 14px,#0000000a 16px,transparent 18px,#f9dba817 31px),
+  linear-gradient(100deg,#93633e,#6e492f 60%,#513421);
+  color:#fff7ee;margin-bottom:17px;box-shadow:inset 0 5px 9px #2d1a1070;
+}
+.closet-banner h2 {font-size:clamp(27px,3vw,38px);font-weight:600;color:#fff8ef;}
+.closet-banner-art::before {background:linear-gradient(#f0d09f,#68482e);}
+.closet-banner-art span {filter:brightness(.88) drop-shadow(2px 5px 4px #20120670);}
+.planning-top-action {justify-content:end;}
+.planning-panel {border-top:1px solid var(--line);padding:20px 0;}
+.planning-panel h3 {font-size:20px;}
+.look-stage {background:radial-gradient(ellipse at top,#e7be8570,transparent 65%),linear-gradient(90deg,#7d5538,#a8794e 48%,#735038);border-top:12px solid #8f633e;border-bottom:14px solid #8c5f39;min-height:300px;padding:56px 12px 27px;gap:13px;}
+.look-stage::before {top:22px;height:6px;background:linear-gradient(#f3d3a1,#7b4f2a);}
+.look-hanger {max-width:240px;min-width:80px;gap:9px;padding:5px 3px 8px;border-radius:4px;justify-content:flex-start;}
+.look-photo {height:195px;width:100%;background:#e5d6c0;clip-path:polygon(5% 0,95% 0,100% 100%,0 100%);filter:drop-shadow(3px 7px 4px #21160e60);}
+.look-photo img {object-fit:contain;}
+.look-photo .garment-art {max-height:95%;width:84%;}
+.look-hanger span:not(.look-garment):not(.garment-thumb) {font-size:12px;color:#fff4e5;white-space:normal;max-width:unset;}
+.wear-option {border-radius:0;background:transparent;border:0;border-bottom:1px solid var(--line);}
+.wear-option.worn {background:#eee6d8;}
+.wear-mini {height:58px;width:53px;flex:0 0 53px;border-radius:4px;}
+.wear-mini .garment-art {width:78%;height:84%;}
+.insight-grid {gap:20px;}
+.insight-panel,.calendar-panel,.wear-panel {border:0;border-bottom:1px solid var(--line);border-radius:0;}
+.insight-panel h3,.calendar-head h3 {font-size:21px;}
+/* Compact visual wear calendar — month, week and list share the same images. */
+.calendar-layout {grid-template-columns:minmax(0,1fr) minmax(280px,.8fr);gap:26px;}
+.calendar-panel,.wear-panel {padding:15px 0;}
+.calendar-mode {display:grid;grid-template-columns:repeat(3,1fr);background:#eee8df;border-radius:9px;padding:4px;margin-bottom:20px;gap:4px;}
+.calendar-mode button {min-height:42px;border:0;border-radius:6px;background:transparent;color:#69584a;font-size:13px;}
+.calendar-mode button[aria-pressed=true] {background:#6c4225;color:#fff;box-shadow:0 1px 4px #2c1b1040;}
+.calendar-head {margin-bottom:14px;}
+.calendar-grid {gap:2px;}
+.weekday {padding-bottom:8px;color:#766454;}
+.day-cell {background:#fbf8f3;border:1px solid #eee5da;border-radius:3px;min-height:75px;gap:1px;justify-content:flex-start;padding:8px 2px 3px;overflow:hidden;font-size:11px;}
+.day-cell.outside {opacity:.42;}
+.day-cell.selected {background:#825737;border-color:#825737;color:#fff;}
+.day-cell.today:not(.selected) {border-color:#9e6533;}
+.calendar-mini {width:48px;height:45px;margin-top:3px;background:#f2e9dc;}
+.calendar-mini .garment-art {height:92%;width:85%;}
+.calendar-list {display:grid;gap:0;}
+.calendar-list-row {min-height:81px;display:flex;gap:11px;align-items:center;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);color:#43352a;padding:7px 2px;}
+.calendar-list-row > span:first-child {font-size:13px;width:38%;}
+.calendar-list-images {display:flex;flex:1;gap:4px;overflow:hidden;}
+.calendar-list-images .garment-thumb {width:48px;height:53px;flex:0 0 48px;}
+.wear-panel .wear-search {margin-top:16px;}
+/* Analysis follows the screenshot's swatch + ring language rather than KPI cards. */
+.category-overview {border-bottom:1px solid var(--line);padding:14px 0 26px;}
+.category-overview h3 {font-size:18px;font-weight:650;margin:0 0 18px;}
+.category-overview-body {display:flex;align-items:center;gap:clamp(24px,7vw,95px);}
+.category-donut {width:clamp(155px,22vw,250px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;flex-shrink:0;}
+.category-donut > span {width:61%;aspect-ratio:1;border-radius:50%;background:#faf7f1;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:33px;font-weight:650;color:#513a26;}
+.category-donut small {font-size:12px;font-weight:500;}
+.category-overview-legend {display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:8px 27px;flex:1;max-width:550px;}
+.category-overview-legend > div {display:flex;align-items:center;gap:8px;font-size:12px;}
+.category-overview-legend i {width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.category-overview-legend span {flex:1;}
+.category-overview-legend b {font-weight:600;}
+.category-bars progress {height:6px;}
+/* Settings menu is a real navigational index, as on the reference board. */
+.settings-hub {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--line);margin:18px 0 18px;}
+.settings-hub button {display:flex;align-items:center;gap:15px;min-height:72px;border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;padding:10px 12px;color:#5a3c28;font-size:14px;}
+.settings-hub button:nth-child(odd) {border-right:1px solid var(--line);}
+.settings-hub button:hover {background:#f1e9dc;}
+.settings-hub button > span {flex:1;font-weight:620;}
+#settings-account,#settings-lock,#settings-backup,#settings-data {scroll-margin-top:84px;}
+.settings-card {border-radius:0;padding:23px 0;}
+.settings-highlight {border-radius:0;background:transparent;padding:19px 0;}
+.settings-highlight-icon {border-radius:5px;}
+.account-section {border-color:var(--line);margin-top:12px;}
+.account-line {border-color:var(--line);}
+.account-tabs button[aria-pressed=true] {border-color:#755037;}
+/* Item registration: photo alcove, selectable pictograms and seasonal controls. */
+.editor-dialog {width:min(620px,calc(100% - 20px));border:0;border-radius:8px;background:#faf7f1;}
+.editor-dialog::backdrop {background:#1a110ab0;backdrop-filter:blur(5px);}
+.dialog-head {background:#fcfaf6;color:var(--ink);border:0;border-bottom:1px solid var(--line);padding:23px 25px 18px;}
+.dialog-head h2 {color:var(--ink);font-size:23px;font-weight:650;}
+.dialog-head .icon-button {color:#5d4737;}
+.editor-form {padding:20px 25px 28px;background:#faf7f1;}
+.photo-field {display:block;background:transparent;padding:0;margin:0 0 20px;}
+.photo-preview {
+  width:100%;height:258px;position:relative;overflow:hidden;background:
+    radial-gradient(ellipse at 50% 10%,#f6d7a97a,transparent 70%),
+    repeating-linear-gradient(90deg,#ffffff10 0 1px,transparent 2px 25px),
+    linear-gradient(105deg,#755034,#a4774d,#69472c);
+  border:9px solid #855b39;border-top:12px solid #a67d56;border-bottom:13px solid #855b39;box-shadow:inset 0 0 18px #3019078c;max-width:none;border-radius:0;
+}
+.photo-display-rail {position:absolute;top:15px;left:30%;right:30%;height:5px;background:linear-gradient(#f9d49d,#82522d);z-index:1;border-radius:3px;}
+.photo-preview > .garment-art {width:42%;height:88%;filter:drop-shadow(8px 13px 5px #27180d55);}
+.photo-preview img {position:relative;z-index:2;object-fit:contain;width:100%;height:100%;}
+.photo-instructions {display:flex;align-items:center;gap:10px;padding:10px 0 0;}
+.photo-instructions strong {font-size:13px;margin-right:auto;}
+.photo-instructions p {display:none;}
+.photo-instructions .button {min-height:44px;}
+.photo-instructions .text-button {display:inline-block;padding:8px;}
+.field {margin-bottom:15px;}
+.field > label,.season-field legend {color:#584433;font-size:12px;font-weight:650;}
+.field input:not([type=checkbox]),.field select,.field textarea {background:#fffcf8;border:1px solid #d9cabb;border-radius:6px;font-size:14px;min-height:46px;}
+.field-category select {position:absolute;width:1px;height:1px;opacity:.001;pointer-events:none;}
+.field-category select:focus-visible + .category-tiles {outline:3px solid #c69959;outline-offset:3px;}
+.category-tiles {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;}
+.category-tile {display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:87px;gap:6px;color:#5e5145;background:#f0eae2;border:1px solid #ebe2d7;border-radius:6px;padding:7px 2px;}
+.category-tile .garment-art {height:43px;width:50px;}
+.category-tile span {font-size:11px;white-space:nowrap;}
+.category-tile[aria-pressed=true] {background:#fff5e8;color:#744321;border:2px solid #88542c;padding:6px 1px;}
+.season-field {margin:16px 0;}
+.season-tiles {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:10px;}
+.season-tile {display:flex;flex-direction:column;justify-content:center;align-items:center;gap:7px;min-height:67px;border:1px solid #e9e1d6;border-radius:6px;background:#f2ede6;color:#695342;padding:8px 3px;}
+.season-tile span {font-size:12px;}
+.season-tile[aria-pressed=true] {border:2px solid #8c542d;background:#fff3e5;color:#85502e;padding:7px 2px;}
+.archive-toggle {font-size:13px;}
+.archive-toggle svg {color:#77583a;}
+.dialog-actions {background:#faf7f1;border-color:var(--line);}
+.form-error {background:#fff1eb;}
+.bulk-dialog .photo-field {display:flex;}
+.bulk-row {border-radius:5px;}
+/* Respect viewport and reachable controls */
+@media(max-width:1150px) {
+  .garment-grid.wardrobe-grid {grid-template-columns:repeat(3,minmax(0,1fr));}
+  .calendar-layout {grid-template-columns:1fr;}
+}
+@media(max-width:850px) {
+  .topbar {height:62px;}
+  .main-content {padding:17px 17px calc(112px + env(safe-area-inset-bottom));}
+  .main-content:has(.wardrobe-stage) {padding-top:0;}
+  .wardrobe-stage {height:calc(100svh - 130px);min-height:460px;}
+  .mobile-nav {height:calc(68px + env(safe-area-inset-bottom));background:#fffaf4f5;border-color:#e1d6c8;box-shadow:0 -3px 9px #33221711;}
+  .mobile-nav button {min-height:50px;gap:4px;color:#796a5d;font-size:10px;}
+  .mobile-nav button.active {color:#744721;border-top:2px solid #784e30;}
+  .mobile-brand strong {font-size:24px;}
+  .mobile-quick-add,.mobile-settings {border:0;background:transparent;color:#533922;width:44px;height:44px;}
+  .local-badge {display:none;}
+  .mobile-settings {display:none;}
+  .main-content:has(.wardrobe-stage) {padding-inline:0;}
+  .home-contents {padding-inline:17px;}
+  .wardrobe-controls {top:62px;}
+}
+@media(max-width:600px) {
+  .wardrobe-stage {height:calc(100svh - 130px);min-height:425px;max-height:830px;border:0;border-top:4px solid #694428;border-bottom:9px solid #70482e;}
+  .wardrobe-copy {top:7%;left:8%;}
+  .wardrobe-copy h1 {font-size:52px;margin-bottom:clamp(84px,22svh,200px);}
+  .wardrobe-headline {font-size:clamp(21px,5.5vw,28px);}
+  .wardrobe-stage-controls {bottom:14px;left:7%;right:7%;gap:8px;}
+  .wardrobe-door-toggle {font-size:11px;min-height:45px;padding:8px 12px;}
+  .wardrobe-scroll-cue {font-size:11px;min-height:45px;}
+  .wardrobe-browse {bottom:80px;right:7%;font-size:11px;}
+  .home-greeting h2 {font-size:21px;}
+  .home-today {grid-template-columns:1fr;}
+  .home-today button {min-height:67px;border-right:0;border-bottom:1px solid var(--line);padding:11px 6px;}
+  .home-today button:last-child {border-bottom:0;}
+  .home-contents .metric {padding:12px 6px;}
+  .metric-head {font-size:10px;}
+  .metric strong {font-size:25px;}
+  .home-contents .quick-actions {grid-template-columns:1fr 1fr;}
+  .home-contents .quick-actions button {padding:13px 5px;}
+  .home-contents .quick-actions strong {font-size:11px;}
+  .home-contents .garment-grid:not(.wardrobe-grid) {display:flex;gap:9px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;}
+  .home-contents .garment-card {flex:0 0 38%;min-width:120px;scroll-snap-align:start;}
+  .home-contents .garment-media {aspect-ratio:.88;}
+  .main-content:not(:has(.wardrobe-stage)) {padding-inline:13px;}
+  .page-intro {gap:11px;}
+  .page-intro .planning-actions {display:flex;flex-wrap:nowrap;width:100%;}
+  .page-intro .planning-actions .button {flex:1;padding:0 7px;min-width:0;white-space:normal;font-size:12px;}
+  .closet-rail-showcase {height:206px;border:5px solid #835b3f;border-top-width:9px;border-bottom-width:10px;}
+  .rail-clothes {left:2%;right:2%;top:15%;gap:1%;}
+  .shelf-choice {min-width:70px;min-height:73px;padding:6px 8px;}
+  .shelf-choice span {font-size:10px;}
+  .garment-grid.wardrobe-grid {grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+  .wardrobe-grid .garment-media {aspect-ratio:.83;}
+  .wardrobe-grid .garment-details {padding:6px 2px 9px;}
+  .wardrobe-grid .garment-name {font-size:11px;}
+  .wardrobe-grid .garment-details p {font-size:10px;}
+  .wardrobe-grid .category-label {font-size:9px;}
+  .toolbar {flex-direction:row;gap:8px;}
+  .toolbar .search-box {flex:1;min-width:0;width:auto;}
+  .filter-fav {min-height:45px;padding:0 9px;font-size:11px;}
+  .filter-fav svg {width:16px;}
+  .closet-banner {min-height:126px;grid-template-columns:1fr 34%;padding:16px;}
+  .closet-banner h2 {font-size:26px;}
+  .look-stage {min-height:215px;padding:44px 8px 15px;}
+  .look-photo {height:137px;}
+  .look-hanger {min-width:68px;}
+  .wear-option {min-height:67px;}
+  .calendar-mode {margin-bottom:13px;}
+  .calendar-panel,.wear-panel {padding:9px 0;}
+  .day-cell {min-height:63px;padding:4px 0 2px;font-size:10px;gap:0;}
+  .calendar-mini {width:30px;height:30px;margin-top:2px;}
+  .calendar-list-images .garment-thumb {width:40px;height:44px;flex-basis:40px;}
+  .category-overview-body {gap:18px;align-items:flex-start;}
+  .category-donut {width:135px;}
+  .category-donut > span {font-size:23px;}
+  .category-overview-legend {grid-template-columns:1fr;gap:6px;}
+  .category-overview-legend > div {font-size:11px;}
+  .settings-hub {grid-template-columns:1fr;}
+  .settings-hub button {min-height:58px;}
+  .settings-hub button:nth-child(odd) {border-right:0;}
+  .photo-preview {height:230px;}
+  .photo-preview > .garment-art {width:53%;}
+  .editor-dialog {width:100%;max-height:100dvh;height:100dvh;margin:0;border:0;border-radius:0;}
+  .editor-form {padding:14px 16px 50px;}
+  .dialog-head {padding:17px 16px;border-bottom:1px solid var(--line);}
+  .dialog-head h2 {font-size:20px;}
+  .photo-instructions {padding:7px 0;}
+  .category-tiles {gap:5px;}
+  .category-tile {min-height:77px;}
+  .category-tile .garment-art {height:38px;}
+  .category-tile span {font-size:10px;}
+  .season-tile {min-height:61px;}
+  .dialog-actions {padding:12px 16px calc(15px + env(safe-area-inset-bottom));}
+}
+@media(max-width:360px) {
+  .garment-grid.wardrobe-grid {grid-template-columns:repeat(2,minmax(0,1fr));}
+  .category-donut {width:115px;}
+  .category-tile span {font-size:9px;}
+  .wardrobe-copy h1 {margin-bottom:70px;}
+  .wardrobe-stage-controls {flex-wrap:wrap;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .wardrobe-door,.wardrobe-copy {transition:none!important;}
+}
