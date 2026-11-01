@@ -39,6 +39,8 @@ export default function ChatGptDraft({ items, service, onClose }: {
   });
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
+  const [preparedFiles, setPreparedFiles] = useState<File[]>([]);
+  const [photosReady, setPhotosReady] = useState(false);
   const projectUrl = validChatGptProjectUrl(projectInput);
   const text = prompt.trim();
   useEffect(() => {
@@ -47,6 +49,22 @@ export default function ChatGptDraft({ items, service, onClose }: {
     el.showModal();
     return () => { if (el.open) el.close(); };
   }, []);
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      const images: File[] = [];
+      for (const item of items.slice(0, 4)) {
+        if (!item.imageId) continue;
+        try {
+          const blob = await service.image(item.id);
+          if (!blob || !['image/jpeg', 'image/png', 'image/webp'].includes(blob.type)) continue;
+          images.push(new File([blob], 'clozy-' + (images.length + 1) + '.' + blob.type.split('/')[1], { type: blob.type }));
+        } catch { /* Missing photos do not block a text-only consultation. */ }
+      }
+      if (active) { setPreparedFiles(images); setPhotosReady(true); }
+    })();
+    return () => { active = false; };
+  }, [items, service]);
   function saveProject(value: string) {
     setProjectInput(value);
     try {
@@ -56,18 +74,12 @@ export default function ChatGptDraft({ items, service, onClose }: {
     } catch { /* Storage may be disabled. */ }
   }
   async function share() {
-    if (!text || busy || !navigator.share) return;
+    if (!text || busy || !photosReady || !navigator.share) return;
+    const outgoing: ShareData = { title: 'Clozy · コーデ相談', text };
+    if (preparedFiles.length && navigator.canShare?.({ files: preparedFiles })) outgoing.files = preparedFiles;
+    // Call navigator.share synchronously during the click's transient user activation.
     setBusy(true); setStatus('');
     try {
-      const files: File[] = [];
-      for (const item of items.slice(0, 4)) {
-        if (!item.imageId) continue;
-        const blob = await service.image(item.id);
-        if (!blob || !['image/jpeg', 'image/png', 'image/webp'].includes(blob.type)) continue;
-        files.push(new File([blob], 'clozy-' + (files.length + 1) + '.' + blob.type.split('/')[1], { type: blob.type }));
-      }
-      const outgoing: ShareData = { title: 'Clozy · コーデ相談', text };
-      if (files.length && navigator.canShare?.({ files })) outgoing.files = files;
       await navigator.share(outgoing);
       setStatus('共有先で内容を確認してください。ChatGPTへの自動保存は行いません。');
     } catch (error) {
@@ -79,15 +91,16 @@ export default function ChatGptDraft({ items, service, onClose }: {
     if (!text) return;
     // Open immediately on direct button activation; async clipboard writes may be blocked by browsers.
     const target = projectUrl || CHATGPT_HOME;
-    const popup = window.open(target, '_blank', 'noopener,noreferrer');
+    // Start writing to the clipboard before the external window steals focus.
+    let operation: Promise<void> | null = null;
+    try { operation = navigator.clipboard.writeText(text); } catch { /* Clipboard not permitted. */ }
+    window.open(target, '_blank', 'noopener,noreferrer');
     try {
-      await navigator.clipboard.writeText(text);
+      if (!operation) throw new Error('Clipboard API unavailable');
+      await operation;
       setStatus('文章をコピーしました。ChatGPTの入力欄に貼り付け、内容を確認して送信してください。');
     } catch {
       setStatus('ChatGPTを開きました。コピーできない場合は上の文章を選択して貼り付けてください。');
-    }
-    if (!popup) {
-      // noopener windows can legitimately return null even when opened.
     }
   }
   function openPrefilled() {
@@ -106,7 +119,7 @@ export default function ChatGptDraft({ items, service, onClose }: {
       <input id="clozy-chatgpt-project" type="url" value={projectInput} placeholder="https://chatgpt.com/g/g-p-..." onChange={event => saveProject(event.target.value)} />
       {projectInput && !projectUrl && <small role="alert">ChatGPTのプロジェクトのリンクを設定してください。通常のChatGPTを開きます。</small>}
       <div className="chatgpt-draft-actions">
-        {typeof navigator.share === 'function' && <button type="button" disabled={!text || busy} onClick={() => void share()}><Icon name="upload" size={18}/> {busy ? '準備中…' : '画像・文章を共有'}</button>}
+        {typeof navigator.share === 'function' && <button type="button" disabled={!text || busy || !photosReady} onClick={() => void share()}><Icon name="upload" size={18}/> {!photosReady || busy ? '準備中…' : '画像・文章を共有'}</button>}
         <button type="button" disabled={!text} onClick={() => void copyAndOpen()}><Icon name="arrow" size={18}/> {projectUrl ? '文章をコピーしてプロジェクトを開く' : '文章をコピーしてChatGPTを開く'}</button>
       </div>
       <details className="chatgpt-draft-experimental">
