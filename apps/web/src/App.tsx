@@ -3,6 +3,7 @@ import type { Clothing, WearEntry } from '@clozy/domain';
 import { CATEGORIES, filterClothing, getWearCounts, wardrobeAnalysis } from '@clozy/domain';
 import { ClozyService } from '@clozy/application';
 import { IndexedDbRepository } from '@clozy/storage';
+import { PreviewWardrobeRepository, isReviewHost, isPreviewDeployment } from './PreviewWardrobe';
 import Icon from './Icon';
 import type { IconName } from './Icon';
 import GarmentForm from './GarmentForm';
@@ -203,7 +204,11 @@ function Settings({ service, onReload, onNotice, busy, setBusy }: {
   </>;
 }
 export default function App() {
-  const service = useMemo(() => new ClozyService(new IndexedDbRepository()), []);
+  const realService = useMemo(() => new ClozyService(new IndexedDbRepository()), []);
+  const previewService = useMemo(() => new ClozyService(new PreviewWardrobeRepository()), []);
+  const reviewHost = isReviewHost(window.location.hostname);
+  const [demoMode, setDemoMode] = useState(() => reviewHost && new URLSearchParams(window.location.search).get('demo') === '1');
+  const service = demoMode ? previewService : realService;
   const [view, setView] = useState<View>('home');
   const [menuOpen, setMenuOpen] = useState(false);
   const [sharedProduct, setSharedProduct] = useState<{name: string; sourceUrl: string} | null>(null);
@@ -233,8 +238,19 @@ export default function App() {
   }, []);
   const reload = useCallback(async () => {
     const data = await service.list();
+    // Public PR previews default to a synthetic in-memory wardrobe only when no
+    // real local items exist. Never clone a private cloud backup into preview.
+    if (!demoMode && isPreviewDeployment(window.location.hostname)
+      && data.clothing.length === 0 && data.wears.length === 0
+      && localStorage.getItem('clozy-preview-personal') !== '1'
+      && !new URLSearchParams(window.location.search).has('from')) {
+      setDemoMode(true);
+      const sample = await previewService.list();
+      setItems(sample.clothing); setWears(sample.wears);
+      return;
+    }
     setItems(data.clothing); setWears(data.wears);
-  }, [service]);
+  }, [service, demoMode, previewService]);
   useEffect(() => {
     let live = true;
     void reload().catch(error => {
@@ -253,12 +269,24 @@ export default function App() {
     if (!window.confirm('「' + item.name + '」と関連する着用記録を削除しますか？')) return;
     if (await execute(() => service.remove(item.id), 'アイテムを削除しました。')) setSelected(null);
   }
+  function setPreviewMode(next: boolean) {
+    if (!reviewHost) return;
+    setMenuOpen(false); setSelected(null); setBulkOpen(false);
+    localStorage.setItem('clozy-preview-personal', next ? '0' : '1');
+    setDemoMode(next);
+    setLoading(true);
+    // Changing the service reference reloads the correct, isolated repository.
+  }
   function changeView(next: View) {
     setMenuOpen(false);
     setView(next);
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
-  return <div className="app-shell" data-view={view}>
+  return <div className="app-shell" data-view={view} data-preview={reviewHost ? "true" : "false"}>
+    {reviewHost && <div className={'preview-ribbon' + (demoMode ? ' is-demo' : '')} aria-label="プレビューのデータ切り替え">
+      <span><strong>{demoMode ? 'SAMPLE CLOSET' : 'PREVIEW'}</strong> {demoMode ? '見本26着・履歴99件を再現 / 保存はこの画面内だけ' : '自分の端末のデータを表示中'}</span>
+      <button type="button" onClick={() => setPreviewMode(!demoMode)}>{demoMode ? '自分のデータに切替' : '見本データを見る'}</button>
+    </div>}
     <a className="skip-link" href="#main-content">本文へスキップ</a>
     <div className="main-shell">
       <main className="main-content" id="main-content" tabIndex={-1}>
@@ -269,7 +297,11 @@ export default function App() {
           {view === 'planning' && <Planning items={items} wears={wears} service={service} busy={busy} onAdd={() => setSelected('new')} onEdit={setSelected} onRecord={(outfit, date) => void execute(() => service.recordOutfit(outfit, date, wears), '組み合わせを着用記録に追加しました。')} />}
           {view === 'calendar' && <CalendarView items={items} wears={wears} service={service} busy={busy} onToggle={(item, date) => void execute(() => service.toggleWear(item, date, wears), '着用記録を更新しました。')} onAdd={() => setSelected('new')} />}
           {view === 'insights' && <Insights items={items} wears={wears} onEdit={setSelected} />}
-          {view === 'settings' && <Settings service={service} onReload={reload} onNotice={setNotice} busy={busy} setBusy={setBusy} />}
+          {view === 'settings' && (demoMode ? <section className="preview-demo-settings">
+            <h2>これは見本のクローゼットです</h2>
+            <p>見本データは一時的なものです。本番の個人データやクラウドのバックアップには触れません。アカウント管理・バックアップの操作は無効です。</p>
+            <button type="button" onClick={() => { setPreviewMode(false); changeView('settings'); }}>自分のデータで設定を開く</button>
+          </section> : <Settings service={service} onReload={reload} onNotice={setNotice} busy={busy} setBusy={setBusy} />)}
         </>}
       </main>
     </div>
