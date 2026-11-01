@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { Clothing, Category, WearEntry } from '@clozy/domain';
-import { CATEGORIES, SEASONS, filterClothing, getWearCounts, inSeason, wardrobeAnalysis } from '@clozy/domain';
+import type { Clothing, WearEntry } from '@clozy/domain';
+import { CATEGORIES, filterClothing, getWearCounts, wardrobeAnalysis } from '@clozy/domain';
 import { ClozyService } from '@clozy/application';
 import { IndexedDbRepository } from '@clozy/storage';
 import Icon from './Icon';
@@ -10,7 +10,7 @@ import BulkAdd from './BulkAdd';
 import Planning from './Planning';
 import CloudAccount from './CloudAccount';
 import ClosetRail from './ClosetRail';
-import { GarmentArt, GarmentThumb } from './GarmentVisual';
+import { GarmentThumb } from './GarmentVisual';
 import { hasPasskey, supportsPasskey, registerPasskey, removePasskey, passkeyError } from './passkey';
 
 type View = 'home' | 'wardrobe' | 'planning' | 'calendar' | 'insights' | 'settings';
