@@ -56,6 +56,17 @@ try {
   await page.getByLabel('メモ').fill('通勤に使う\n手洗い推奨');
   await page.getByRole('button', { name: '保存する', exact: true }).click();
   await page.getByRole('dialog').waitFor({ state: 'hidden' });
+  await page.locator('.closet-search input').fill('');
+  await page.locator('.closet-plaque button').click();
+  await page.getByRole('button', { name: '比較に追加' }).click();
+  assert.equal(await page.locator('.closet-compare-thumb').count(), 1, 'first comparison item is retained');
+  await page.getByRole('button', { name: '次の服へ' }).click();
+  await page.locator('.closet-plaque button').click();
+  await page.getByRole('button', { name: '比較に追加' }).click();
+  await page.getByRole('button', { name: '2着を比較', exact: true }).click();
+  assert.equal(await page.locator('.closet-compare-columns section').count(), 2, 'side by side comparison renders');
+  await page.getByRole('button', { name: '比較画面を閉じる' }).click();
+  await page.getByRole('button', { name: '比較を解除' }).click();
   await page.getByRole('navigation').getByRole('button', { name: 'コーデ', exact: true }).click();
   await page.getByRole('heading', { name: '今日のコーデ' }).waitFor();
   assert.equal(await page.locator('.planning-panel .wear-option').count(), 3);
