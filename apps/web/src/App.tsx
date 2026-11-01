@@ -282,7 +282,7 @@ export default function App() {
     setView(next);
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
-  return <div className="app-shell" data-view={view}>
+  return <div className="app-shell" data-view={view} data-preview={reviewHost ? "true" : "false"}>
     {reviewHost && <div className={'preview-ribbon' + (demoMode ? ' is-demo' : '')} aria-label="プレビューのデータ切り替え">
       <span><strong>{demoMode ? 'SAMPLE CLOSET' : 'PREVIEW'}</strong> {demoMode ? '見本26着・履歴99件を再現 / 保存はこの画面内だけ' : '自分の端末のデータを表示中'}</span>
       <button type="button" onClick={() => setPreviewMode(!demoMode)}>{demoMode ? '自分のデータに切替' : '見本データを見る'}</button>
