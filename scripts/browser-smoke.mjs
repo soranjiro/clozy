@@ -106,6 +106,11 @@ try {
   await page.getByRole('button', { name: '引き出しを閉じる' }).click();
   await page.getByRole('button', { name: '次の服へ' }).click();
   assert.equal(await page.locator('.closet-garment-slide.is-active').count(), 1, 'mobile rail supports tapping to advance');
+  const rail = page.locator('.closet-rail-track');
+  const beforeSlide = await rail.evaluate(el => el.scrollLeft);
+  await rail.evaluate(el => el.scrollBy({left:140,behavior:'instant'}));
+  await page.waitForTimeout(150);
+  assert.notEqual(await rail.evaluate(el => el.scrollLeft), beforeSlide, 'hanger rail supports native horizontal scrolling');
   await page.getByRole('navigation', { name: 'モバイルナビゲーション' }).getByRole('button', { name: 'コーデ', exact: true }).click();
   await page.getByRole('heading', { name: '今日のコーデ' }).waitFor();
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, 'mobile overflow');
@@ -135,7 +140,7 @@ try {
   await page.getByRole('button', { name: '1着を登録', exact: true }).waitFor({ state: 'visible' });
   await page.getByRole('dialog').getByRole('button', { name: '閉じる', exact: true }).last().click();
   assert.equal(await page.locator('.closet-garment-slide').count(), 3, 'closet shows three active garments after one was archived');
-  assert.equal(await page.locator('.closet-drawer-items button').count(), 0, 'closed drawer does not expose focusable items');
+  assert.equal(await page.locator('.closet-drawer-content').getAttribute('aria-hidden'), 'true', 'closed drawer is hidden from assistive technology');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.getByRole('navigation', { name: 'モバイルナビゲーション' }).getByRole('button', { name: 'ホーム', exact: true }).click();
   await page.getByRole('button', { name: '引き出しを開く' }).click();
