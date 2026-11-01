@@ -14,7 +14,7 @@ describe('preview fixtures are isolated and representative', () => {
     expect(new Set(sample.wears.map(w => w.clothingId + ':' + w.date)).size).toBe(99);
     sample.clothing.forEach(validateClothing);
     sample.wears.forEach(validateWearEntry);
-    expect(previewColor(sample.clothing[0].id)).toMatch(/^#[a-f0-9]{6}$/);
+    expect(previewColor(sample.clothing[0]!.id)).toMatch(/^#[a-f0-9]{6}$/);
     expect(previewColor('unrelated')).toBeUndefined();
   });
   it('never silently shows a synthetic wardrobe in production', () => {
@@ -28,7 +28,7 @@ describe('preview fixtures are isolated and representative', () => {
   it('keeps demo edits and wear records in volatile memory only', async () => {
     const store = new PreviewWardrobeRepository();
     const initial = await store.snapshot();
-    await store.deleteClothing(initial.clothing[0].id);
+    await store.deleteClothing(initial.clothing[0]!.id);
     expect((await store.snapshot()).clothing).toHaveLength(25);
     expect((await new PreviewWardrobeRepository().snapshot()).clothing).toHaveLength(26);
   });
@@ -44,8 +44,8 @@ describe('ChatGPT prompt transfer', () => {
   it('builds bounded user-reviewable drafts without network calls', () => {
     const clothes = makePreviewSnapshot().clothing;
     const p = draftPrompt(clothes.slice(0, 2));
-    expect(p).toContain(clothes[0].name);
-    expect(p).toContain(clothes[1].name);
+    expect(p).toContain(clothes[0]!.name);
+    expect(p).toContain(clothes[1]!.name);
     expect(new URL(draftUrl(p)).origin).toBe('https://chatgpt.com');
     expect(new URL(draftUrl(p)).searchParams.get('q')).toBe(p);
   });
