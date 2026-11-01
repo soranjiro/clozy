@@ -74,13 +74,17 @@ try {
   await page.locator('.closet-plaque button').click();
   await page.getByRole('button', { name: '比較に追加' }).click();
   assert.equal(await page.locator('.closet-compare-thumb').count(), 1, 'first comparison item is retained');
-  await page.getByRole('button', { name: '次の服へ' }).click();
+  // Explicitly select a different physical compartment; smooth rail scrolling
+  // must not make comparison depend on an animation's intermediate index.
+  await page.getByRole('navigation', { name: '収納場所から服を探す' }).getByRole('button', { name: 'ボトムス、1着' }).click();
   await page.locator('.closet-plaque button').click();
   await page.getByRole('button', { name: '比較に追加' }).click();
+  assert.equal(await page.locator('.closet-compare-thumb').count(), 2, 'two distinct garments selected');
   await page.getByRole('button', { name: '2着を比較', exact: true }).click();
   assert.equal(await page.locator('.closet-compare-columns section').count(), 2, 'side by side comparison renders');
   await page.getByRole('button', { name: '比較画面を閉じる' }).click();
   await page.getByRole('button', { name: '比較を解除' }).click();
+  await page.getByRole('navigation', { name: '収納場所から服を探す' }).getByRole('button', { name: /すべて/ }).click();
   await navigate('コーデ');
   await page.getByRole('heading', { name: '今日のコーデ' }).waitFor();
   assert.equal(await page.locator('.planning-panel .wear-option').count(), 3);
