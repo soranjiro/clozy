@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { Clothing, WearEntry } from '@clozy/domain';
+import type { Clothing, Category, WearEntry } from '@clozy/domain';
 import { CATEGORIES, filterClothing, getWearCounts, wardrobeAnalysis } from '@clozy/domain';
 import { ClozyService } from '@clozy/application';
 import { IndexedDbRepository } from '@clozy/storage';
@@ -10,18 +10,19 @@ import GarmentForm from './GarmentForm';
 import BulkAdd from './BulkAdd';
 import Planning from './Planning';
 import CloudAccount from './CloudAccount';
-import ClosetRail from './ClosetRail';
+import ImmersiveCloset from './closet/ImmersiveCloset';
+import ClosetDialog from './closet/ClosetDialog';
 import { GarmentThumb } from './GarmentVisual';
 import { hasPasskey, supportsPasskey, registerPasskey, removePasskey, passkeyError } from './passkey';
 
 type View = 'home' | 'wardrobe' | 'planning' | 'calendar' | 'insights' | 'settings';
 type Notice = { message: string; kind: 'success' | 'error' };
-const waypoints: { key: View; title: string; icon: IconName }[] = [
-  { key: 'home', title: 'クローゼット', icon: 'hanger' },
-  { key: 'wardrobe', title: '服を整理', icon: 'grid' },
-  { key: 'planning', title: 'コーデ', icon: 'sparkles' },
-  { key: 'calendar', title: '着用記録', icon: 'calendar' },
-  { key: 'insights', title: '服を見直す', icon: 'chart' },
+const nav: { key: View; title: string; icon: IconName }[] = [
+  { key: 'home', title: 'ホーム', icon: 'home' },
+  { key: 'wardrobe', title: 'クローゼット', icon: 'hanger' },
+  { key: 'planning', title: 'コーデ', icon: 'hanger' },
+  { key: 'calendar', title: 'カレンダー', icon: 'calendar' },
+  { key: 'insights', title: '分析', icon: 'chart' },
   { key: 'settings', title: '設定', icon: 'settings' }
 ];
 const todayLocal = () => {
@@ -33,22 +34,6 @@ const niceDate = (date: string) => new Date(date + 'T12:00:00').toLocaleDateStri
 
 function EmptyState({ title, description, onAdd, action = '服を登録する' }: { title: string; description: string; onAdd?: () => void; action?: string }) {
   return <div className="empty-state"><span className="empty-icon"><Icon name="hanger" size={38} /></span><h3>{title}</h3><p>{description}</p>{onAdd && <button className="button button-primary" onClick={onAdd}><Icon name="plus" size={18} /> {action}</button>}</div>;
-}
-function Home({ items, service, onAdd, onBulk, onGo, onEdit, onFavorite, onWearToday, wornToday, busy }: {
-  items: Clothing[]; wears: WearEntry[]; service: ClozyService; onAdd: () => void; onBulk: () => void; onGo: (view: View) => void;
-  onEdit: (item: Clothing) => void; onFavorite: (item: Clothing) => void; onWearToday: (item: Clothing) => void;
-  wornToday: ReadonlySet<string>; busy: boolean;
-}) {
-  return <ClosetRail mode="home" items={items} service={service} busy={busy} wornToday={wornToday}
-    onAdd={onAdd} onBulk={onBulk} onEdit={onEdit} onFavorite={onFavorite} onWearToday={onWearToday} onGo={onGo} />;
-}
-function Wardrobe({ items, service, onAdd, onBulk, onEdit, onFavorite, onWearToday, wornToday, onGo, busy }: {
-  items: Clothing[]; service: ClozyService; onAdd: () => void; onBulk: () => void;
-  onEdit: (item: Clothing) => void; onFavorite: (item: Clothing) => void; onWearToday: (item: Clothing) => void;
-  wornToday: ReadonlySet<string>; onGo: (view: View) => void; busy: boolean;
-}) {
-  return <ClosetRail mode="wardrobe" items={items} service={service} busy={busy} wornToday={wornToday}
-    onAdd={onAdd} onBulk={onBulk} onEdit={onEdit} onFavorite={onFavorite} onWearToday={onWearToday} onGo={onGo} />;
 }
 function CalendarView({ items, wears, busy, onToggle, onAdd, service }: {
   items: Clothing[]; wears: WearEntry[]; busy: boolean; onToggle: (item: Clothing, date: string) => void; onAdd: () => void; service: ClozyService
@@ -211,6 +196,7 @@ export default function App() {
   const service = demoMode ? previewService : realService;
   const [view, setView] = useState<View>('home');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [addCategory, setAddCategory] = useState<Category>();
   const [sharedProduct, setSharedProduct] = useState<{name: string; sourceUrl: string} | null>(null);
   const [items, setItems] = useState<Clothing[]>([]);
   const [wears, setWears] = useState<WearEntry[]>([]);
@@ -278,22 +264,23 @@ export default function App() {
     // Changing the service reference reloads the correct, isolated repository.
   }
   function changeView(next: View) {
-    setMenuOpen(false);
     setView(next);
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
-  return <div className="app-shell" data-view={view} data-preview={reviewHost ? "true" : "false"}>
+  return <div className="app-shell immersive-app" data-preview={reviewHost ? "true" : "false"}>
     {reviewHost && <div className={'preview-ribbon' + (demoMode ? ' is-demo' : '')} aria-label="プレビューのデータ切り替え">
       <span><strong>{demoMode ? 'SAMPLE CLOSET' : 'PREVIEW'}</strong> {demoMode ? '見本26着・履歴99件を再現 / 保存はこの画面内だけ' : '自分の端末のデータを表示中'}</span>
       <button type="button" onClick={() => setPreviewMode(!demoMode)}>{demoMode ? '自分のデータに切替' : '見本データを見る'}</button>
     </div>}
+
     <a className="skip-link" href="#main-content">本文へスキップ</a>
     <div className="main-shell">
       <main className="main-content" id="main-content" tabIndex={-1}>
         {notice && <div className={'notice ' + notice.kind} role={notice.kind === 'error' ? 'alert' : 'status'}><span>{notice.message}</span><button type="button" onClick={() => setNotice(null)} aria-label="通知を閉じる"><Icon name="close" size={16} /></button></div>}
         {loading ? <div className="loading-state" role="status">クローゼットを読み込んでいます…</div> : loadFailed ? <EmptyState title="保存データを読み込めませんでした" description="データは削除していません。別のタブを閉じ、ブラウザの保存設定を確認してから再読み込みしてください。" onAdd={() => window.location.reload()} action="再読み込み" /> : <>
-          {view === 'home' && <Home items={items} wears={wears} service={service} onAdd={() => setSelected('new')} onBulk={() => setBulkOpen(true)} onGo={changeView} onEdit={setSelected} onFavorite={i => void execute(() => service.favorite(i), 'お気に入りを更新しました。')} onWearToday={i => void execute(() => service.toggleWear(i, todayLocal(), wears), '今日の着用記録を更新しました。')} wornToday={wornToday} busy={busy} />}
-          {view === 'wardrobe' && <Wardrobe items={items} service={service} onAdd={() => setSelected('new')} onBulk={() => setBulkOpen(true)} onEdit={setSelected} onGo={changeView} onFavorite={i => void execute(() => service.favorite(i), 'お気に入りを更新しました。')} onWearToday={i => void execute(() => service.toggleWear(i, todayLocal(), wears), '今日の着用記録を更新しました。')} wornToday={wornToday} busy={busy} />}
+          <div hidden={view !== 'home' && view !== 'wardrobe'}>
+            <ImmersiveCloset onWearToday={i => void execute(() => service.toggleWear(i, todayLocal(), wears), '今日の着用記録を更新しました。')} key={demoMode ? "demo" : "personal"} items={items} wears={wears} service={service} busy={busy} onAdd={category => { setAddCategory(category); setSelected('new'); }} onBulk={() => setBulkOpen(true)} onEdit={setSelected} onFavorite={i => void execute(() => service.favorite(i), 'お気に入りを更新しました。')} onRecord={(outfit, date) => execute(() => service.recordOutfit(outfit, date, wears), '組み合わせを着用記録に追加しました。')} />
+          </div>
           {view === 'planning' && <Planning items={items} wears={wears} service={service} busy={busy} onAdd={() => setSelected('new')} onEdit={setSelected} onRecord={(outfit, date) => void execute(() => service.recordOutfit(outfit, date, wears), '組み合わせを着用記録に追加しました。')} />}
           {view === 'calendar' && <CalendarView items={items} wears={wears} service={service} busy={busy} onToggle={(item, date) => void execute(() => service.toggleWear(item, date, wears), '着用記録を更新しました。')} onAdd={() => setSelected('new')} />}
           {view === 'insights' && <Insights items={items} wears={wears} onEdit={setSelected} />}
@@ -305,16 +292,13 @@ export default function App() {
         </>}
       </main>
     </div>
-    <nav className="closet-wayfinder" aria-label="クローゼットの移動" onKeyDown={event => { if (event.key === 'Escape') setMenuOpen(false); }}>
-      {menuOpen && <button type="button" className="wayfinder-scrim" aria-label="移動メニューを閉じる" onClick={() => setMenuOpen(false)} />}
-      <button type="button" className="wayfinder-handle" aria-label="場所を移動" aria-expanded={menuOpen} aria-controls="clozy-wayfinder-panel" onClick={() => setMenuOpen(open => !open)}><Icon name={menuOpen ? 'close' : 'menu'} size={21} /></button>
-      {menuOpen && <div className="wayfinder-panel" id="clozy-wayfinder-panel">
-        <p className="wayfinder-title">CLOZY · MY WARDROBE</p>
-        {waypoints.map(item => <button type="button" key={item.key} aria-current={view === item.key ? 'page' : undefined} onClick={() => changeView(item.key)}><Icon name={item.icon} size={19} /><span>{item.title}</span><Icon name="right" size={16} /></button>)}
-        <button type="button" className="wayfinder-add" onClick={() => { setMenuOpen(false); setSelected('new'); }}><Icon name="plus" size={20} /><span>新しい服を登録</span></button>
-      </div>}
-    </nav>
+    <button className="closet-utility-handle" aria-label="機能一覧を開く" onClick={() => setMenuOpen(true)}><Icon name="menu" /><span>機能一覧</span></button>
+    {view !== 'home' && view !== 'wardrobe' && <button className="closet-return" onClick={() => changeView('home')}><Icon name="left" />クローゼットへ戻る</button>}
+    {menuOpen && <ClosetDialog title="クローゼットの引き出し" onClose={() => setMenuOpen(false)}>
+      <nav className="closet-feature-menu" aria-label="機能一覧">{nav.filter(item => item.key !== 'home').map(item => <button key={item.key} onClick={() => { setMenuOpen(false); changeView(item.key); }}><Icon name={item.icon} /><span>{item.title}</span><Icon name="right" size={16} /></button>)}</nav>
+      <button className="button button-outline" onClick={() => { setMenuOpen(false); setSelected('new'); }}>服を追加</button>
+    </ClosetDialog>}
     {bulkOpen && <BulkAdd service={service} items={items} onClose={() => setBulkOpen(false)} onSaved={reload} />}
-    {selected && <GarmentForm key={selected === 'new' ? 'new' : selected.id} service={service} current={selected === 'new' ? undefined : selected} draft={sharedProduct ?? undefined} onClose={() => { setSelected(null); setSharedProduct(null); }} onSaved={async () => { await reload(); setSelected(null); setSharedProduct(null); setNotice({ kind: 'success', message: 'アイテムを保存しました。' }); }} onDelete={remove} busy={busy} />}
+    {selected && <GarmentForm key={selected === 'new' ? 'new' : selected.id} service={service} initialCategory={addCategory} current={selected === 'new' ? undefined : selected} draft={sharedProduct ?? undefined} onClose={() => { setSelected(null); setSharedProduct(null); }} onSaved={async () => { await reload(); setSelected(null); setSharedProduct(null); setNotice({ kind: 'success', message: 'アイテムを保存しました。' }); }} onDelete={remove} busy={busy} />}
   </div>;
 }

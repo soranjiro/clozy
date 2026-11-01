@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { CATEGORIES, SEASONS } from '@clozy/domain';
-import type { Clothing, ClothingInput } from '@clozy/domain';
+import type { Category, Clothing, ClothingInput } from '@clozy/domain';
 import { processPhoto } from '@clozy/storage';
 import type { ClozyService } from '@clozy/application';
 import Icon from './Icon';
@@ -24,10 +24,11 @@ function useExistingPhoto(service: ClozyService, id: string | undefined) {
   return url;
 }
 export default function GarmentForm({
-  service, current, draft, onClose, onSaved, onDelete, busy
+  service, current, draft, initialCategory, onClose, onSaved, onDelete, busy
 }: {
   service: ClozyService;
   current?: Clothing;
+  initialCategory?: Category;
   draft?: { name: string; sourceUrl: string };
   onClose: () => void;
   onSaved: () => Promise<void>;
@@ -40,7 +41,7 @@ export default function GarmentForm({
     size: current.size, notes: current.notes, favorite: current.favorite,
     seasons: current.seasons ?? [...SEASONS], archived: current.archived ?? false,
     sourceUrl: current.sourceUrl, purchasePrice: current.purchasePrice
-  } : { ...defaults, ...draft });
+  } : { ...defaults, ...draft, category: initialCategory ?? defaults.category });
   const [dirty, setDirty] = useState(false);
   const [photo, setPhoto] = useState<Blob>();
   const [photoMode, setPhotoMode] = useState<'keep' | 'set' | 'remove'>('keep');
