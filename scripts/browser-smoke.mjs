@@ -143,7 +143,7 @@ try {
   assert.equal(await page.locator('.mobile-nav').count(), 0, 'mobile layout has no bottom navigation');
   await page.getByRole('button', { name: '場所を移動' }).click();
   assert.equal(await page.getByRole('navigation', { name: 'クローゼットの移動' }).getByRole('button', { name: '設定' }).isVisible(), true, 'settings remain discoverable');
-  await page.getByRole('button', { name: '移動メニューを閉じる' }).click();
+  await page.getByRole('button', { name: '移動メニューを閉じる' }).click({ position: { x: 8, y: 8 } });
   await page.setViewportSize({ width: 320, height: 720 });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true, '320px mobile overflow');
   await page.setViewportSize({ width: 390, height: 844 });
