@@ -172,6 +172,18 @@ try {
   await navigate('クローゼット');
   await page.getByRole('button', { name: '引き出しを開く' }).click();
   assert.equal(await page.locator('.closet-drawer-content.is-open').count(), 1, 'reduced motion keeps drawer functional');
-  assert.deepEqual(errors, []);
+  // A merchant's HTTPS link lands in an unsaved draft, never an automatic purchase import.
+  const shareContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  try {
+    const sharePage = await shareContext.newPage();
+    await sharePage.goto(base + '/?from=share&title=' + encodeURIComponent('白のシャツ') + '&url=' + encodeURIComponent('https://store.example/products/shirt'));
+    await sharePage.getByRole('dialog', { name: '服を登録' }).waitFor();
+    assert.equal(await sharePage.getByLabel('アイテム名').inputValue(), '白のシャツ');
+    assert.equal(await sharePage.getByLabel('商品URL').inputValue(), 'https://store.example/products/shirt');
+    assert.equal(new URL(sharePage.url()).search, '', 'share URL is removed from browser history');
+    await sharePage.getByRole('button', { name: 'キャンセル' }).click();
+    assert.equal(await sharePage.getByRole('dialog').count(), 0, 'shared item remains unsaved when dismissed');
+  } finally { await shareContext.close(); }
+    assert.deepEqual(errors, []);
   console.log('PASS: immersive horizontal hanger rail, drawer, garment inspection, bulk photos, metadata, wardrobe analytics, outfit recording, passkey, mobile and reduced motion; no page errors');
 } finally { await browser?.close(); server?.kill('SIGTERM'); }
