@@ -4,6 +4,7 @@ import { CATEGORIES, SEASONS, filterClothing, inSeason } from '@clozy/domain';
 import type { ClozyService } from '@clozy/application';
 import Icon from './Icon';
 import { GarmentArt, GarmentThumb } from './GarmentVisual';
+import ChatGptDraft from './ChatGptDraft';
 
 type Destination = 'wardrobe' | 'planning' | 'calendar' | 'insights';
 type Props = {
@@ -36,6 +37,7 @@ export default function ClosetRail({ items, service, mode, busy, onAdd, onBulk, 
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [compareOpen, setCompareOpen] = useState(false);
   const [focusedId, setFocusedId] = useState<string | null>(null);
+  const [chatItem, setChatItem] = useState<Clothing | null>(null);
   const [active, setActive] = useState(0);
   const track = useRef<HTMLDivElement>(null);
   const detail = useRef<HTMLDialogElement>(null);
@@ -253,11 +255,13 @@ export default function ClosetRail({ items, service, mode, busy, onAdd, onBulk, 
           <div className="closet-inspect-actions">
             <button type="button" aria-label="お気に入りを切り替える" aria-pressed={current.favorite} onClick={() => onFavorite(current)} disabled={busy}><Icon name="heart" size={20} fill={current.favorite ? 'currentColor' : 'none'}/></button>
             <button type="button" aria-pressed={wornToday.has(current.id)} onClick={() => onWearToday(current)} disabled={busy}><Icon name={wornToday.has(current.id) ? 'check' : 'calendar'} size={18}/> {wornToday.has(current.id) ? '今日の記録を外す' : '今日着た'}</button>
+            <button type="button" onClick={() => { setFocusedId(null); setChatItem(current); }}><Icon name="sparkles" size={18}/> ChatGPTで相談</button>
             <button type="button" onClick={() => queueCompare(current)}><Icon name="grid" size={18}/> 比較に追加</button>
             <button type="button" onClick={editCurrent}><Icon name="edit" size={18}/> 詳細・編集</button>
           </div>
         </div>
       </div>}
     </dialog>
+    {chatItem && <ChatGptDraft items={[chatItem]} service={service} onClose={() => setChatItem(null)}/>}
   </section>;
 }
