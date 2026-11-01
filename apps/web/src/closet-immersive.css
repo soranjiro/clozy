@@ -1,0 +1,289 @@
+/* CLOZY / HANGER ROOM — one immersive wood-and-fabric interface.
+   Native scroll snapping keeps touch, pointer, keyboard and assistive technology usable. */
+:root {
+  --closet-wood: #412918;
+  --closet-oak: #70472d;
+  --closet-brass: #c49b64;
+  --closet-light: #f5e2c4;
+}
+html { background:#22150e; }
+body { background:#22150e; }
+.app-shell { min-height:100svh; }
+.app-shell .sidebar, .app-shell .topbar, .app-shell .page-footer { display:none!important; }
+.app-shell .main-shell { margin:0!important; min-height:100svh; width:100%; }
+.app-shell .main-content { max-width:none!important; margin:0!important; }
+.app-shell[data-view="home"],.app-shell[data-view="wardrobe"],
+.app-shell[data-view="home"] .main-shell,.app-shell[data-view="wardrobe"] .main-shell,
+.app-shell[data-view="home"] .main-content,.app-shell[data-view="wardrobe"] .main-content {
+  background:#24170f; padding:0!important; color:#f7e8d3;
+}
+.app-shell:not([data-view="home"]):not([data-view="wardrobe"]) .main-shell {background:#f9f5ee;}
+.app-shell:not([data-view="home"]):not([data-view="wardrobe"]) .main-content {
+  max-width:1150px!important;margin:auto!important;
+  padding:34px clamp(16px,4vw,52px) 155px!important;
+}
+.app-shell .mobile-nav {
+  position:fixed!important;bottom:calc(14px + env(safe-area-inset-bottom))!important;
+  left:50%!important;right:auto!important;top:auto!important;
+  width:min(540px,calc(100vw - 24px))!important;min-height:65px!important;
+  transform:translateX(-50%);z-index:60!important;display:flex!important;
+  padding:6px!important;gap:3px;
+  border:1px solid #d0a56c77!important;border-radius:18px!important;
+  background:linear-gradient(160deg,#65452ecf,#291a12f4 80%)!important;
+  box-shadow:0 12px 30px #0b0808a0,inset 0 1px #f6d4aa33!important;
+  -webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
+}
+.app-shell .mobile-nav button {
+  flex:1;display:flex!important;flex-direction:column;justify-content:center;align-items:center;
+  min-width:0;min-height:52px!important;gap:3px;
+  border:0!important;border-radius:13px!important;
+  color:#d5bda0!important;background:transparent!important;
+  font-size:10px!important;font-weight:500!important;letter-spacing:0!important;
+}
+.app-shell .mobile-nav button.active {
+  color:#fff6df!important;background:#e2bc8240!important;
+  box-shadow:inset 0 0 0 1px #ead0a133!important;
+}
+.app-shell .mobile-nav button:focus-visible {outline:2px solid #f3d2a4;outline-offset:-3px;}
+.app-shell .mobile-nav svg {width:21px;height:21px;flex-shrink:0;}
+.app-shell .notice {position:fixed;z-index:80;top:12px;right:12px;max-width:min(430px,calc(100vw - 24px));box-shadow:0 12px 26px #0003;}
+.closet-room {width:100%;max-width:1760px;margin:0 auto;padding:0 0 125px;background:#24170f;}
+.closet-cabinet {
+  position:relative;isolation:isolate;overflow:hidden;
+  min-height:660px;
+  border:clamp(9px,1.8vw,22px) solid #583822;
+  border-top-width:clamp(12px,2.4vw,28px);
+  background:
+    radial-gradient(ellipse at 53% 24%,#ddaf7045,transparent 58%),
+    repeating-linear-gradient(90deg,transparent 0 22px,#00000008 23px,#e9b16e06 26px,transparent 33px),
+    linear-gradient(90deg,#24160f 0%,#583823 6%,#302015 18%,#342417 83%,#6d4226 95%,#25160d);
+  box-shadow:inset 0 0 75px #0f0906,0 12px 38px #0005;
+}
+.closet-cabinet:before,.closet-cabinet:after {
+  position:absolute;z-index:-1;content:"";top:0;bottom:0;width:18px;
+  background:repeating-linear-gradient(90deg,#3d2619,#795035 5px,#3b2215 10px);
+  box-shadow:inset 0 0 10px #140d08;
+}
+.closet-cabinet:before {left:0}.closet-cabinet:after {right:0}
+.closet-cabinet-ceiling {
+  position:relative;height:42px;display:flex;justify-content:center;align-items:center;
+  background:linear-gradient(#24140d,#6c4227 25%,#3b2518 100%);
+  border-bottom:3px solid #a7774a55;box-shadow:0 9px 20px #100a08aa;
+}
+.closet-engraving {position:absolute;left:clamp(17px,5vw,60px);font:italic 20px/1 Georgia,serif;letter-spacing:-.06em;color:#d1a779b2;}
+.closet-ceiling-lamp {width:54px;height:8px;border-radius:0 0 18px 18px;background:#efc88e;
+  box-shadow:0 0 11px #fff1b3,0 15px 54px 24px #e9b67a40;}
+.closet-upper-shelf {
+  position:relative;height:clamp(86px,12vw,146px);
+  border-bottom:11px solid #70452c;
+  background:linear-gradient(165deg,#3a2719,#563721 74%,#23160e);
+  box-shadow:inset 0 -14px 20px #140e07a3,0 9px 14px #100b08b0;
+  overflow:hidden;
+}
+.closet-upper-shelf:after {content:"";position:absolute;inset:auto 0 0;height:5px;background:linear-gradient(#b78b59,#583621);}
+.closet-basket {position:absolute;left:27%;bottom:4px;width:clamp(66px,12vw,145px);height:64%;border-radius:5px 5px 8px 8px;
+  background:repeating-linear-gradient(0deg,#b8976e8a 0 3px,#694928 3px 6px);border:5px solid #97704a;
+  box-shadow:inset 0 0 16px #1d120c8c,7px 7px 17px #0007;}
+.closet-folds {position:absolute;right:28%;bottom:6px;width:clamp(65px,11vw,138px);height:58%;display:flex;flex-direction:column;justify-content:end;}
+.closet-folds i {display:block;flex:1;border-radius:17px 8px 4px 4px;max-height:23px;
+  background:linear-gradient(110deg,#ddd2be,#99856e 75%,#e6d9c5);box-shadow:0 -2px 2px #ffffff55,0 2px 7px #100a08a0;}
+.closet-folds i:nth-child(2) {background:linear-gradient(110deg,#817869,#4e4b48,#989085);}
+.closet-hatbox {position:absolute;right:8%;bottom:6px;width:clamp(54px,8vw,100px);height:68%;border-radius:47% 47% 10px 10px;
+  background:linear-gradient(90deg,#a69178,#e6d7b8 38%,#a89276);box-shadow:inset -9px -4px 18px #58433266,3px 7px 14px #130b08a3;}
+.closet-hatbox:before {content:"";position:absolute;top:12px;left:-6px;right:-6px;border-top:6px solid #e4d4b6;border-radius:50%;}
+.closet-plant {position:absolute;left:6%;top:-11px;width:130px;height:105%;filter:drop-shadow(7px 6px 5px #05030280);}
+.closet-plant:before {content:"";position:absolute;left:47%;top:0;width:3px;height:110%;background:#465034;transform:rotate(14deg);}
+.closet-plant i {position:absolute;width:48px;height:21px;border-radius:90% 5% 90% 10%;background:linear-gradient(120deg,#778054,#263c27);transform:rotate(-24deg);}
+.closet-plant i:nth-child(1){top:3%;left:15%}.closet-plant i:nth-child(2){top:23%;left:52%;transform:rotate(145deg)}
+.closet-plant i:nth-child(3){top:43%;left:6%;transform:rotate(-40deg)}
+.closet-plant i:nth-child(4){top:57%;left:56%;transform:rotate(155deg)}
+.closet-plant i:nth-child(5){top:75%;left:20%;transform:rotate(-23deg)}
+.closet-tools {position:relative;z-index:4;display:flex;align-items:center;gap:12px;min-height:69px;
+  padding:14px clamp(19px,4.8vw,70px) 9px;}
+.closet-tools h1 {margin:0;font-size:clamp(18px,2vw,24px);font-weight:500;letter-spacing:.06em;color:#f0dfc7;}
+.closet-item-count {font-size:11px;color:#bda080;white-space:nowrap;}
+.closet-tool-actions {display:flex;gap:6px;margin-left:auto;}
+.closet-tool-actions button,.closet-search button {
+  display:grid;place-items:center;width:40px;height:40px;padding:0;border:1px solid #cda87855;border-radius:50%;
+  background:#20150fc0;color:#ead6b9;
+}
+.closet-tool-actions button.is-selected {color:#ffe4ae;background:#b3834b66;}
+.closet-tool-actions button:hover {background:#785234;}
+.closet-search {display:flex;align-items:center;gap:10px;padding:2px clamp(19px,4.8vw,70px) 9px;color:#dec49f;}
+.closet-search input {flex:1;min-width:0;background:#271a13c9;border:1px solid #bd977166;padding:12px;border-radius:6px;color:#fff7eb;outline-offset:2px;}
+.closet-search button {width:37px;height:37px;}
+.closet-categories {
+  display:flex;gap:16px;align-items:center;overflow-x:auto;scrollbar-width:none;
+  padding:0 clamp(19px,4.8vw,70px);height:45px;white-space:nowrap;
+  -webkit-overflow-scrolling:touch;
+}
+.closet-categories::-webkit-scrollbar,.closet-rail-track::-webkit-scrollbar{display:none;}
+.closet-categories button {flex:0 0 auto;border:0;border-bottom:1px solid transparent;border-radius:0;
+  padding:8px 1px;background:transparent;color:#bba58c;font-size:12px;letter-spacing:.035em;}
+.closet-categories button[aria-pressed=true] {border-bottom-color:#f0c88f;color:#fff0d9;}
+.closet-hanging-area {
+  position:relative;isolation:isolate;height:clamp(365px,49svh,660px);
+  overflow:hidden;
+  background:radial-gradient(ellipse at 50% 26%,#af80513a 0%,transparent 56%),
+    linear-gradient(90deg,#1b120e99,transparent 14% 86%,#140d0bba);
+}
+.closet-hanging-rail {
+  position:absolute;z-index:0;top:40px;left:2%;right:2%;height:9px;border-radius:6px;
+  background:linear-gradient(#4c3b27,#e2c49a 38%,#8d7253 65%,#382b20);
+  box-shadow:0 6px 9px #0009,0 0 5px #fce1a15c;
+}
+.closet-rail-end {position:absolute;top:29px;width:15px;height:30px;border-radius:4px;z-index:2;background:linear-gradient(90deg,#543821,#d3aa6c,#432a1d);}
+.closet-rail-end.left{left:1.6%}.closet-rail-end.right{right:1.6%}
+.closet-rail-track {
+  position:relative;z-index:1;display:flex;align-items:stretch;
+  width:100%;height:100%;gap:clamp(0px,1vw,15px);overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;scroll-padding-inline:0;
+  overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+.closet-track-spacer {flex:0 0 calc(50% - clamp(185px,29vw,320px)/2);}
+.closet-garment-slide {
+  --slide-width:clamp(185px,29vw,320px);
+  position:relative;scroll-snap-align:center;flex:0 0 var(--slide-width);
+  height:100%;padding:0;border:0;background:transparent;
+  opacity:.58;filter:brightness(.70);
+  transform:scale(.88);transform-origin:50% 27%;
+  transition:transform .48s cubic-bezier(.2,.9,.25,1),opacity .42s,filter .42s;
+  -webkit-tap-highlight-color:transparent;
+}
+.closet-garment-slide.is-active {opacity:1;filter:brightness(1);transform:scale(1);}
+.closet-garment-slide:focus-visible {outline:2px solid #eec58a;outline-offset:-4px;}
+.closet-hanger-hook {
+  position:absolute;top:38px;left:calc(50% - 10px);height:41px;width:21px;
+  border:3px solid #bd9161;border-left-color:transparent;border-bottom-color:transparent;
+  border-radius:55% 55% 40% 0;transform:rotate(-14deg);
+  filter:drop-shadow(2px 2px 2px #0008);
+}
+.closet-hanger-shoulders {
+  position:absolute;top:75px;left:13%;right:13%;height:32px;
+  clip-path:polygon(47% 0,53% 0,100% 82%,100% 97%,0 97%,0 82%);
+  background:linear-gradient(#d2a369 5%,#855b35 70%,#482b1c);
+  filter:drop-shadow(0 5px 3px #0009);
+}
+.closet-hanging-garment {
+  position:absolute;top:99px;left:3%;right:3%;bottom:52px;display:grid;place-items:center;
+  filter:drop-shadow(12px 19px 15px #08060594);
+}
+.closet-hanging-garment .garment-thumb {display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:transparent;border:0;border-radius:0;overflow:visible;}
+.closet-hanging-garment .garment-thumb img {display:block;width:100%;height:100%;max-width:100%;object-fit:contain;mix-blend-mode:normal;filter:drop-shadow(4px 8px 5px #0b080852);}
+.closet-hanging-garment .garment-thumb svg {display:block;width:100%;height:100%;max-width:100%;max-height:100%;filter:drop-shadow(4px 10px 6px #0e0b0885);}
+.closet-hanging-garment .garment-art {height:100%;width:100%;}
+.closet-rail-arrow {
+  position:absolute;z-index:4;top:43%;display:grid;place-items:center;width:44px;height:55px;
+  padding:0;border:0;background:linear-gradient(90deg,#2b1a1285,#3a251400);color:#f6dcb5;
+}
+.closet-rail-arrow.prev{left:7px}.closet-rail-arrow.next{right:7px;transform:rotate(180deg)}
+.closet-rail-arrow.next svg{transform:rotate(180deg)}
+.closet-rail-arrow:disabled {opacity:.25;cursor:default;}
+.closet-plaque {
+  position:absolute;z-index:5;left:50%;bottom:5px;transform:translateX(-50%);
+  width:min(365px,calc(100% - 120px));min-height:90px;
+  display:grid;grid-template-columns:1fr auto;column-gap:8px;align-content:center;
+  padding:13px 20px;
+  border:1px solid #d7b17c8a;border-radius:13px;
+  background:linear-gradient(140deg,#5e4333e8,#34261def);
+  box-shadow:inset 0 1px #f8daac26,0 13px 25px #120c0ca6;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.closet-plaque-number {grid-column:1;font:11px Georgia,serif;color:#d1af84;letter-spacing:.12em;}
+.closet-plaque-number i{display:inline-block;width:16px;border-top:1px solid #ad8c6c;vertical-align:middle;margin:0 3px;}
+.closet-plaque strong {grid-column:1;font-weight:500;font-size:18px;letter-spacing:.02em;color:#fff5e4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.closet-plaque > span:last-of-type {grid-column:1;font-size:11px;color:#c3aa8d;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.closet-plaque button {grid-column:2;grid-row:1/4;align-self:center;display:grid;place-items:center;width:36px;height:36px;border:1px solid #c9a471;border-radius:50%;background:transparent;color:#f7dbb0;}
+.closet-pagination{position:absolute;z-index:4;bottom:102px;left:50%;transform:translateX(-50%);display:flex;gap:8px;}
+.closet-pagination button{padding:0;width:5px;height:5px;border:0;border-radius:50%;background:#c1a2806b;}
+.closet-pagination button[aria-current=true]{width:8px;height:8px;background:#ffdc99;box-shadow:0 0 9px #ffcb80;}
+.closet-empty-rail {position:relative;height:100%;display:grid;place-items:center;}
+.closet-demo-hangers {display:flex;position:absolute;left:50%;top:74px;transform:translateX(-50%);height:60%;width:min(790px,93%);justify-content:center;align-items:stretch;opacity:.43;filter:blur(1.8px);}
+.closet-demo-hangers>span {display:block;position:relative;flex:1;min-width:0;max-width:150px;filter:drop-shadow(8px 13px 5px #0006);}
+.closet-demo-hangers svg{display:block;width:100%;height:100%;}
+.closet-demo-hook {display:block;position:absolute;left:50%;top:-31px;width:17px;height:31px;border:2px solid #cfb487;border-bottom:0;border-radius:40% 50% 0 0;}
+.closet-empty-message {position:relative;z-index:2;display:grid;place-items:center;gap:12px;padding:20px 25px;border-radius:9px;background:#20140dd9;box-shadow:0 6px 45px #0008;text-align:center;}
+.closet-empty-message p {margin:0;color:#f8e5ca;font-size:18px;letter-spacing:.03em;}
+.closet-empty-message button {display:flex;align-items:center;gap:8px;background:#e7c89c;color:#392415;border:0;border-radius:4px;padding:12px 17px;font-size:13px;font-weight:600;}
+.closet-cabinet-base {position:relative;z-index:2;background:repeating-linear-gradient(90deg,#51331e 0,#67432b 18px,#5a3921 21px,#4f301f 26px);
+  border-top:13px solid #7b5234;box-shadow:0 -4px 18px #0009,inset 0 2px #cb96615c;}
+.closet-drawer-handle {display:flex;align-items:center;justify-content:center;gap:16px;width:100%;min-height:65px;
+  padding:8px 20px;border:0;background:linear-gradient(#704c31,#52331e 70%,#382418);
+  color:#d4b28b;font:10px Georgia,serif;letter-spacing:.18em;}
+.closet-brass-pull {width:66px;height:15px;border:3px solid #b28b5b;border-top-width:5px;border-radius:4px 4px 40% 40%;box-shadow:0 2px 6px #0008,inset 0 2px #ead1a477;}
+.closet-drawer-handle svg{transition:transform .35s;}.closet-drawer-handle.is-open svg{transform:rotate(90deg);}
+.closet-drawer-content {max-height:0;opacity:0;overflow:hidden;background:linear-gradient(150deg,#3a2619,#211710);
+  transition:max-height .45s cubic-bezier(.2,.9,.3,1),opacity .3s;}
+.closet-drawer-content.is-open {max-height:270px;opacity:1;box-shadow:inset 0 18px 25px #0007;}
+.closet-drawer-content p{margin:16px 22px 10px;font-size:12px;color:#d4bc9e;}
+.closet-drawer-items {display:flex;overflow-x:auto;gap:11px;padding:8px 22px 25px;scrollbar-width:thin;}
+.closet-drawer-items button {display:flex;flex-direction:column;align-items:center;gap:7px;flex:0 0 104px;min-width:0;padding:8px;border:1px solid #a0784b80;background:#62442c;color:#f3ddbe;font-size:11px;border-radius:5px;}
+.closet-drawer-items button .garment-thumb {display:grid;place-items:center;width:81px;height:72px;background:#c5b49b;border-radius:4px;overflow:hidden;}
+.closet-drawer-items button img,.closet-drawer-items button svg {max-width:100%;max-height:100%;object-fit:contain;}
+.closet-drawer-items button span:last-child {max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.closet-folded-sample {display:block;flex:1 0 90px;height:50px;max-width:175px;border-radius:19px 10px 4px 4px;
+  background:repeating-linear-gradient(0deg,#dac7af,#cbb598 6px,#ad977b 9px);box-shadow:2px 6px 8px #110b0866;}
+.closet-folded-sample:nth-child(2) {background:repeating-linear-gradient(0deg,#746d64,#b1a594 9px,#786c63 14px);}
+.closet-folded-sample:nth-child(3) {background:repeating-linear-gradient(0deg,#ddd5c8,#a5947d 6px,#dfd3c0 11px);}
+.closet-passage {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));max-width:920px;margin:0 auto;padding:25px clamp(14px,4vw,35px);gap:8px;}
+.closet-passage button {display:flex;align-items:center;gap:12px;min-width:0;padding:18px 14px;border:1px solid #ac866052;
+  background:#332217;color:#e9d1b0;border-radius:5px;font-size:12px;text-align:left;}
+.closet-passage button:hover {background:#4d3120;}.closet-passage button span{flex:1;}
+.closet-passage button svg:last-child{opacity:.65;flex-shrink:0;}
+.closet-cabinet-actions {display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;padding:0 16px;}
+.closet-cabinet-actions>button,.closet-cabinet-actions label{display:flex;align-items:center;gap:8px;
+  padding:11px 14px;border:1px solid #926f4c;border-radius:3px;background:transparent;color:#e4c49f;font-size:12px;}
+.closet-cabinet-actions label select {min-width:0;max-width:145px;background:#3d2b1e;color:#efdcc6;padding:5px;border:1px solid #936d49;border-radius:3px;}
+.closet-inspect {width:min(470px,calc(100vw - 24px));height:min(730px,calc(100dvh - 32px));max-width:none;max-height:none;padding:0;border:1px solid #b78e59;border-radius:16px;
+  background:radial-gradient(ellipse at 50% 30%,#76543c,#251911 80%);color:#fbe9d1;box-shadow:0 25px 90px #000b;overflow:hidden;}
+.closet-inspect::backdrop{background:#0d0808bb;backdrop-filter:blur(8px);}
+.closet-inspect-inner {height:100%;display:flex;flex-direction:column;position:relative;}
+.closet-inspect-close {position:absolute;z-index:3;top:19px;right:19px;width:42px;height:42px;display:grid;place-items:center;background:#261710bd;color:#f9d9ae;border:1px solid #b89064;border-radius:50%;}
+.closet-inspect-rail {position:absolute;top:73px;left:10%;right:10%;height:7px;background:linear-gradient(#ae8756,#edcfaa,#7b5630);border-radius:9px;box-shadow:0 5px 8px #0008;}
+.closet-inspect-garment {display:grid;place-items:center;flex:1;min-height:0;margin:84px 24px 10px;}
+.closet-inspect-garment .garment-thumb {display:grid;place-items:center;width:100%;height:100%;background:transparent;overflow:visible;}
+.closet-inspect-garment .garment-thumb img,.closet-inspect-garment .garment-thumb svg {width:100%;height:100%;object-fit:contain;filter:drop-shadow(8px 16px 12px #0b0605b0);}
+.closet-inspect-details {padding:20px 24px 26px;background:linear-gradient(#3c291ff0,#211711fa);border-top:1px solid #b591695f;}
+.closet-inspect-details>span {color:#d7ae7d;font-size:11px;letter-spacing:.06em;}
+.closet-inspect-details h2{margin:7px 0 5px;font-size:24px;font-weight:500;color:#fff5e8;}
+.closet-inspect-details p{font-size:12px;color:#baa48e;min-height:15px;margin:0 0 14px;}
+.closet-inspect-actions {display:flex;gap:10px;}
+.closet-inspect-actions button {display:flex;align-items:center;justify-content:center;gap:8px;
+  min-height:47px;border-radius:5px;border:1px solid #c4a276;color:#f4dfbf;background:transparent;padding:10px 17px;}
+.closet-inspect-actions button:last-child{flex:1;background:#b78c59;color:#21170e;border:0;font-weight:600;}
+.closet-room button:focus-visible,.closet-room select:focus-visible {outline:2px solid #f3cd93;outline-offset:3px;}
+@media(min-width:900px) {
+  .closet-room {padding-bottom:130px;}
+  .closet-cabinet {margin:0 auto;max-width:1500px;}
+  .closet-hanging-area {height:min(57svh,630px);}
+}
+@media(max-width:700px) {
+  .closet-cabinet {border-left-width:8px;border-right-width:8px;border-top-width:10px;min-height:0;}
+  .closet-cabinet-ceiling {height:28px;}
+  .closet-engraving {font-size:15px;left:16px;}
+  .closet-upper-shelf {height:82px;border-bottom-width:7px;}
+  .closet-basket {height:56%;}.closet-hatbox {height:65%;}
+  .closet-tools {min-height:61px;padding:9px 17px 4px;gap:7px;}
+  .closet-tools h1 {font-size:17px;}.closet-item-count {font-size:10px;}
+  .closet-tool-actions{gap:3px}.closet-tool-actions button {width:36px;height:36px;}
+  .closet-categories {height:41px;padding:0 17px;gap:19px;}
+  .closet-categories button {font-size:11px;}
+  .closet-hanging-area {height:clamp(380px,53svh,540px);}
+  .closet-garment-slide {--slide-width:clamp(180px,61vw,270px);}
+  .closet-track-spacer {flex-basis:calc(50% - clamp(180px,61vw,270px)/2);}
+  .closet-hanging-garment {bottom:50px;}
+  .closet-plaque {bottom:9px;min-height:81px;width:min(315px,calc(100% - 100px));padding:10px 14px;}
+  .closet-plaque strong {font-size:16px;}
+  .closet-pagination {bottom:95px;}
+  .closet-rail-arrow {width:31px;height:47px;}
+  .closet-passage {grid-template-columns:1fr;gap:0;padding:15px 18px 20px;}
+  .closet-passage button {min-height:58px;border:0;border-bottom:1px solid #a888604d;border-radius:0;padding:13px 12px;}
+  .closet-drawer-handle{min-height:58px;}
+  .closet-cabinet-actions {gap:8px;}
+  .closet-cabinet-actions button,.closet-cabinet-actions label {padding:10px;font-size:11px;}
+  .closet-inspect {height:min(670px,calc(100dvh - 24px));}
+}
+@media(prefers-reduced-motion:reduce) {
+  .closet-garment-slide,.closet-drawer-content,.closet-drawer-handle svg {transition:none!important;}
+  .closet-rail-track {scroll-behavior:auto!important;}
+}
