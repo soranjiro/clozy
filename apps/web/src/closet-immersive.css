@@ -429,5 +429,9 @@ body { background:#22150e; }
   .app-shell .wayfinder-panel,.closet-compartment {transition:none!important;}
 }
 
-/* Keep transient notices below the cabinet handle, so they cannot block the only wayfinder. */
-.app-shell .notice {top:calc(68px + env(safe-area-inset-top));}
+/* Notices are below the wardrobe, not over the only route through the app. */
+.app-shell .notice {
+  top:auto!important;right:auto!important;left:clamp(12px,3vw,28px);
+  bottom:calc(14px + env(safe-area-inset-bottom));
+  max-width:min(430px,calc(100vw - 24px));
+}
