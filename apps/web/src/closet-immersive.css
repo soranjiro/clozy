@@ -428,3 +428,6 @@ body { background:#22150e; }
 @media(prefers-reduced-motion:reduce) {
   .app-shell .wayfinder-panel,.closet-compartment {transition:none!important;}
 }
+
+/* Keep transient notices below the cabinet handle, so they cannot block the only wayfinder. */
+.app-shell .notice {top:calc(68px + env(safe-area-inset-top));}
