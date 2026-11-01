@@ -15,12 +15,12 @@ import { hasPasskey, supportsPasskey, registerPasskey, removePasskey, passkeyErr
 
 type View = 'home' | 'wardrobe' | 'planning' | 'calendar' | 'insights' | 'settings';
 type Notice = { message: string; kind: 'success' | 'error' };
-const nav: { key: View; title: string; icon: IconName }[] = [
-  { key: 'home', title: 'ホーム', icon: 'home' },
-  { key: 'wardrobe', title: 'クローゼット', icon: 'hanger' },
-  { key: 'planning', title: 'コーデ', icon: 'hanger' },
-  { key: 'calendar', title: 'カレンダー', icon: 'calendar' },
-  { key: 'insights', title: '分析', icon: 'chart' },
+const waypoints: { key: View; title: string; icon: IconName }[] = [
+  { key: 'home', title: 'クローゼット', icon: 'hanger' },
+  { key: 'wardrobe', title: '服を整理', icon: 'grid' },
+  { key: 'planning', title: 'コーデ', icon: 'sparkles' },
+  { key: 'calendar', title: '着用記録', icon: 'calendar' },
+  { key: 'insights', title: '服を見直す', icon: 'chart' },
   { key: 'settings', title: '設定', icon: 'settings' }
 ];
 const todayLocal = () => {
@@ -33,19 +33,21 @@ const niceDate = (date: string) => new Date(date + 'T12:00:00').toLocaleDateStri
 function EmptyState({ title, description, onAdd, action = '服を登録する' }: { title: string; description: string; onAdd?: () => void; action?: string }) {
   return <div className="empty-state"><span className="empty-icon"><Icon name="hanger" size={38} /></span><h3>{title}</h3><p>{description}</p>{onAdd && <button className="button button-primary" onClick={onAdd}><Icon name="plus" size={18} /> {action}</button>}</div>;
 }
-function Home({ items, service, onAdd, onBulk, onGo, onEdit, onFavorite, busy }: {
+function Home({ items, service, onAdd, onBulk, onGo, onEdit, onFavorite, onWearToday, wornToday, busy }: {
   items: Clothing[]; wears: WearEntry[]; service: ClozyService; onAdd: () => void; onBulk: () => void; onGo: (view: View) => void;
-  onEdit: (item: Clothing) => void; onFavorite: (item: Clothing) => void; busy: boolean
+  onEdit: (item: Clothing) => void; onFavorite: (item: Clothing) => void; onWearToday: (item: Clothing) => void;
+  wornToday: ReadonlySet<string>; busy: boolean;
 }) {
-  return <ClosetRail mode="home" items={items} service={service} busy={busy}
-    onAdd={onAdd} onBulk={onBulk} onEdit={onEdit} onFavorite={onFavorite} onGo={onGo} />;
+  return <ClosetRail mode="home" items={items} service={service} busy={busy} wornToday={wornToday}
+    onAdd={onAdd} onBulk={onBulk} onEdit={onEdit} onFavorite={onFavorite} onWearToday={onWearToday} onGo={onGo} />;
 }
-function Wardrobe({ items, service, onAdd, onBulk, onEdit, onFavorite, onGo, busy }: {
+function Wardrobe({ items, service, onAdd, onBulk, onEdit, onFavorite, onWearToday, wornToday, onGo, busy }: {
   items: Clothing[]; service: ClozyService; onAdd: () => void; onBulk: () => void;
-  onEdit: (item: Clothing) => void; onFavorite: (item: Clothing) => void; onGo: (view: View) => void; busy: boolean
+  onEdit: (item: Clothing) => void; onFavorite: (item: Clothing) => void; onWearToday: (item: Clothing) => void;
+  wornToday: ReadonlySet<string>; onGo: (view: View) => void; busy: boolean;
 }) {
-  return <ClosetRail mode="wardrobe" items={items} service={service} busy={busy}
-    onAdd={onAdd} onBulk={onBulk} onEdit={onEdit} onFavorite={onFavorite} onGo={onGo} />;
+  return <ClosetRail mode="wardrobe" items={items} service={service} busy={busy} wornToday={wornToday}
+    onAdd={onAdd} onBulk={onBulk} onEdit={onEdit} onFavorite={onFavorite} onWearToday={onWearToday} onGo={onGo} />;
 }
 function CalendarView({ items, wears, busy, onToggle, onAdd, service }: {
   items: Clothing[]; wears: WearEntry[]; busy: boolean; onToggle: (item: Clothing, date: string) => void; onAdd: () => void; service: ClozyService
@@ -203,6 +205,7 @@ function Settings({ service, onReload, onNotice, busy, setBusy }: {
 export default function App() {
   const service = useMemo(() => new ClozyService(new IndexedDbRepository()), []);
   const [view, setView] = useState<View>('home');
+  const [menuOpen, setMenuOpen] = useState(false);
   const [items, setItems] = useState<Clothing[]>([]);
   const [wears, setWears] = useState<WearEntry[]>([]);
   const [selected, setSelected] = useState<Clothing | 'new' | null>(null);
@@ -211,6 +214,7 @@ export default function App() {
   const [loadFailed, setLoadFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
+  const wornToday = useMemo(() => new Set(wears.filter(w => w.date === todayLocal()).map(w => w.clothingId)), [wears]);
   const reload = useCallback(async () => {
     const data = await service.list();
     setItems(data.clothing); setWears(data.wears);
@@ -234,6 +238,7 @@ export default function App() {
     if (await execute(() => service.remove(item.id), 'アイテムを削除しました。')) setSelected(null);
   }
   function changeView(next: View) {
+    setMenuOpen(false);
     setView(next);
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
@@ -243,8 +248,8 @@ export default function App() {
       <main className="main-content" id="main-content" tabIndex={-1}>
         {notice && <div className={'notice ' + notice.kind} role={notice.kind === 'error' ? 'alert' : 'status'}><span>{notice.message}</span><button type="button" onClick={() => setNotice(null)} aria-label="通知を閉じる"><Icon name="close" size={16} /></button></div>}
         {loading ? <div className="loading-state" role="status">クローゼットを読み込んでいます…</div> : loadFailed ? <EmptyState title="保存データを読み込めませんでした" description="データは削除していません。別のタブを閉じ、ブラウザの保存設定を確認してから再読み込みしてください。" onAdd={() => window.location.reload()} action="再読み込み" /> : <>
-          {view === 'home' && <Home items={items} wears={wears} service={service} onAdd={() => setSelected('new')} onBulk={() => setBulkOpen(true)} onGo={changeView} onEdit={setSelected} onFavorite={i => void execute(() => service.favorite(i), 'お気に入りを更新しました。')} busy={busy} />}
-          {view === 'wardrobe' && <Wardrobe items={items} service={service} onAdd={() => setSelected('new')} onBulk={() => setBulkOpen(true)} onEdit={setSelected} onGo={changeView} onFavorite={i => void execute(() => service.favorite(i), 'お気に入りを更新しました。')} busy={busy} />}
+          {view === 'home' && <Home items={items} wears={wears} service={service} onAdd={() => setSelected('new')} onBulk={() => setBulkOpen(true)} onGo={changeView} onEdit={setSelected} onFavorite={i => void execute(() => service.favorite(i), 'お気に入りを更新しました。')} onWearToday={i => void execute(() => service.toggleWear(i, todayLocal(), wears), '今日の着用記録を更新しました。')} wornToday={wornToday} busy={busy} />}
+          {view === 'wardrobe' && <Wardrobe items={items} service={service} onAdd={() => setSelected('new')} onBulk={() => setBulkOpen(true)} onEdit={setSelected} onGo={changeView} onFavorite={i => void execute(() => service.favorite(i), 'お気に入りを更新しました。')} onWearToday={i => void execute(() => service.toggleWear(i, todayLocal(), wears), '今日の着用記録を更新しました。')} wornToday={wornToday} busy={busy} />}
           {view === 'planning' && <Planning items={items} wears={wears} service={service} busy={busy} onAdd={() => setSelected('new')} onEdit={setSelected} onRecord={(outfit, date) => void execute(() => service.recordOutfit(outfit, date, wears), '組み合わせを着用記録に追加しました。')} />}
           {view === 'calendar' && <CalendarView items={items} wears={wears} service={service} busy={busy} onToggle={(item, date) => void execute(() => service.toggleWear(item, date, wears), '着用記録を更新しました。')} onAdd={() => setSelected('new')} />}
           {view === 'insights' && <Insights items={items} wears={wears} onEdit={setSelected} />}
@@ -252,7 +257,15 @@ export default function App() {
         </>}
       </main>
     </div>
-    <nav className="mobile-nav" aria-label="モバイルナビゲーション">{nav.filter(item => item.key !== 'insights').map(item => <button key={item.key} className={view === item.key ? 'active' : ''} aria-current={view === item.key ? 'page' : undefined} onClick={() => changeView(item.key)}><Icon name={item.icon} size={21} /><span>{item.title}</span></button>)}</nav>
+    <nav className="closet-wayfinder" aria-label="クローゼットの移動" onKeyDown={event => { if (event.key === 'Escape') setMenuOpen(false); }}>
+      {menuOpen && <button type="button" className="wayfinder-scrim" aria-label="移動メニューを閉じる" onClick={() => setMenuOpen(false)} />}
+      <button type="button" className="wayfinder-handle" aria-label="場所を移動" aria-expanded={menuOpen} aria-controls="clozy-wayfinder-panel" onClick={() => setMenuOpen(open => !open)}><Icon name={menuOpen ? 'close' : 'menu'} size={21} /></button>
+      {menuOpen && <div className="wayfinder-panel" id="clozy-wayfinder-panel">
+        <p className="wayfinder-title">CLOZY · MY WARDROBE</p>
+        {waypoints.map(item => <button type="button" key={item.key} aria-current={view === item.key ? 'page' : undefined} onClick={() => changeView(item.key)}><Icon name={item.icon} size={19} /><span>{item.title}</span><Icon name="right" size={16} /></button>)}
+        <button type="button" className="wayfinder-add" onClick={() => { setMenuOpen(false); setSelected('new'); }}><Icon name="plus" size={20} /><span>新しい服を登録</span></button>
+      </div>}
+    </nav>
     {bulkOpen && <BulkAdd service={service} items={items} onClose={() => setBulkOpen(false)} onSaved={reload} />}
     {selected && <GarmentForm key={selected === 'new' ? 'new' : selected.id} service={service} current={selected === 'new' ? undefined : selected} onClose={() => setSelected(null)} onSaved={async () => { await reload(); setSelected(null); setNotice({ kind: 'success', message: 'アイテムを保存しました。' }); }} onDelete={remove} busy={busy} />}
   </div>;
