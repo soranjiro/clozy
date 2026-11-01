@@ -188,6 +188,41 @@ try {
     await sharePage.getByRole('button', { name: 'キャンセル' }).click();
     assert.equal(await sharePage.getByRole('dialog').count(), 0, 'shared item remains unsaved when dismissed');
   } finally { await shareContext.close(); }
+  // A fresh public preview can be explored with synthetic clothes and wear history.
+  // This browser context must never import a private user's cloud snapshot.
+  const demoContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  try {
+    const demoPage = await demoContext.newPage();
+    const demoErrors = [];
+    demoPage.on('pageerror', error => demoErrors.push(error.message));
+    await demoPage.goto(base + '/?demo=1');
+    await demoPage.getByRole('heading', { name: '今日のクローゼット' }).waitFor();
+    assert.equal(await demoPage.locator('.closet-garment-slide').count(), 26, 'review preview shows 26 synthetic garments');
+    assert.equal(await demoPage.locator('.closet-rail-track .garment-art').count(), 26, 'sample garments have colored illustrations without remote images');
+    await demoPage.getByRole('navigation', { name: '収納場所から服を探す' }).getByRole('button', { name: 'アウター、9着' }).click();
+    assert.equal(await demoPage.locator('.closet-garment-slide').count(), 9, 'category counts reflect actual sample data');
+    await demoPage.getByRole('navigation', { name: '収納場所から服を探す' }).getByRole('button', { name: /すべて/ }).click();
+    await demoPage.locator('.closet-plaque button').click();
+    await demoPage.getByRole('button', { name: 'ChatGPTで相談' }).click();
+    await demoPage.getByRole('dialog', { name: 'コーデを相談する' }).waitFor();
+    assert.ok((await demoPage.getByLabel('相談する内容').inputValue()).includes('Clozy'));
+    await demoPage.getByLabel('ChatGPTプロジェクトのURL（任意）').fill('https://chatgpt.com.evil.example/g/g-p-test');
+    await demoPage.getByText('ChatGPTのプロジェクトのリンクを設定してください。').waitFor();
+    await demoPage.getByLabel('ChatGPTプロジェクトのURL（任意）').fill('https://chatgpt.com/g/g-p-sample-project');
+    assert.equal(await demoPage.getByText('ChatGPTのプロジェクトのリンクを設定してください。').count(), 0);
+    await demoPage.getByRole('button', { name: '相談を閉じる' }).click();
+    await demoPage.getByRole('button', { name: '場所を移動' }).click();
+    await demoPage.getByRole('navigation', { name: 'クローゼットの移動' }).getByRole('button', { name: '服を見直す' }).click();
+    assert.equal(await demoPage.locator('.metric strong').nth(1).innerText().then(x => x.replace(/\s/g,'')), '99回', 'synthetic wears power history stats');
+    await demoPage.getByRole('button', { name: '自分のデータに切替' }).click();
+    await demoPage.getByRole('button', { name: '見本データを見る' }).waitFor();
+    await demoPage.getByRole('button', { name: '見本データを見る' }).click();
+    await demoPage.getByRole('button', { name: '自分のデータに切替' }).waitFor();
+    await demoPage.getByRole('button', { name: '場所を移動' }).click();
+    await demoPage.getByRole('navigation', { name: 'クローゼットの移動' }).getByRole('button', { name: '設定' }).click();
+    await demoPage.getByRole('heading', { name: 'これは見本のクローゼットです' }).waitFor();
+    assert.deepEqual(demoErrors, [], 'demo environment has no browser exceptions');
+  } finally { await demoContext.close(); }
     assert.deepEqual(errors, []);
   console.log('PASS: immersive horizontal hanger rail, drawer, garment inspection, bulk photos, metadata, wardrobe analytics, outfit recording, passkey, mobile and reduced motion; no page errors');
 } finally { await browser?.close(); server?.kill('SIGTERM'); }
