@@ -93,8 +93,10 @@ export default function ClosetRail({ items, service, mode, busy, onAdd, onBulk, 
     });
   }
   function select(index: number) {
+    const selected = visible[index];
+    if (!selected) return;
     if (index !== active) moveTo(index);
-    else setFocusedId(visible[index].id);
+    else setFocusedId(selected.id);
   }
   function editCurrent() {
     if (!current) return;
