@@ -78,10 +78,9 @@ export default function ChatGptDraft({ items, service, onClose }: {
     const outgoing: ShareData = { title: 'Clozy · コーデ相談', text };
     if (preparedFiles.length && navigator.canShare?.({ files: preparedFiles })) outgoing.files = preparedFiles;
     // Call navigator.share synchronously during the click's transient user activation.
-    const operation = navigator.share(outgoing);
     setBusy(true); setStatus('');
     try {
-      await operation;
+      await navigator.share(outgoing);
       setStatus('共有先で内容を確認してください。ChatGPTへの自動保存は行いません。');
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
