@@ -31,10 +31,14 @@ export default function ClosetRail({ items, service, mode, busy, onAdd, onBulk, 
   const [storage, setStorage] = useState('着用中');
   const [sort, setSort] = useState('newest');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [compareOpen, setCompareOpen] = useState(false);
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [active, setActive] = useState(0);
   const track = useRef<HTMLDivElement>(null);
   const detail = useRef<HTMLDialogElement>(null);
+  const comparison = useRef<HTMLDialogElement>(null);
+  const touchOrigin = useRef<{ x: number; y: number } | null>(null);
   const frame = useRef<number | null>(null);
 
   const visible = useMemo(() => filterClothing(items, query, category, favorites)
@@ -48,6 +52,8 @@ export default function ClosetRail({ items, service, mode, busy, onAdd, onBulk, 
   const current = items.find(item => item.id === focusedId);
   const center = visible[Math.min(active, visible.length - 1)];
   const stored = items.filter(item => item.archived);
+  const compared = compareIds.map(id => items.find(item => item.id === id))
+    .filter((item): item is Clothing => Boolean(item));
 
   useEffect(() => {
     setActive(0);
@@ -60,6 +66,13 @@ export default function ClosetRail({ items, service, mode, busy, onAdd, onBulk, 
     if (current && !dialog.open) dialog.showModal();
     if (!current && dialog.open) dialog.close();
   }, [current]);
+
+  useEffect(() => {
+    const dialog = comparison.current;
+    if (!dialog) return;
+    if (compareOpen && compared.length === 2 && !dialog.open) dialog.showModal();
+    if ((!compareOpen || compared.length !== 2) && dialog.open) dialog.close();
+  }, [compareOpen, compared.length]);
 
   useEffect(() => () => { if (frame.current !== null) cancelAnimationFrame(frame.current); }, []);
 
@@ -98,6 +111,23 @@ export default function ClosetRail({ items, service, mode, busy, onAdd, onBulk, 
     if (index !== active) moveTo(index);
     else setFocusedId(selected.id);
   }
+  function queueCompare(item: Clothing) {
+    setCompareIds(previous => previous.includes(item.id) ? previous : [...previous.slice(-1), item.id]);
+    setFocusedId(null);
+  }
+  function onRoomTouchStart(event: React.TouchEvent<HTMLDivElement>) {
+    const touch = event.touches.item(0);
+    if (touch) touchOrigin.current = { x: touch.clientX, y: touch.clientY };
+  }
+  function onRoomTouchEnd(event: React.TouchEvent<HTMLDivElement>) {
+    const touch = event.changedTouches.item(0);
+    const origin = touchOrigin.current;
+    touchOrigin.current = null;
+    if (!touch || !origin) return;
+    const dx = touch.clientX - origin.x;
+    const dy = touch.clientY - origin.y;
+    if (dy > 80 && Math.abs(dx) < 60) setDrawerOpen(true);
+  }
   function editCurrent() {
     if (!current) return;
     const item = current;
@@ -127,7 +157,7 @@ export default function ClosetRail({ items, service, mode, busy, onAdd, onBulk, 
       <nav className="closet-categories" aria-label="服のカテゴリー">
         {(['すべて', ...CATEGORIES] as const).map(c => <button type="button" key={c} aria-pressed={category === c} onClick={() => setCategory(c)}>{c}</button>)}
       </nav>
-      <div className="closet-hanging-area">
+      <div className="closet-hanging-area" onTouchStart={onRoomTouchStart} onTouchEnd={onRoomTouchEnd}>
         <div className="closet-hanging-rail" aria-hidden="true" />
         <span className="closet-rail-end left" aria-hidden="true" /><span className="closet-rail-end right" aria-hidden="true" />
         {visible.length ? <>
@@ -183,6 +213,20 @@ export default function ClosetRail({ items, service, mode, busy, onAdd, onBulk, 
         <label>並び順<select aria-label="並び順" value={sort} onChange={event => setSort(event.target.value)}><option value="newest">新しい順</option><option value="oldest">古い順</option><option value="updated">更新順</option><option value="name">名前順</option></select></label>
       </>}
     </div>
+    {compared.length > 0 && <div className="closet-compare-tray" role="region" aria-label="服の比較">
+      <span>比較 {compared.length} / 2</span>
+      <div>{compared.map(item => <span key={item.id} className="closet-compare-thumb"><GarmentThumb item={item} service={service}/><small>{item.name}</small></span>)}</div>
+      <button type="button" className="closet-compare-start" disabled={compared.length !== 2} onClick={() => setCompareOpen(true)}>2着を比較</button>
+      <button type="button" aria-label="比較を解除" onClick={() => { setCompareIds([]); setCompareOpen(false); }}><Icon name="close" size={18}/></button>
+    </div>}
+    <dialog className="closet-compare-dialog" ref={comparison} aria-label="2着を並べて比較" onClose={() => setCompareOpen(false)}>
+      <div className="closet-compare-heading"><h2>2着を比較</h2><button type="button" aria-label="比較画面を閉じる" onClick={() => setCompareOpen(false)}><Icon name="close" size={20}/></button></div>
+      <div className="closet-compare-columns">{compared.map(item => <section key={item.id}>
+        <div className="closet-compare-picture"><GarmentThumb item={item} service={service}/></div>
+        <h3>{item.name}</h3><p>{item.category}</p><p>{item.brand || '—'}</p><p>{item.color || '—'}</p>
+        <button type="button" onClick={() => { setCompareOpen(false); onEdit(item); }}>編集する <Icon name="arrow" size={16}/></button>
+      </section>)}</div>
+    </dialog>
     <dialog className="closet-inspect" ref={detail} aria-labelledby="closet-inspect-name" onClose={() => setFocusedId(null)}>
       {current && <div className="closet-inspect-inner">
         <button className="closet-inspect-close" aria-label="詳細を閉じる" type="button" onClick={() => setFocusedId(null)}><Icon name="close" size={20}/></button>
@@ -192,6 +236,7 @@ export default function ClosetRail({ items, service, mode, busy, onAdd, onBulk, 
           <p>{[current.brand, current.color, current.size].filter(Boolean).join(' · ')}</p>
           <div className="closet-inspect-actions">
             <button type="button" aria-label="お気に入りを切り替える" aria-pressed={current.favorite} onClick={() => onFavorite(current)} disabled={busy}><Icon name="heart" size={20} fill={current.favorite ? 'currentColor' : 'none'}/></button>
+            <button type="button" onClick={() => queueCompare(current)}><Icon name="grid" size={18}/> 比較に追加</button>
             <button type="button" onClick={editCurrent}><Icon name="edit" size={18}/> 詳細・編集</button>
           </div>
         </div>
