@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1"
+    "preview": "vite preview --host 127.0.0.1",
+    "predev": "node scripts/generate-pwa-icons.mjs",
+    "prebuild": "node scripts/generate-pwa-icons.mjs"
   },
   "dependencies": {
     "@clozy/application": "*",
