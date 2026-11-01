@@ -206,6 +206,7 @@ export default function App() {
   const service = useMemo(() => new ClozyService(new IndexedDbRepository()), []);
   const [view, setView] = useState<View>('home');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [sharedProduct, setSharedProduct] = useState<{name: string; sourceUrl: string} | null>(null);
   const [items, setItems] = useState<Clothing[]>([]);
   const [wears, setWears] = useState<WearEntry[]>([]);
   const [selected, setSelected] = useState<Clothing | 'new' | null>(null);
@@ -215,6 +216,21 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
   const wornToday = useMemo(() => new Set(wears.filter(w => w.date === todayLocal()).map(w => w.clothingId)), [wears]);
+  useEffect(() => {
+    // Android PWA share target: never save or fetch a merchant URL without review.
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('from') !== 'share') return;
+    const candidate = params.get('url') || params.get('text')?.match(/https:\/\/[^\s]+/)?.[0] || '';
+    try {
+      const url = new URL(candidate);
+      if (url.protocol === 'https:' && candidate.length <= 2048) {
+        setSharedProduct({ name: (params.get('title') || '').trim().slice(0, 80), sourceUrl: url.toString() });
+        setSelected('new');
+      }
+    } catch { /* Share data was not a product URL. Do not persist it. */ }
+    // Product links can contain purchase tokens or tracking parameters.
+    window.history.replaceState(window.history.state, '', window.location.pathname + window.location.hash);
+  }, []);
   const reload = useCallback(async () => {
     const data = await service.list();
     setItems(data.clothing); setWears(data.wears);
@@ -267,6 +283,6 @@ export default function App() {
       </div>}
     </nav>
     {bulkOpen && <BulkAdd service={service} items={items} onClose={() => setBulkOpen(false)} onSaved={reload} />}
-    {selected && <GarmentForm key={selected === 'new' ? 'new' : selected.id} service={service} current={selected === 'new' ? undefined : selected} onClose={() => setSelected(null)} onSaved={async () => { await reload(); setSelected(null); setNotice({ kind: 'success', message: 'アイテムを保存しました。' }); }} onDelete={remove} busy={busy} />}
+    {selected && <GarmentForm key={selected === 'new' ? 'new' : selected.id} service={service} current={selected === 'new' ? undefined : selected} draft={sharedProduct ?? undefined} onClose={() => { setSelected(null); setSharedProduct(null); }} onSaved={async () => { await reload(); setSelected(null); setSharedProduct(null); setNotice({ kind: 'success', message: 'アイテムを保存しました。' }); }} onDelete={remove} busy={busy} />}
   </div>;
 }
