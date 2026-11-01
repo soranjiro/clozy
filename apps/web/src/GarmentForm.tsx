@@ -24,10 +24,11 @@ function useExistingPhoto(service: ClozyService, id: string | undefined) {
   return url;
 }
 export default function GarmentForm({
-  service, current, onClose, onSaved, onDelete, busy
+  service, current, draft, onClose, onSaved, onDelete, busy
 }: {
   service: ClozyService;
   current?: Clothing;
+  draft?: { name: string; sourceUrl: string };
   onClose: () => void;
   onSaved: () => Promise<void>;
   onDelete: (item: Clothing) => Promise<void>;
@@ -39,7 +40,7 @@ export default function GarmentForm({
     size: current.size, notes: current.notes, favorite: current.favorite,
     seasons: current.seasons ?? [...SEASONS], archived: current.archived ?? false,
     sourceUrl: current.sourceUrl, purchasePrice: current.purchasePrice
-  } : defaults);
+  } : { ...defaults, ...draft });
   const [dirty, setDirty] = useState(false);
   const [photo, setPhoto] = useState<Blob>();
   const [photoMode, setPhotoMode] = useState<'keep' | 'set' | 'remove'>('keep');
@@ -103,6 +104,7 @@ export default function GarmentForm({
           </div>
           <div className="photo-instructions">
             <strong>服の写真</strong>
+            <p className="photo-capture-guide"><Icon name="camera" size={16}/> 正面・1着・背景はシンプルに</p>
             
             <label className="button button-outline file-label">
               <Icon name="camera" size={18} /> 写真を選ぶ
@@ -111,6 +113,7 @@ export default function GarmentForm({
             {shown && <button type="button" className="text-button" disabled={busy || pending} onClick={() => { setPhoto(undefined); setPhotoMode('remove'); setDirty(true); }}>画像を削除</button>}
           </div>
         </div>
+        {draft && <p className="share-draft-hint">商品リンクから下書きを作成しました。写真とカテゴリーを確認して保存してください。</p>}
         <div className="field">
           <label htmlFor="cloth-name">アイテム名 <span aria-hidden="true" className="required">*</span></label>
           <input id="cloth-name" required maxLength={80} value={fields.name} onChange={e => change('name', e.target.value)} placeholder="白のリネンシャツ" autoFocus />
