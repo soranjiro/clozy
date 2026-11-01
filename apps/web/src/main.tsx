@@ -5,6 +5,7 @@ import PasskeyGate from './PasskeyGate';
 import './styles.css';
 import './wardrobe-experience.css';
 import './reference-ui.css';
+import './closet-immersive.css';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Application root was not found');
