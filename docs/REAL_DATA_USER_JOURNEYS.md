@@ -10,7 +10,7 @@
 1. **Enter**: default home is the closet. No fixed tab bar or dashboard cards. A small brass knob opens an accessible wayfinder for non-spatial destinations.
 2. **Find**: categories are real furniture compartments with photo previews and exact counts from the active device's items. Top/outer/bottom categories are on the rail; shoes/bags/accessories use a shelf treatment. Category buttons use real text and accessible names, not gesture-only controls.
 3. **Take**: horizontal native scrolling shifts hangers. Tap the centered garment to inspect it. From that inspection, mark `今日着た` directly; a second tap undoes an accidental record. Preserves compare/edit/favorite.
-4. **Add**: plus in the wardrobe and the wayfinder opens the same photo editor; multiple additions retain the existing bulk modal. Current URL field records provenance but **does not yet import product data**.
+4. **Add**: plus in the wardrobe and the wayfinder opens the same photo editor; multiple additions retain the existing bulk modal. Android-compatible PWA share targets now prefill an **unsaved** garment form from an HTTPS merchant URL and optional title, but **do not fetch metadata or product images**, and never save automatically.
 5. **Coordinate**: the passage from the closet opens the existing outfit planner. The planner currently uses deterministic rules; no AI/color/TPO inference should be claimed.
 6. **Remember**: the passage opens the wear calendar, where multiple garments can be recorded and previous days edited. Analytics and settings live in the wayfinder.
 
@@ -22,7 +22,7 @@
 - On 320px viewport, ensure menu + cabinet controls do not overlap; on 390/768/1440, verify text and image display.
 
 ## Product/purchase import (planned, not implemented)
-- From a supported ecommerce Share action or user-pasted product URL, create a **draft** with name/brand/color/category/price/product URL and source photo.
+- From a supported ecommerce Share action or user-pasted product URL, create a **reviewable draft** with name/brand/color/category/price/product URL and source photo.
 - Product metadata retrieval is backend-only, domain-allowlisted, URL-protocol validated, bounded, redirected-host revalidated and protected against SSRF. Respect publisher rights and terms; no credential scraping.
 - Image preprocessing should strip EXIF, rotate correctly, segment the garment (when user opts in), crop/pad without stretching, use a uniform neutral background and front-facing product photo when available. Preserve original image only with user consent and private access; clearly label AI-edited images.
 - Inspect and edit the draft, avoid duplicates using product URL/hash and user confirmation, only then publish as a garment. Purchase does not imply that a garment was delivered/worn.
