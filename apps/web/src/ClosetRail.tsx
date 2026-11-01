@@ -15,6 +15,8 @@ type Props = {
   onBulk: () => void;
   onEdit: (item: Clothing) => void;
   onFavorite: (item: Clothing) => void;
+  onWearToday: (item: Clothing) => void;
+  wornToday: ReadonlySet<string>;
   onGo: (destination: Destination) => void;
 };
 
@@ -22,7 +24,7 @@ const demo: Category[] = ['アウター', 'トップス', 'ワンピース', '�
 const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** A real horizontally scrolling rail, rather than a picture of one. */
-export default function ClosetRail({ items, service, mode, busy, onAdd, onBulk, onEdit, onFavorite, onGo }: Props) {
+export default function ClosetRail({ items, service, mode, busy, onAdd, onBulk, onEdit, onFavorite, onWearToday, wornToday, onGo }: Props) {
   const [category, setCategory] = useState<Category | 'すべて'>('すべて');
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -50,6 +52,7 @@ export default function ClosetRail({ items, service, mode, busy, onAdd, onBulk, 
       : b.createdAt.localeCompare(a.createdAt)), [items, query, category, favorites, season, storage, sort]);
 
   const current = items.find(item => item.id === focusedId);
+  const shelfMode = category === 'シューズ' || category === 'バッグ' || category === 'アクセサリー' || category === 'その他';
   const center = visible[Math.min(active, visible.length - 1)];
   const stored = items.filter(item => item.archived);
   const compared = compareIds.map(id => items.find(item => item.id === id))
@@ -154,10 +157,23 @@ export default function ClosetRail({ items, service, mode, busy, onAdd, onBulk, 
         </div>
       </div>
       {searchOpen && <label className="closet-search"><Icon name="search" size={17} /><span className="sr-only">服を検索</span><input type="search" autoFocus value={query} placeholder="名前・色・ブランド" onChange={event => setQuery(event.target.value)} /><button type="button" aria-label="検索を閉じる" onClick={() => { setSearchOpen(false); setQuery(''); }}><Icon name="close" size={17} /></button></label>}
-      <nav className="closet-categories" aria-label="服のカテゴリー">
-        {(['すべて', ...CATEGORIES] as const).map(c => <button type="button" key={c} aria-pressed={category === c} onClick={() => setCategory(c)}>{c}</button>)}
+      <nav className="closet-compartments" aria-label="収納場所から服を探す">
+        <button type="button" className="closet-compartment all" aria-pressed={category === 'すべて'} onClick={() => setCategory('すべて')}>
+          <span className="closet-compartment-picture"><Icon name="hanger" size={29}/></span>
+          <span className="closet-compartment-name">すべて</span>
+          <small>{items.length}着</small>
+        </button>
+        {CATEGORIES.map(c => {
+          const sample = items.find(item => item.category === c && !item.archived) ?? items.find(item => item.category === c);
+          const count = items.filter(item => item.category === c && !item.archived).length;
+          return <button type="button" key={c} className="closet-compartment" aria-label={c + '、' + count + '着'} aria-pressed={category === c} onClick={() => { setCategory(c); setStorage('着用中'); }}>
+            <span className="closet-compartment-picture">{sample ? <GarmentThumb item={sample} service={service}/> : <GarmentArt category={c} small/>}</span>
+            <span className="closet-compartment-name">{c}</span>
+            <small>{count}着</small>
+          </button>;
+        })}
       </nav>
-      <div className="closet-hanging-area" onTouchStart={onRoomTouchStart} onTouchEnd={onRoomTouchEnd}>
+      <div className={'closet-hanging-area' + (shelfMode ? ' is-shelf' : '')} onTouchStart={onRoomTouchStart} onTouchEnd={onRoomTouchEnd}>
         <div className="closet-hanging-rail" aria-hidden="true" />
         <span className="closet-rail-end left" aria-hidden="true" /><span className="closet-rail-end right" aria-hidden="true" />
         {visible.length ? <>
@@ -236,6 +252,7 @@ export default function ClosetRail({ items, service, mode, busy, onAdd, onBulk, 
           <p>{[current.brand, current.color, current.size].filter(Boolean).join(' · ')}</p>
           <div className="closet-inspect-actions">
             <button type="button" aria-label="お気に入りを切り替える" aria-pressed={current.favorite} onClick={() => onFavorite(current)} disabled={busy}><Icon name="heart" size={20} fill={current.favorite ? 'currentColor' : 'none'}/></button>
+            <button type="button" aria-pressed={wornToday.has(current.id)} onClick={() => onWearToday(current)} disabled={busy}><Icon name={wornToday.has(current.id) ? 'check' : 'calendar'} size={18}/> {wornToday.has(current.id) ? '今日の記録を外す' : '今日着た'}</button>
             <button type="button" onClick={() => queueCompare(current)}><Icon name="grid" size={18}/> 比較に追加</button>
             <button type="button" onClick={editCurrent}><Icon name="edit" size={18}/> 詳細・編集</button>
           </div>
