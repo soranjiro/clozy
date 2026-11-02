@@ -187,6 +187,12 @@ try {
     demoPage.on('pageerror', error => errors.push(error.message));
     await demoPage.goto(base + '/?demo=1');
     await demoPage.getByText('26 pieces', { exact: true }).waitFor();
+    await demoPage.waitForFunction(() => [...document.querySelectorAll('.preview-asset-probe')].length > 0 && [...document.querySelectorAll('.preview-asset-probe')].every(img => img.complete && img.naturalWidth > 0));
+    assert.equal(await demoPage.locator('.closet-piece .garment-art').count(), 0, 'sample rails use realistic generated garments');
+    await demoPage.screenshot({ path: '/tmp/clozy-luxury-mobile.png', fullPage: true });
+    await demoPage.setViewportSize({ width: 1440, height: 1000 });
+    await demoPage.screenshot({ path: '/tmp/clozy-luxury-desktop.png', fullPage: true });
+    await demoPage.setViewportSize({ width: 390, height: 844 });
     await demoPage.locator('#zone-tops .closet-piece').first().click();
     await demoPage.getByRole('button', { name: 'ChatGPTで相談', exact: true }).click();
     await demoPage.getByRole('dialog', { name: 'コーデを相談する' }).waitFor();

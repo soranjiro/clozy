@@ -64,3 +64,44 @@
 .immersive-app .closet-tool span{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
 .immersive-app .zone-long:has(.closet-empty-hanger) .closet-empty-hanger{min-height:180px}
 @media(min-width:1100px){.immersive-app .closet-scene-tools{right:calc((100vw - 980px)/2 + 8px)}}
+
+/* Atelier finish: real walnut grain, warm grazing light and brushed brass. */
+.immersive-app{background:radial-gradient(ellipse at 50% 0,#403429,#161310 80%);color:#493b2c}
+.immersive-closet{--walnut:url('/closet/materials/walnut.jpg');padding:0 24px;background:linear-gradient(90deg,#160d08aa,transparent 3%,transparent 97%,#160d08bb),var(--walnut) center/620px auto;box-shadow:0 30px 90px #0009,0 0 0 1px #ac815633}
+.immersive-app .closet-cornice{height:34px;background:linear-gradient(#ffffff09,#0004),var(--walnut) center/600px auto;border-bottom:1px solid #dfb77755;box-shadow:0 6px 12px #0009}
+.closet-cabinet{background:transparent;gap:14px;padding:14px 0}
+.closet-zone{border:1px solid #b0885b44;border-bottom:12px solid #624329;box-shadow:0 6px 10px #0008,inset 0 1px #edc39855}
+.closet-bay{background:radial-gradient(ellipse at 50% 0,#e0b47230,transparent 60%),linear-gradient(90deg,#160d08a1,transparent 12%,transparent 88%,#160d08a1),var(--walnut) center/480px auto;box-shadow:inset 0 14px 30px #0009;min-height:360px}
+.closet-light{top:5px;height:2px;left:6%;right:6%;background:#fff3d1;box-shadow:0 2px 8px 3px #ffdca688,0 12px 35px 12px #ffd29c30;z-index:3}
+.closet-bay-title{padding:22px 22px 16px;color:#f6e6cb;position:relative;z-index:3}
+.closet-bay-title h2{font-size:11px;letter-spacing:.18em;font-weight:400}.closet-bay-title>span{color:#d9c3a4;font-size:10px;letter-spacing:.12em}
+.closet-bay.rail:before{top:80px;height:5px;background:linear-gradient(#fff0c9,#c1a16d 25%,#775c33 60%,#edd5a0);box-shadow:0 4px 6px #0007}
+.closet-rail-track{height:295px}.closet-piece{height:286px;padding-top:38px;filter:brightness(.82);transform:rotateY(-16deg) scale(.92);color:#f1dfc2}
+.closet-piece.is-centered{filter:brightness(1.04)}
+.closet-piece .garment-thumb{height:220px;width:150px;filter:drop-shadow(10px 12px 6px #0006)}
+.closet-piece-name{font-size:10px;font-weight:400;letter-spacing:.04em;margin-top:6px;color:#f2dfc2;background:#21140e70;padding:4px 9px;border-radius:2px;max-width:144px}
+.closet-hanger{border-color:#b18b5e;top:26px;background:linear-gradient(155deg,transparent 39%,#b68c5f 42% 58%,transparent 61%);height:24px;filter:drop-shadow(0 3px 2px #0008)}
+.closet-piece:before{top:6px;border-color:#e0c18b;height:26px}
+.closet-rail-controls{gap:10px;padding:0 16px 10px}.closet-rail-controls input{appearance:none;-webkit-appearance:none;background:transparent;height:44px;accent-color:#d2b785}
+.closet-rail-controls input::-webkit-slider-runnable-track{height:2px;background:#b69b7066;border-radius:2px}.closet-rail-controls input::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:12px;height:12px;border-radius:50%;margin-top:-5px;background:linear-gradient(135deg,#f3ddb0,#aa8851);box-shadow:0 1px 4px #0008}
+.closet-rail-controls input::-moz-range-track{height:2px;background:#b69b7066}.closet-rail-controls input::-moz-range-thumb{width:12px;height:12px;border:0;background:#d1b17e;border-radius:50%}
+.closet-rail-controls .closet-round{background:#2c1c1180;color:#e3cda4;border:1px solid #c3a27155;width:36px;height:44px;border-radius:18px;box-shadow:inset 0 1px #fff1}
+.zone-bottoms .closet-hanger{height:8px;top:33px;clip-path:none;border-width:0;border-radius:2px;background:linear-gradient(#d1b181,#977044)}
+.zone-bottoms .closet-hanger:before,.zone-bottoms .closet-hanger:after{content:'';position:absolute;width:5px;height:13px;top:0;background:linear-gradient(90deg,#c3b292,#6d5d42);left:5px}.zone-bottoms .closet-hanger:after{left:auto;right:5px}
+.shelf .closet-rail-track{height:220px}.shelf .closet-piece{height:218px;padding-top:0;justify-content:flex-end}.shelf .closet-piece .garment-thumb{height:170px}.shelf .closet-piece:after{content:'';position:absolute;bottom:26px;width:146px;height:10px;background:linear-gradient(#a77c4c,#57371e);box-shadow:0 7px 10px #0006;z-index:-1;transform:perspective(300px) rotateX(25deg)}
+.closet-empty-hanger{color:#d4bf9e;min-height:200px}.zone-stored .closet-bay{min-height:150px}
+.closet-favorite{color:#ead5a5}.closet-plinth{color:#d4b992;background:linear-gradient(#0001,#0003);font-size:10px;letter-spacing:.08em}
+.closet-tool,.immersive-app .closet-tool,.closet-utility-handle{background:linear-gradient(145deg,#f6e9cf,#d9c39e);color:#6d5130;border-color:#e8d4ae;box-shadow:0 4px 12px #0005,inset 0 1px #fff9}
+.closet-dialog{border:1px solid #bca07a;border-top:6px solid #8b673f;border-radius:4px;padding:28px;background:radial-gradient(ellipse at 50% 0,#fffdf8,#eee5d5);box-shadow:0 30px 100px #000a}
+.closet-dialog::backdrop{background:#100c08b3;backdrop-filter:blur(8px)}
+.closet-inspect{background:radial-gradient(ellipse at 50% 15%,#d7b77d33,transparent 70%),linear-gradient(#0003,#0005),var(--walnut,url('/closet/materials/walnut.jpg')) center/480px auto;min-height:380px;box-shadow:inset 0 10px 25px #0008}
+.closet-inspect .garment-thumb{height:330px;width:250px}.closet-item-actions{margin-top:10px}
+.closet-index-grid button{background:#f0e8d9;border:1px solid #d6c7ae;box-shadow:inset 0 1px #fff8}.closet-index-grid .garment-thumb{height:180px}.closet-index-grid strong{font-weight:400}
+.closet-outfit{background:linear-gradient(#0002,#0004),url('/closet/materials/walnut.jpg') center/480px auto;color:#f3e3ca}.closet-outfit .garment-thumb{height:200px}
+.preview-garment-photo{display:block;flex:none;height:100%;aspect-ratio:2/3;max-width:100%;background-size:300% 300%;background-repeat:no-repeat}
+.preview-asset-probe{display:none!important}
+.has-preview-photo{display:flex;align-items:center;justify-content:center}
+.zone-long .closet-piece .garment-thumb{height:440px;width:180px}.zone-long .closet-piece{height:510px}.zone-long .closet-rail-track{height:525px}
+@media(max-width:650px){.immersive-closet{padding:0 14px}.closet-cabinet{gap:12px}.closet-bay{min-height:330px}.closet-bay-title{padding:20px 16px 16px}.closet-bay.rail:before{top:78px}.closet-rail-track{height:272px}.closet-piece{height:267px}.closet-piece .garment-thumb{height:203px}.closet-rail-controls{padding:0 10px 6px}.shelf .closet-rail-track{height:195px}.shelf .closet-piece{height:190px}.shelf .closet-piece .garment-thumb{height:155px}.zone-long .closet-rail-track{height:360px}.zone-long .closet-piece{height:350px}.zone-long .closet-piece .garment-thumb{height:285px;width:165px}.closet-index-grid .garment-thumb{height:125px}.closet-dialog{padding:18px}.closet-inspect .garment-thumb{height:300px}.closet-inspect{min-height:350px}.closet-bay:has(.closet-empty-hanger){min-height:180px}.closet-empty-hanger{min-height:130px}}
+
+.closet-bay{background-size:auto,auto,cover;background-repeat:no-repeat}.zone-long .closet-bay{background-size:auto,auto,cover}
