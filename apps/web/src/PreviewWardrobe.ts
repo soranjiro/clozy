@@ -99,3 +99,12 @@ export class PreviewWardrobeRepository implements WardrobeRepository {
     this.images = new Map(images.map(x => [x.id, x.blob]));
   }
 }
+
+/** Generated imagery belongs only to the explicitly marked synthetic wardrobe. */
+export function previewAsset(item: Clothing): { src: string; cell: number } | undefined {
+  if (item.notes !== 'プレビュー用の架空の服です' || previewColor(item.id) === undefined) return undefined;
+  const index = Number(item.id.slice(-2)) - 1;
+  return index < 9 ? { src: '/closet/preview/outerwear.webp', cell: index }
+    : index < 18 ? { src: '/closet/preview/tops.webp', cell: index - 9 }
+    : { src: '/closet/preview/bottoms-shoes.webp', cell: index - 18 };
+}
