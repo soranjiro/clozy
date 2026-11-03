@@ -2,6 +2,10 @@
 
 A Japanese wardrobe manager with local-first storage and optional Cloudflare account-backed manual backups. Local use never requires an account.
 
+## Immersive closet
+
+The default UI now uses separate hanging rails and a shoe shelf with actual wardrobe data, a searchable photo index, and manual outfit selection. See [implementation status](docs/IMMERSIVE_CLOSET_DELIVERY.md) for completed features, validation and the current photo/CSS rendering scope.
+
 ## Run locally
 
 Requires Node.js 22.12+ and npm 10+:

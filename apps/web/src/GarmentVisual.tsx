@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Category, Clothing } from '@clozy/domain';
 import type { ClozyService } from '@clozy/application';
-import { previewColor } from './PreviewWardrobe';
+import { previewColor, previewAsset } from './PreviewWardrobe';
 
 const tone: Record<Category, string> = {
   'トップス': '#f2e8d9', 'ボトムス': '#aa9987', 'アウター': '#9a876f',
@@ -28,20 +28,23 @@ export function GarmentArt({ category, small = false, fabricColor }: { category:
       {category === 'アクセサリー' && <><ellipse cx="50" cy="55" rx="27" ry="35" fill="none" strokeWidth="5"/><circle cx="50" cy="18" r="12"/><path d="M32 87q18 22 36 0" fill="none"/></>}
       {category === 'その他' && <><rect x="18" y="33" width="64" height="65" rx="4"/><path d="M18 53h64M33 33V18h34v15M42 68h16" fill="none"/></>}
     </g>
-    <path fill={'url(#fabric-' + category + ')'} d="M14 8h74v98H14z" opacity=".4" />
   </svg>;
 }
 export function GarmentThumb({ item, service, className = '' }: { item: Clothing; service: ClozyService; className?: string }) {
   const [url, setUrl] = useState<string>();
+  const [assetFailed, setAssetFailed] = useState(false);
+  const asset = !item.imageId && !assetFailed ? previewAsset(item) : undefined;
+  useEffect(() => setAssetFailed(false), [item.id]);
   useEffect(() => {
     if (!item.imageId) { setUrl(undefined); return; }
+    setUrl(undefined);
     let active = true, objectUrl: string | undefined;
     void service.image(item.id).then(blob => {
       if (active && blob) { objectUrl = URL.createObjectURL(blob); setUrl(objectUrl); }
     }).catch(() => { if (active) setUrl(undefined); });
     return () => { active = false; if (objectUrl) URL.revokeObjectURL(objectUrl); };
-  }, [item.id, item.imageId, service]);
-  return <span className={'garment-thumb ' + className}>
-    {url ? <img src={url} alt="" loading="lazy" />  : <GarmentArt category={item.category} fabricColor={previewColor(item.id)} />}
+  }, [item.id, item.imageId, item.updatedAt, service]);
+  return <span className={'garment-thumb ' + className + (asset ? ' has-preview-photo' : '')}>
+    {url ? <img src={url} alt="" loading="lazy" onError={() => setUrl(undefined)} />  : asset ? <span className="preview-garment-photo" aria-hidden="true" style={{ backgroundImage: `url("${asset.src}")`, backgroundPosition: `${(asset.cell % 3) * 50}% ${Math.floor(asset.cell / 3) * 50}%` }}><img src={asset.src} alt="" onError={() => setAssetFailed(true)} className="preview-asset-probe" /></span> : <GarmentArt category={item.category} fabricColor={previewColor(item.id)} />}
   </span>;
 }
