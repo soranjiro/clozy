@@ -10,6 +10,8 @@ export interface WardrobeRepository {
   snapshot(): Promise<Snapshot>;
   getImage(id: string): Promise<Blob | undefined>;
   saveClothing(item: Clothing, image?: Blob, removeOldImage?: boolean): Promise<void>;
+  /** Atomic on IndexedDB; optional fallback supports the demo repository. */
+  setArchived?(ids: string[], archived: boolean, updatedAt: string): Promise<void>;
   deleteClothing(id: string): Promise<void>;
   saveWear(entry: WearEntry): Promise<void>;
   saveWears(entries: WearEntry[]): Promise<void>;
@@ -100,6 +102,13 @@ export class ClozyService {
   }
   async favorite(current: Clothing): Promise<void> {
     await this.repo.saveClothing(validateClothing({ ...current, favorite: !current.favorite, updatedAt: new Date().toISOString() }));
+  }
+  async archive(items: Clothing[], archived: boolean): Promise<void> {
+    const unique = [...new Map(items.map(item => [item.id, item])).values()];
+    if (unique.some(item => !validId(item.id))) throw new DomainError('衣服IDが不正です');
+    const now = new Date().toISOString();
+    if (this.repo.setArchived) await this.repo.setArchived(unique.map(item => item.id), archived, now);
+    else for (const item of unique) await this.repo.saveClothing(validateClothing({ ...item, archived, updatedAt: now }));
   }
   remove(id: string): Promise<void> { return this.repo.deleteClothing(id); }
   clearAll(): Promise<void> { return this.repo.replaceAll({ clothing: [], wears: [] }, []); }
