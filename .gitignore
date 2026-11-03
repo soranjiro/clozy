@@ -12,4 +12,4 @@ coverage/
 .npm-cache/
 .wrangler/
 
-.cache/
+.firebase/

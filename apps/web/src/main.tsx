@@ -3,7 +3,10 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import PasskeyGate from './PasskeyGate';
 import './styles.css';
-import './atelier.css';
+import './wardrobe-experience.css';
+import './reference-ui.css';
+import './closet/preview-and-draft.css';
+import './closet/immersive-closet.css';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Application root was not found');

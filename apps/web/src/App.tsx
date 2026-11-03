@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Clothing, Category, WearEntry } from '@clozy/domain';
-import { CATEGORIES, SEASONS, filterClothing, getWearCounts, inSeason, wardrobeAnalysis } from '@clozy/domain';
+import { CATEGORIES, filterClothing, getWearCounts, wardrobeAnalysis } from '@clozy/domain';
 import { ClozyService } from '@clozy/application';
 import { IndexedDbRepository } from '@clozy/storage';
+import { PreviewWardrobeRepository, isReviewHost, isPreviewDeployment } from './PreviewWardrobe';
 import Icon from './Icon';
 import type { IconName } from './Icon';
 import GarmentForm from './GarmentForm';
 import BulkAdd from './BulkAdd';
 import Planning from './Planning';
-import { ClosetCollection, ClosetScene, DisplayHanger, GarmentSilhouette } from './ClosetDisplay';
+import CloudAccount from './CloudAccount';
+import ImmersiveCloset from './closet/ImmersiveCloset';
+import ClosetDialog from './closet/ClosetDialog';
+import { GarmentThumb } from './GarmentVisual';
 import { hasPasskey, supportsPasskey, registerPasskey, removePasskey, passkeyError } from './passkey';
 
 type View = 'home' | 'wardrobe' | 'planning' | 'calendar' | 'insights' | 'settings';
@@ -16,9 +20,9 @@ type Notice = { message: string; kind: 'success' | 'error' };
 const nav: { key: View; title: string; icon: IconName }[] = [
   { key: 'home', title: 'ホーム', icon: 'home' },
   { key: 'wardrobe', title: 'クローゼット', icon: 'hanger' },
-  { key: 'planning', title: '服選び', icon: 'sparkles' },
+  { key: 'planning', title: 'コーデ', icon: 'hanger' },
   { key: 'calendar', title: 'カレンダー', icon: 'calendar' },
-  { key: 'insights', title: 'スタイル分析', icon: 'chart' },
+  { key: 'insights', title: '分析', icon: 'chart' },
   { key: 'settings', title: '設定', icon: 'settings' }
 ];
 const todayLocal = () => {
@@ -28,128 +32,16 @@ const todayLocal = () => {
 const dateKey = (date: Date) => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
 const niceDate = (date: string) => new Date(date + 'T12:00:00').toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'long' });
 
-function GarmentImage({ service, item }: { service: ClozyService; item: Clothing }) {
-  const [url, setUrl] = useState<string>();
-  useEffect(() => {
-    if (!item.imageId) { setUrl(undefined); return; }
-    let cancelled = false;
-    let objectUrl: string | undefined;
-    void service.image(item.id).then(blob => {
-      if (!cancelled && blob) { objectUrl = URL.createObjectURL(blob); setUrl(objectUrl); }
-    }).catch(() => { if (!cancelled) setUrl(undefined); });
-    return () => { cancelled = true; if (objectUrl) URL.revokeObjectURL(objectUrl); };
-  }, [item.id, item.imageId, item.updatedAt, service]);
-  return url
-    ? <img className="garment-photo" src={url} alt={item.name} loading="lazy" />
-    : <div className="garment-placeholder"><GarmentSilhouette item={item} /><span className="visual-fallback-label">写真なし · イメージ</span></div>;
-}
-function GarmentCard({ item, service, onEdit, onFavorite, busy }: {
-  item: Clothing; service: ClozyService; onEdit: (item: Clothing) => void; onFavorite: (item: Clothing) => void; busy: boolean
-}) {
-  const shelved = ['シューズ', 'バッグ', 'アクセサリー'].includes(item.category);
-  return <article className={'garment-card ' + (item.archived ? 'is-stored ' : '') + (shelved ? 'is-shelved ' : '') + (item.imageId ? 'has-photo' : '')}>
-    <div className="garment-media">
-      {!shelved && <DisplayHanger />}
-      <button className="garment-open" type="button" onClick={() => onEdit(item)} aria-label={item.name + 'を編集'}>
-        <GarmentImage item={item} service={service} />
-      </button>
-      <button className={'favorite-button ' + (item.favorite ? 'is-favorite' : '')} type="button" onClick={() => onFavorite(item)} disabled={busy} aria-pressed={item.favorite} aria-label={item.name + (item.favorite ? 'をお気に入りから外す' : 'をお気に入りに追加')}>
-        <Icon name="heart" size={19} fill={item.favorite ? 'currentColor' : 'none'} />
-      </button>
-    </div>
-    <div className="garment-details">
-      <span className="category-label">{item.category}{item.archived ? ' · 収納中' : ''}</span>
-      <button className="garment-name" type="button" onClick={() => onEdit(item)}>{item.name}</button>
-      <p>{[item.brand, item.color].filter(Boolean).join(' · ') || (item.seasons ?? SEASONS).join('・')}</p>
-      {item.sourceUrl && <a className="product-link" href={item.sourceUrl} target="_blank" rel="noopener noreferrer">商品ページ ↗</a>}
-    </div>
-  </article>;
-}
 function EmptyState({ title, description, onAdd, action = '服を登録する' }: { title: string; description: string; onAdd?: () => void; action?: string }) {
   return <div className="empty-state"><span className="empty-icon"><Icon name="hanger" size={38} /></span><h3>{title}</h3><p>{description}</p>{onAdd && <button className="button button-primary" onClick={onAdd}><Icon name="plus" size={18} /> {action}</button>}</div>;
 }
-function Home({ items, wears, service, onAdd, onGo, onEdit, onFavorite, busy }: {
-  items: Clothing[]; wears: WearEntry[]; service: ClozyService; onAdd: () => void; onGo: (view: View) => void;
-  onEdit: (item: Clothing) => void; onFavorite: (item: Clothing) => void; busy: boolean
-}) {
-  const counts = getWearCounts(wears);
-  const featured = [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 4);
-  const recent = [...wears].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
-  return <>
-    <div className="hero">
-      <div className="hero-copy">
-        <p className="eyebrow hero-eyebrow">THE ART OF YOUR EVERYDAY</p>
-        <h2>好きな服に、<br /><em>とっておきの場所を。</em></h2>
-        <p>扉を開くたび、少しうれしくなる。<br />あなただけの、小さなドレッシングルーム。</p>
-        <div className="hero-actions"><button className="button button-light" onClick={() => onGo('wardrobe')}>クローゼットを開く <Icon name="arrow" size={17} /></button><button className="hero-add" onClick={onAdd}><Icon name="plus" size={16} /> 服を登録</button></div>
-      </div>
-      <ClosetScene />
-    </div>
-    <div className="metric-grid">
-      <div className="metric"><div className="metric-head"><span>登録アイテム</span><span className="metric-icon lavender"><Icon name="hanger" size={19} /></span></div><strong>{items.length}<small> 着</small></strong><p>自分だけのコレクション</p></div>
-      <div className="metric"><div className="metric-head"><span>お気に入り</span><span className="metric-icon peach"><Icon name="heart" size={19} /></span></div><strong>{items.filter(i => i.favorite).length}<small> 着</small></strong><p>とっておきのアイテム</p></div>
-      <div className="metric"><div className="metric-head"><span>着用記録</span><span className="metric-icon mint"><Icon name="calendar" size={19} /></span></div><strong>{wears.length}<small> 回</small></strong><p>これまでのスタイル履歴</p></div>
-    </div>
-    <div className="quick-actions"><button onClick={() => onGo('planning')}><Icon name="sparkles" size={24} /><span><strong>今日、何を着よう？</strong><small>手持ちから候補を選ぶ</small></span><Icon name="right" size={18} /></button><button onClick={() => onGo('wardrobe')}><Icon name="hanger" size={24} /><span><strong>クローゼットを整える</strong><small>まとめて登録・季節で絞り込み</small></span><Icon name="right" size={18} /></button></div>
-    <section className="content-section">
-      <div className="section-head"><div><p className="eyebrow">RECENTLY ADDED</p><h3>最近追加したアイテム</h3></div><button className="section-link" onClick={() => onGo('wardrobe')}>すべて見る <Icon name="arrow" size={17} /></button></div>
-      <ClosetCollection count={featured.length} label="最近追加した服のクローゼット" preview>{featured.length ? featured.map(i => <GarmentCard key={i.id} item={i} service={service} onEdit={onEdit} onFavorite={onFavorite} busy={busy} />) : <EmptyState title="最初の1着からはじめよう" description="大切な服に、ひとつずつ居場所を。写真がなくても名前だけで登録できます。" onAdd={onAdd} />}</ClosetCollection>
-    </section>
-    <section className="content-section bottom-section">
-      <div className="section-head"><div><p className="eyebrow">STYLE JOURNAL</p><h3>最近の着用記録</h3></div><button className="section-link" onClick={() => onGo('calendar')}>カレンダーへ <Icon name="arrow" size={17} /></button></div>
-      <div className="activity-panel">
-        {recent.length ? recent.map(w => { const item = items.find(i => i.id === w.clothingId); return <div className="activity-row" key={w.id}><div className="activity-dot"><Icon name="check" size={15} /></div><div><strong>{item?.name ?? '削除済みの服'}</strong><p>{niceDate(w.date)}に着用</p></div><span>{counts.get(w.clothingId) ?? 0}回</span></div>; }) : <div className="activity-empty">カレンダーから今日のコーディネートを記録できます。</div>}
-      </div>
-    </section>
-  </>;
-}
-function Wardrobe({ items, service, onAdd, onBulk, onEdit, onFavorite, onArchive, busy }: {
-  items: Clothing[]; service: ClozyService; onAdd: () => void; onBulk: () => void; onEdit: (item: Clothing) => void; onFavorite: (item: Clothing) => void; onArchive: (items: Clothing[], archived: boolean) => Promise<boolean>; busy: boolean
-}) {
-  const [selecting, setSelecting] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [query, setQuery] = useState('');
-  const [category, setCategory] = useState<Category | 'すべて'>('すべて');
-  const [onlyFavorite, setOnlyFavorite] = useState(false);
-  const [sort, setSort] = useState('newest');
-  const [season, setSeason] = useState('すべて');
-  const [storage, setStorage] = useState('すべて');
-  const [groupByCategory, setGroupByCategory] = useState(true);
-  const shown = filterClothing(items, query, category, onlyFavorite).filter(item =>
-    (season === 'すべて' || inSeason(item, season as typeof SEASONS[number])) &&
-    (storage === 'すべて' || (storage === '収納中' ? item.archived : !item.archived))).sort((a, b) =>
-    sort === 'name' ? a.name.localeCompare(b.name, 'ja', { numeric: true }) :
-    sort === 'oldest' ? a.createdAt.localeCompare(b.createdAt) :
-    sort === 'updated' ? b.updatedAt.localeCompare(a.updatedAt) : b.createdAt.localeCompare(a.createdAt));
-  const filtered = Boolean(query || category !== 'すべて' || onlyFavorite || season !== 'すべて' || storage !== 'すべて');
-  const reset = () => { setQuery(''); setCategory('すべて'); setOnlyFavorite(false); setSeason('すべて'); setStorage('すべて'); };
-  const selectedItems = shown.filter(item => selectedIds.includes(item.id));
-  async function archiveSelection(archived: boolean) {
-    if (busy || !selectedItems.length) return;
-    if (await onArchive(selectedItems, archived)) setSelectedIds([]);
-  }
-  const renderItem = (item: Clothing) => <div className="selectable-garment" key={item.id}>{selecting && <label className="garment-select check-row"><input type="checkbox" checked={selectedIds.includes(item.id)} disabled={busy} onChange={e => setSelectedIds(ids => e.target.checked ? [...ids, item.id] : ids.filter(id => id !== item.id))} />{item.name}を選択</label>}<GarmentCard key={item.id} item={item} service={service} onEdit={onEdit} onFavorite={onFavorite} busy={busy} /></div>;
-  const groups = (['アウター', 'トップス', 'ワンピース', 'ボトムス', 'シューズ', 'バッグ', 'アクセサリー', 'その他'] as const).map(c => {
-    const group = shown.filter(item => item.category === c);
-    return { category: c, count: group.length, children: group.map(renderItem) };
-  }).filter(group => group.count > 0);
-  return <>
-    <div className="page-intro"><div><p className="eyebrow">YOUR PERSONAL DRESSING ROOM</p><h2>クローゼット</h2><p>お気に入りを掛けて、季節をしまう。あなただけのコレクション。</p></div><div className="planning-actions"><button className="button button-outline" onClick={onBulk}>まとめて登録</button><button className="button button-primary" onClick={onAdd}><Icon name="plus" size={18} /> 1着ずつ登録</button></div></div>
-    <div className="toolbar"><label className="search-box"><Icon name="search" size={19} /><span className="sr-only">服を検索</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="名前・ブランド・カラーで検索" /></label><button className={'filter-fav ' + (onlyFavorite ? 'selected' : '')} aria-pressed={onlyFavorite} onClick={() => setOnlyFavorite(!onlyFavorite)}><Icon name="heart" size={18} /> お気に入り</button></div>
-    <div className="category-pills" aria-label="カテゴリーで絞り込み">{(['すべて', ...CATEGORIES] as const).map(c => <button key={c} className={'pill ' + (category === c ? 'active' : '')} aria-pressed={category === c} onClick={() => setCategory(c)}>{c}</button>)}</div>
-    <div className="planning-controls"><label className="sort-control">季節<select value={season} onChange={e => setSeason(e.target.value)}>{['すべて', ...SEASONS].map(s => <option key={s}>{s}</option>)}</select></label><label className="sort-control">衣替え<select value={storage} onChange={e => setStorage(e.target.value)}>{['すべて', '着用中', '収納中'].map(s => <option key={s}>{s}</option>)}</select></label></div>
-    <div className="collection-summary"><span className="results-count" role="status">{shown.length} / {items.length} アイテム</span><label className="sort-control">並べ方<select value={groupByCategory ? 'category' : 'all'} onChange={e => setGroupByCategory(e.target.value === 'category')}><option value="category">カテゴリー別の棚</option><option value="all">すべて一緒に並べる</option></select></label><label className="sort-control">並べ替え <select value={sort} onChange={e => setSort(e.target.value)}><option value="newest">登録が新しい順</option><option value="oldest">登録が古い順</option><option value="updated">更新が新しい順</option><option value="name">名前順</option></select></label>{filtered && <button className="section-link" onClick={reset}>絞り込みを解除</button>}</div>
-    <section className="seasonal-tools" aria-label="まとめて衣替え"><div className="planning-actions"><button className="button button-outline" disabled={busy} onClick={() => { setSelecting(!selecting); setSelectedIds([]); }}>{selecting ? '衣替えの選択を終了' : 'まとめて衣替え'}</button>{selecting && <><button className="button button-ghost" disabled={busy || !shown.length} onClick={() => setSelectedIds(shown.map(item => item.id))}>表示中の服をすべて選択</button><button className="button button-ghost" disabled={busy} onClick={() => setSelectedIds([])}>選択解除</button></>}</div>{selecting && <><p role="status">表示中の{shown.length}着のうち{selectedItems.length}着を選択。絞り込みで隠れた服は変更しません。写真と着用記録は残ります。</p><div className="planning-actions"><button className="button button-primary" disabled={busy || !selectedItems.length} onClick={() => void archiveSelection(true)}>選んだ服を収納する</button><button className="button button-outline" disabled={busy || !selectedItems.length} onClick={() => void archiveSelection(false)}>選んだ服を着用中に戻す</button></div></>}</section>
-    <ClosetCollection count={shown.length} label="登録した服のクローゼット" groups={groupByCategory ? groups : undefined}>{shown.length ? shown.map(renderItem) :
-      <EmptyState title={items.length ? '条件に合う服が見つかりません' : 'クローゼットはまだ空っぽです'} description={items.length ? '検索ワードやフィルターを変更してください。' : '最初の1着を掛けて、あなただけのクローゼットを育てましょう。'} onAdd={items.length ? reset : onAdd} action={items.length ? '絞り込みを解除' : '服を登録する'} />}</ClosetCollection>
-  </>;
-}
-function CalendarView({ items, wears, busy, onToggle, onAdd }: {
-  items: Clothing[]; wears: WearEntry[]; busy: boolean; onToggle: (item: Clothing, date: string) => void; onAdd: () => void
+function CalendarView({ items, wears, busy, onToggle, onAdd, service }: {
+  items: Clothing[]; wears: WearEntry[]; busy: boolean; onToggle: (item: Clothing, date: string) => void; onAdd: () => void; service: ClozyService
 }) {
   const [month, setMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
   const [selected, setSelected] = useState(todayLocal);
   const [query, setQuery] = useState('');
+  const [mode, setMode] = useState<'month' | 'week' | 'list'>('month');
   const available = filterClothing(items, query, 'すべて', false);
   const dateCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -157,37 +49,51 @@ function CalendarView({ items, wears, busy, onToggle, onAdd }: {
     return counts;
   }, [wears]);
   const firstWeekday = (month.getDay() + 6) % 7;
-  const cells = Array.from({ length: 42 }, (_, i) => new Date(month.getFullYear(), month.getMonth(), i + 1 - firstWeekday));
+  const allCells = Array.from({ length: 42 }, (_, i) => new Date(month.getFullYear(), month.getMonth(), i + 1 - firstWeekday));
+  const selectedDay = new Date(selected + 'T12:00:00');
+  const weekStart = new Date(selectedDay); weekStart.setDate(selectedDay.getDate() - (selectedDay.getDay() + 6) % 7);
+  const cells = mode === 'week' ? Array.from({length:7}, (_, i) => new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i)) : allCells;
+  const itemIndex = new Map(items.map(item => [item.id, item]));
+  const firstWorn = new Map<string, Clothing>();
+  for (const wear of wears) { const item = itemIndex.get(wear.clothingId); if (item && !firstWorn.has(wear.date)) firstWorn.set(wear.date, item); }
   const selectedWears = wears.filter(w => w.date === selected);
   const worn = new Set(selectedWears.map(w => w.clothingId));
   return <>
-    <div className="page-intro"><div><p className="eyebrow">STYLE JOURNAL</p><h2>着用カレンダー</h2><p>今日のコーデを記録して、あなたのスタイルを振り返ろう。</p></div></div>
+    <div className="closet-banner">
+      <div><h2>カレンダー</h2></div>
+      <div className="closet-banner-art" aria-hidden="true"><span /><span /><span /></div>
+    </div>
+    <div className="calendar-day-review" role="status"><span>{niceDate(selected)}</span><span>{selectedWears.length}着</span></div>
     <div className="calendar-layout">
       <section className="calendar-panel" aria-label="着用日カレンダー">
+        <div className="calendar-mode" role="group" aria-label="カレンダー表示">{([["month","月"],["week","週"],["list","リスト"]] as const).map(([key,label])=><button key={key} type="button" aria-pressed={mode === key} onClick={() => setMode(key)}>{label}</button>)}</div>
         <div className="calendar-head"><h3>{month.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long' })}</h3><div><button className="button button-ghost" onClick={() => { const now = new Date(); setMonth(new Date(now.getFullYear(), now.getMonth(), 1)); setSelected(todayLocal()); }}>今日</button><button className="icon-button" aria-label="前の月" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}><Icon name="left" /></button><button className="icon-button" aria-label="次の月" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}><Icon name="right" /></button></div></div>
-        <div className="calendar-grid">
+        {mode !== 'list' ? <div className="calendar-grid">
           {['月','火','水','木','金','土','日'].map(day => <span className="weekday" key={day}>{day}</span>)}
           {cells.map(day => {
             const key = dateKey(day);
             const count = dateCounts.get(key) ?? 0;
             return <button key={key} className={'day-cell ' + (day.getMonth() !== month.getMonth() ? 'outside ' : '') + (key === todayLocal() ? 'today ' : '') + (key === selected ? 'selected ' : '')} aria-pressed={key === selected} aria-label={niceDate(key) + (count ? '、着用' + count + '件' : '')} onClick={() => { setSelected(key); if (day.getMonth() !== month.getMonth()) setMonth(new Date(day.getFullYear(), day.getMonth(), 1)); }}>
-              <span>{day.getDate()}</span>{count > 0 && <i aria-hidden="true" className="wear-dot" />}
+              <span>{day.getDate()}</span>{firstWorn.has(key) ? <GarmentThumb item={firstWorn.get(key)!} service={service} className="calendar-mini"/> : count > 0 ? <i aria-hidden="true" className="wear-dot" /> : null}
             </button>;
           })}
-        </div>
+        </div> : <div className="calendar-list">{[...new Set(wears.map(w=>w.date))].sort().reverse().filter(day=>day.startsWith(dateKey(month).slice(0,7))).map(day =>
+          <button key={day} type="button" onClick={() => setSelected(day)} className="calendar-list-row">
+            <span>{niceDate(day)}</span><span className="calendar-list-images">{wears.filter(w=>w.date===day).slice(0,4).map(w=>{ const item=itemIndex.get(w.clothingId); return item ? <GarmentThumb key={w.id} item={item} service={service}/> : null; })}</span><Icon name="right" size={18}/>
+          </button>)}</div>}
       </section>
       <section className="wear-panel">
-        <p className="eyebrow">OUTFIT OF THE DAY</p><h3>{niceDate(selected)}</h3><p className="wear-hint">この日に着た服をタップして記録できます。</p>
+        <p className="eyebrow">OUTFIT OF THE DAY</p><h3>{niceDate(selected)}</h3><p className="wear-hint">着た服を選択</p>
         {items.length > 0 && <label className="search-box wear-search"><Icon name="search" size={18} /><span className="sr-only">記録する服を検索</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="記録する服を検索" /></label>}
         {items.length > 0 && !available.length && <p className="panel-empty" role="status">条件に合う服はありません。</p>}
-        {items.length ? <div className="wear-options">{available.map(item => <button key={item.id} className={'wear-option ' + (worn.has(item.id) ? 'worn' : '')} aria-pressed={worn.has(item.id)} onClick={() => onToggle(item, selected)} disabled={busy}><span className="wear-option-icon"><Icon name="hanger" size={19} /></span><span><strong>{item.name}</strong><small>{item.category}</small></span><span className="wear-check">{worn.has(item.id) && <Icon name="check" size={14} />}</span></button>)}</div> : <EmptyState title="服を追加しましょう" description="記録したい服をクローゼットへ登録してください。" onAdd={onAdd} />}
+        {items.length ? <div className="wear-options">{available.map(item => <button key={item.id} className={'wear-option ' + (worn.has(item.id) ? 'worn' : '')} aria-pressed={worn.has(item.id)} onClick={() => onToggle(item, selected)} disabled={busy}><GarmentThumb item={item} service={service} className="wear-mini"/><span><strong>{item.name}</strong><small>{item.category}</small></span><span className="wear-check">{worn.has(item.id) && <Icon name="check" size={14} />}</span></button>)}</div> : <EmptyState title="服を追加しましょう" description="記録したい服をクローゼットへ登録してください。" onAdd={onAdd} />}
         {items.length > 0 && <p className="wear-summary">{selectedWears.length ? selectedWears.length + '着を記録しました' : 'まだ着用記録はありません'}</p>}
       </section>
     </div>
   </>;
 }
 function Insights({ items, wears, onEdit }: { items: Clothing[]; wears: WearEntry[]; onEdit: (item: Clothing) => void }) {
-  const [period, setPeriod] = useState('all');
+  const [period, setPeriod] = useState<'all' | '30' | '90'>('all');
   const today = todayLocal();
   const start = new Date(today + 'T12:00:00');
   start.setDate(start.getDate() - (period === '30' ? 29 : 89));
@@ -201,14 +107,20 @@ function Insights({ items, wears, onEdit }: { items: Clothing[]; wears: WearEntr
   const categories = CATEGORIES.map(category => ({ category, count: items.filter(item => item.category === category).length })).filter(row => row.count > 0);
   const max = Math.max(1, ...categories.map(row => row.count));
   return <>
-    <div className="page-intro"><div><p className="eyebrow">YOUR STYLE IN NUMBERS</p><h2>スタイル分析</h2><p>持っている服と、着ている服。数字から見つけるわたしらしさ。</p></div></div>
-    <div className="planning-controls"><label className="sort-control">着用集計の期間<select value={period} onChange={e => setPeriod(e.target.value)}><option value="all">今日までの全期間</option><option value="30">最近30日</option><option value="90">最近90日</option></select></label><p className="panel-description">着用回数・ランキングは選択期間、未着用と1回あたりの金額は今日までの全記録で計算します。未来の記録は含めません。</p></div>
+    <div className="closet-banner">
+      <div><h2>スタイル分析</h2></div>
+      <div className="closet-banner-art" aria-hidden="true"><span /><span /><span /></div>
+    </div>
+    <section className="category-overview" aria-labelledby="category-overview-heading"><h3 id="category-overview-heading">カテゴリーのバランス</h3><div className="category-overview-body">
+      <div className="category-donut" style={{background: 'conic-gradient(' + CATEGORIES.map((c,i)=>{ const n=items.filter(x=>x.category===c).length; const total=Math.max(items.length,1); const before=items.filter(x=>CATEGORIES.indexOf(x.category)<i).length; return ['#6b4227','#a07750','#c4ab8c','#876e56','#d7c4ac','#9c8b77','#d7cdba','#eee4d7'][i] + ' ' + (before/total*100) + '% ' + ((before+n)/total*100) + '%'; }).join(',') + ')'}}><span>{items.length}<small>着</small></span></div>
+      <div className="category-overview-legend">{CATEGORIES.map((c,i)=><div key={c}><i style={{background:['#6b4227','#a07750','#c4ab8c','#876e56','#d7c4ac','#9c8b77','#d7cdba','#eee4d7'][i]}}/><span>{c}</span><b>{items.filter(x=>x.category===c).length}</b></div>)}</div>
+      </div></section>
+    <div className="planning-controls"><label className="sort-control">着用集計の期間<select value={period} onChange={e => setPeriod(e.target.value as 'all' | '30' | '90')}><option value="all">今日までの全期間</option><option value="30">最近30日</option><option value="90">最近90日</option></select></label><p className="panel-description">着用回数とランキングは選択期間、未着用と1回あたりの金額は今日までの全記録で計算します。未来の記録は含めません。</p></div>
     <div className="metric-grid">
       <div className="metric"><div className="metric-head"><span>総アイテム数</span><span className="metric-icon lavender"><Icon name="hanger" /></span></div><strong>{items.length}<small> 着</small></strong></div>
       <div className="metric"><div className="metric-head"><span>着用記録</span><span className="metric-icon mint"><Icon name="calendar" /></span></div><strong>{periodWears.length}<small> 回</small></strong></div>
       <div className="metric"><div className="metric-head"><span>着用した服</span><span className="metric-icon peach"><Icon name="sparkles" /></span></div><strong>{counts.size}<small> 着</small></strong></div>
     </div>
-    <section className="seasonal-tools"><p>選択期間に着た服の割合：{items.length ? Math.round(counts.size / items.length * 100) : 0}%（{counts.size} / {items.length}着）。まずは眠っている服を見直してみましょう。</p></section>
     <div className="metric-grid"><div className="metric"><div className="metric-head">まだ着ていない服</div><strong>{analysis.unworn.length}<small> 着</small></strong><p>収納中の服を除く・記録ベース</p></div><div className="metric"><div className="metric-head">衣替えで収納中</div><strong>{analysis.archivedCount}<small> 着</small></strong><p>削除せず着用履歴も残します</p></div><div className="metric"><div className="metric-head">登録した購入金額</div><strong className="money-value">¥{analysis.totalPurchasePrice.toLocaleString('ja-JP')}</strong><p>{analysis.pricedCount}着の金額入力分のみ</p></div></div>
     <div className="insight-grid content-section"><section className="insight-panel"><p className="eyebrow">REDISCOVER YOUR CLOSET</p><h3>次に着てみたい服</h3>{analysis.unworn.length ? <div className="outfit-list">{analysis.unworn.slice(0, 8).map(item => <button className="wear-option" key={item.id} onClick={() => onEdit(item)}><span><strong>{item.name}</strong><small>{item.category} · 着用記録なし</small></span><Icon name="right" size={18} /></button>)}</div> : <p className="panel-empty">着用中の服はすべて記録済み、またはまだ服が登録されていません。</p>}</section><section className="insight-panel"><p className="eyebrow">COST PER WEAR</p><h3>1回着るあたりの金額</h3><p className="panel-description">購入金額 ÷ 着用記録数。金額未入力・未着用の服は含めません。高い順に表示します。</p>{analysis.costPerWear.length ? <div className="outfit-list">{analysis.costPerWear.slice(0, 5).map(({ item, cost }) => <button className="wear-option" key={item.id} onClick={() => onEdit(item)}><span><strong>{item.name}</strong><small>{lifetimeCounts.get(item.id)}回着用</small></span><strong>¥{Math.round(cost).toLocaleString('ja-JP')} / 回</strong></button>)}</div> : <p className="panel-empty">購入金額と着用記録を入れると表示されます。</p>}</section></div>
     <div className="insight-grid content-section">
@@ -266,18 +178,35 @@ function Settings({ service, onReload, onNotice, busy, setBusy }: {
     finally { setBusy(false); }
   }
   return <>
-    <div className="page-intro"><div><p className="eyebrow">YOUR DATA, YOUR CHOICE</p><h2>設定とプライバシー</h2><p>あなたのクローゼットは、あなたのもの。</p></div></div>
-    <section className="settings-highlight"><div className="settings-highlight-icon"><Icon name="shield" size={27} /></div><div><h3>データはこの端末のブラウザに保存されます</h3><p>Clozyはアカウント不要です。写真や着用履歴をサーバーに送信しません。ブラウザを消去するとデータが失われることがあるため、定期的にバックアップしてください。</p></div></section>
-    <div className="settings-card"><div><h3>パスキーでアプリをロック {protectedByPasskey ? '・有効' : ''}</h3><p>端末の顔・指紋・PINで本人確認します。再読み込み時と、1分以上バックグラウンドにした時にロックします。サーバー認証やデータ暗号化ではなく、ブラウザの保存内容を直接操作できる人からは保護できません。パスキーはバックアップに含まれません。</p>{!supportsPasskey() && <p>HTTPSとWebAuthnに対応したブラウザが必要です。開発時はIPアドレスではなくlocalhostで開いてください。</p>}</div><button className="button button-outline" disabled={busy || !supportsPasskey()} onClick={() => void changePasskey()}>{protectedByPasskey ? '本人確認して解除' : 'パスキーを登録'}</button>{protectedByPasskey && <button className="button button-primary" disabled={busy} onClick={() => window.dispatchEvent(new Event('clozy-lock'))}>今すぐロック</button>}</div>
-    <div className="settings-card"><div><h3>データをバックアップ</h3><p>写真・服の情報・着用履歴をまとめてJSONファイルに保存します。ファイルは暗号化されません。</p></div><button className="button button-outline" onClick={() => void download()} disabled={busy}><Icon name="download" size={18} /> エクスポート</button></div>
+    <div className="closet-banner">
+      <div><h2>設定</h2></div>
+      <div className="closet-banner-art" aria-hidden="true"><span /><span /><span /></div>
+    </div>
+    <nav className="settings-hub" aria-label="設定メニュー">
+      {([['settings-account','user','アカウント'],['settings-backup','cloud','バックアップ'],['settings-lock','lock','プライバシー'],['settings-data','box','ローカル保存']] as const).map(([id,icon,title]) =>
+        <button key={id} type="button" onClick={() => document.getElementById(id)?.scrollIntoView({behavior: 'smooth',block:'start'})}>
+          <Icon name={icon} size={23}/><span>{title}</span><Icon name="right" size={18}/>
+        </button>)}
+    </nav>
+    <div id="settings-account"><CloudAccount service={service} onReload={onReload} /></div>
+    <section id="settings-data" className="settings-highlight"><div className="settings-highlight-icon"><Icon name="box" size={27} /></div><div><h3>この端末に保存</h3><p>クラウドへのバックアップは任意です。</p></div></section>
+    <div id="settings-lock" className="settings-card"><div><h3>パスキーでアプリをロック {protectedByPasskey ? '・有効' : ''}</h3><p>端末の顔・指紋・PINで本人確認します。再読み込み時と、1分以上バックグラウンドにした時にロックします。サーバー認証やデータ暗号化ではなく、ブラウザの保存内容を直接操作できる人からは保護できません。パスキーはバックアップに含まれません。</p>{!supportsPasskey() && <p>HTTPSとWebAuthnに対応したブラウザが必要です。開発時はIPアドレスではなくlocalhostで開いてください。</p>}</div><button className="button button-outline" disabled={busy || !supportsPasskey()} onClick={() => void changePasskey()}>{protectedByPasskey ? '本人確認して解除' : 'パスキーを登録'}</button>{protectedByPasskey && <button className="button button-primary" disabled={busy} onClick={() => window.dispatchEvent(new Event('clozy-lock'))}>今すぐロック</button>}</div>
+    <div id="settings-backup" className="settings-card"><div><h3>データをバックアップ</h3><p>写真・服の情報・着用履歴をまとめてJSONファイルに保存します。ファイルは暗号化されません。</p></div><button className="button button-outline" onClick={() => void download()} disabled={busy}><Icon name="download" size={18} /> エクスポート</button></div>
     <div className="settings-card"><div><h3>データを復元</h3><p>以前のバックアップから復元します。現在のデータはすべて置き換わります。</p></div><label className={'button button-outline file-label ' + (busy ? 'disabled' : '')}><Icon name="upload" size={18} /> インポート<input type="file" accept="application/json,.json" disabled={busy} onChange={e => { void restore(e.target.files?.[0]); e.target.value = ''; }} /></label></div>
     <div className="settings-card danger-zone"><div><h3>すべてのデータを削除</h3><p>このブラウザに保存されたClozyのデータを消去します。元には戻せません。</p></div><button className="button button-danger-outline" onClick={() => void clear()} disabled={busy}><Icon name="trash" size={18} /> 全データを削除</button></div>
     <div className="privacy-footnote"><Icon name="shield" size={18} /><p>保存データとバックアップは暗号化されていません。共有端末やブラウザ拡張機能からアクセスされる可能性があります。端末のロックとバックアップの安全な保管を推奨します。</p></div>
   </>;
 }
 export default function App() {
-  const service = useMemo(() => new ClozyService(new IndexedDbRepository()), []);
+  const realService = useMemo(() => new ClozyService(new IndexedDbRepository()), []);
+  const previewService = useMemo(() => new ClozyService(new PreviewWardrobeRepository()), []);
+  const reviewHost = isReviewHost(window.location.hostname);
+  const [demoMode, setDemoMode] = useState(() => reviewHost && new URLSearchParams(window.location.search).get('demo') === '1');
+  const service = demoMode ? previewService : realService;
   const [view, setView] = useState<View>('home');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [addCategory, setAddCategory] = useState<Category>();
+  const [sharedProduct, setSharedProduct] = useState<{name: string; sourceUrl: string} | null>(null);
   const [items, setItems] = useState<Clothing[]>([]);
   const [wears, setWears] = useState<WearEntry[]>([]);
   const [selected, setSelected] = useState<Clothing | 'new' | null>(null);
@@ -286,10 +215,37 @@ export default function App() {
   const [loadFailed, setLoadFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
+  const wornToday = useMemo(() => new Set(wears.filter(w => w.date === todayLocal()).map(w => w.clothingId)), [wears]);
+  useEffect(() => {
+    // Android PWA share target: never save or fetch a merchant URL without review.
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('from') !== 'share') return;
+    const candidate = params.get('url') || params.get('text')?.match(/https:\/\/[^\s]+/)?.[0] || '';
+    try {
+      const url = new URL(candidate);
+      if (url.protocol === 'https:' && candidate.length <= 2048) {
+        setSharedProduct({ name: (params.get('title') || '').trim().slice(0, 80), sourceUrl: url.toString() });
+        setSelected('new');
+      }
+    } catch { /* Share data was not a product URL. Do not persist it. */ }
+    // Product links can contain purchase tokens or tracking parameters.
+    window.history.replaceState(window.history.state, '', window.location.pathname + window.location.hash);
+  }, []);
   const reload = useCallback(async () => {
     const data = await service.list();
+    // Public PR previews default to a synthetic in-memory wardrobe only when no
+    // real local items exist. Never clone a private cloud backup into preview.
+    if (!demoMode && isPreviewDeployment(window.location.hostname)
+      && data.clothing.length === 0 && data.wears.length === 0
+      && localStorage.getItem('clozy-preview-personal') !== '1'
+      && !new URLSearchParams(window.location.search).has('from')) {
+      setDemoMode(true);
+      const sample = await previewService.list();
+      setItems(sample.clothing); setWears(sample.wears);
+      return;
+    }
     setItems(data.clothing); setWears(data.wears);
-  }, [service]);
+  }, [service, demoMode, previewService]);
   useEffect(() => {
     let live = true;
     void reload().catch(error => {
@@ -308,36 +264,50 @@ export default function App() {
     if (!window.confirm('「' + item.name + '」と関連する着用記録を削除しますか？')) return;
     if (await execute(() => service.remove(item.id), 'アイテムを削除しました。')) setSelected(null);
   }
+  function setPreviewMode(next: boolean) {
+    if (!reviewHost) return;
+    setMenuOpen(false); setSelected(null); setBulkOpen(false);
+    localStorage.setItem('clozy-preview-personal', next ? '0' : '1');
+    setDemoMode(next);
+    setLoading(true);
+    // Changing the service reference reloads the correct, isolated repository.
+  }
   function changeView(next: View) {
     setView(next);
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
-  const title = nav.find(item => item.key === view)?.title ?? 'ホーム';
-  return <div className="app-shell">
+  return <div className="app-shell immersive-app" data-preview={reviewHost ? "true" : "false"}>
+    {reviewHost && <div className={'preview-ribbon' + (demoMode ? ' is-demo' : '')} aria-label="プレビューのデータ切り替え">
+      <span><strong>{demoMode ? 'SAMPLE CLOSET' : 'PREVIEW'}</strong> {demoMode ? '見本26着・履歴99件を再現 / 保存はこの画面内だけ' : '自分の端末のデータを表示中'}</span>
+      <button type="button" onClick={() => setPreviewMode(!demoMode)}>{demoMode ? '自分のデータに切替' : '見本データを見る'}</button>
+    </div>}
+
     <a className="skip-link" href="#main-content">本文へスキップ</a>
-    <aside className="sidebar" aria-label="メインナビゲーション">
-      <button className="brand" onClick={() => changeView('home')} aria-label="Clozy ホームへ"><span className="brand-mark"><Icon name="hanger" size={24} /></span><span>clozy<span className="brand-dot">.</span></span></button>
-      <div className="sidebar-group"><p className="sidebar-label">MY WARDROBE</p><nav>{nav.map(item => <button key={item.key} className={'nav-link ' + (view === item.key ? 'active' : '')} aria-current={view === item.key ? 'page' : undefined} onClick={() => changeView(item.key)}><Icon name={item.icon} size={20} /><span>{item.title}</span>{view === item.key && <span className="nav-active-dot" />}</button>)}</nav></div>
-      <div className="sidebar-bottom"><div className="privacy-card"><span><Icon name="shield" size={19} /></span><strong>Private by design</strong><p>あなたのデータは<br />このブラウザの中だけに。</p></div><span className="sidebar-version">CLOZY · YOUR SPACE</span></div>
-    </aside>
     <div className="main-shell">
-      <header className="topbar"><div className="mobile-brand"><span className="brand-mark"><Icon name="hanger" size={19} /></span><strong>clozy<span className="brand-dot">.</span></strong></div><div className="breadcrumb"><span>MY WARDROBE</span><Icon name="right" size={15} /><strong>{title}</strong></div><div className="topbar-right"><span className="local-badge"><Icon name="shield" size={15} /> ローカル保存</span><button className="mobile-settings" type="button" aria-label="設定を開く" aria-current={view === 'settings' ? 'page' : undefined} onClick={() => changeView('settings')}><Icon name="settings" size={21} /></button><span className="topbar-avatar" aria-label="あなたのクローゼット">C</span></div></header>
       <main className="main-content" id="main-content" tabIndex={-1}>
         {notice && <div className={'notice ' + notice.kind} role={notice.kind === 'error' ? 'alert' : 'status'}><span>{notice.message}</span><button type="button" onClick={() => setNotice(null)} aria-label="通知を閉じる"><Icon name="close" size={16} /></button></div>}
         {loading ? <div className="loading-state" role="status">クローゼットを読み込んでいます…</div> : loadFailed ? <EmptyState title="保存データを読み込めませんでした" description="データは削除していません。別のタブを閉じ、ブラウザの保存設定を確認してから再読み込みしてください。" onAdd={() => window.location.reload()} action="再読み込み" /> : <>
-          {view === 'home' && <Home items={items} wears={wears} service={service} onAdd={() => setSelected('new')} onGo={changeView} onEdit={setSelected} onFavorite={i => void execute(() => service.favorite(i), 'お気に入りを更新しました。')} busy={busy} />}
-          {view === 'wardrobe' && <Wardrobe items={items} service={service} onAdd={() => setSelected('new')} onBulk={() => setBulkOpen(true)} onArchive={(chosen, archived) => execute(() => service.archive(chosen, archived), archived ? '選んだ服を収納しました。選択して着用中に戻せます。' : '選んだ服を着用中に戻しました。')} onEdit={setSelected} onFavorite={i => void execute(() => service.favorite(i), 'お気に入りを更新しました。')} busy={busy} />}
-          {view === 'planning' && <Planning items={items} wears={wears} busy={busy} onAdd={() => setSelected('new')} onEdit={setSelected} onRecord={(outfit, date) => void execute(() => service.recordOutfit(outfit, date, wears), '組み合わせを着用記録に追加しました。')} />}
-          {view === 'calendar' && <CalendarView items={items} wears={wears} busy={busy} onToggle={(item, date) => void execute(() => service.toggleWear(item, date, wears), '着用記録を更新しました。')} onAdd={() => setSelected('new')} />}
+          <div hidden={view !== 'home' && view !== 'wardrobe'}>
+            <ImmersiveCloset onWearToday={i => void execute(() => service.toggleWear(i, todayLocal(), wears), '今日の着用記録を更新しました。')} key={demoMode ? "demo" : "personal"} items={items} wears={wears} service={service} busy={busy} onAdd={category => { setAddCategory(category); setSelected('new'); }} onBulk={() => setBulkOpen(true)} onEdit={setSelected} onFavorite={i => void execute(() => service.favorite(i), 'お気に入りを更新しました。')} onRecord={(outfit, date) => execute(() => service.recordOutfit(outfit, date, wears), '組み合わせを着用記録に追加しました。')} onArchive={(selectedItems, archived) => execute(() => service.archive(selectedItems, archived), archived ? '選んだ服を収納しました。' : '選んだ服を着用中に戻しました。')} />
+          </div>
+          {view === 'planning' && <Planning items={items} wears={wears} service={service} busy={busy} onAdd={() => setSelected('new')} onEdit={setSelected} onRecord={(outfit, date) => void execute(() => service.recordOutfit(outfit, date, wears), '組み合わせを着用記録に追加しました。')} />}
+          {view === 'calendar' && <CalendarView items={items} wears={wears} service={service} busy={busy} onToggle={(item, date) => void execute(() => service.toggleWear(item, date, wears), '着用記録を更新しました。')} onAdd={() => setSelected('new')} />}
           {view === 'insights' && <Insights items={items} wears={wears} onEdit={setSelected} />}
-          {view === 'settings' && <Settings service={service} onReload={reload} onNotice={setNotice} busy={busy} setBusy={setBusy} />}
+          {view === 'settings' && (demoMode ? <section className="preview-demo-settings">
+            <h2>これは見本のクローゼットです</h2>
+            <p>見本データは一時的なものです。本番の個人データやクラウドのバックアップには触れません。アカウント管理・バックアップの操作は無効です。</p>
+            <button type="button" onClick={() => { setPreviewMode(false); changeView('settings'); }}>自分のデータで設定を開く</button>
+          </section> : <Settings service={service} onReload={reload} onNotice={setNotice} busy={busy} setBusy={setBusy} />)}
         </>}
       </main>
-      <footer className="page-footer">Clozy — A place for every piece. <span>Everyday, in your own style.</span></footer>
     </div>
-    <nav className="mobile-nav" aria-label="モバイルナビゲーション">{nav.filter(item => item.key !== 'settings').map(item => <button key={item.key} className={view === item.key ? 'active' : ''} aria-current={view === item.key ? 'page' : undefined} onClick={() => changeView(item.key)}><Icon name={item.icon} size={21} /><span>{item.title}</span></button>)}</nav>
-    <button className="mobile-add" type="button" onClick={() => setSelected('new')} aria-label="アイテムを追加"><Icon name="plus" size={18} /> 服を追加</button>
+    <button className="closet-utility-handle" aria-label="機能一覧を開く" onClick={() => setMenuOpen(true)}><Icon name="menu" /><span>機能一覧</span></button>
+    {view !== 'home' && view !== 'wardrobe' && <button className="closet-return" onClick={() => changeView('home')}><Icon name="left" />クローゼットへ戻る</button>}
+    {menuOpen && <ClosetDialog title="クローゼットの引き出し" onClose={() => setMenuOpen(false)}>
+      <nav className="closet-feature-menu" aria-label="機能一覧">{nav.filter(item => item.key !== 'home').map(item => <button key={item.key} onClick={() => { setMenuOpen(false); changeView(item.key); }}><Icon name={item.icon} /><span>{item.title}</span><Icon name="right" size={16} /></button>)}</nav>
+      <button className="button button-outline" onClick={() => { setMenuOpen(false); setSelected('new'); }}>服を追加</button>
+    </ClosetDialog>}
     {bulkOpen && <BulkAdd service={service} items={items} onClose={() => setBulkOpen(false)} onSaved={reload} />}
-    {selected && <GarmentForm key={selected === 'new' ? 'new' : selected.id} service={service} current={selected === 'new' ? undefined : selected} onClose={() => setSelected(null)} onSaved={async (keepOpen) => { await reload(); if (!keepOpen) setSelected(null); setNotice({ kind: 'success', message: 'アイテムを保存しました。' }); }} onDelete={remove} busy={busy} />}
+    {selected && <GarmentForm key={selected === 'new' ? 'new' : selected.id} service={service} initialCategory={addCategory} current={selected === 'new' ? undefined : selected} draft={sharedProduct ?? undefined} onClose={() => { setSelected(null); setSharedProduct(null); }} onSaved={async (keepOpen) => { await reload(); if (!keepOpen) setSelected(null); setSharedProduct(null); setNotice({ kind: 'success', message: 'アイテムを保存しました。' }); }} onDelete={remove} busy={busy} />}
   </div>;
 }

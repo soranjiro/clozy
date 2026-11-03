@@ -6,12 +6,15 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1"
+    "preview": "vite preview --host 127.0.0.1",
+    "predev": "node scripts/generate-pwa-icons.mjs",
+    "prebuild": "node scripts/generate-pwa-icons.mjs"
   },
   "dependencies": {
     "@clozy/application": "*",
     "@clozy/domain": "*",
     "@clozy/storage": "*",
+    "firebase": "13.1.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   }

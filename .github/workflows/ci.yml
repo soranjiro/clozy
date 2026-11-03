@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -25,14 +25,10 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - run: node --check functions/_lib.js && for file in functions/api/*.js; do node --check "$file"; done
+      - run: npx wrangler pages functions build functions --outfile /tmp/clozy-pages-worker.mjs
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
-      - name: Save browser verification screenshots
-        uses: actions/upload-artifact@v4
-        with:
-          name: browser-screenshots
-          path: /tmp/clozy-*.png
-          retention-days: 3
       - run: npm audit --audit-level=high
       - name: Save verified site
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
@@ -59,8 +55,8 @@ jobs:
       name: ${{ github.event_name == 'pull_request' && format('preview-pr-{0}', github.event.pull_request.number) || 'production' }}
       url: ${{ steps.deploy.outputs.pages-deployment-alias-url || steps.deploy.outputs.deployment-url }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -82,15 +78,14 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           command: pages deploy apps/web/dist --project-name=clozy --branch=${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'main' }}
+      - name: Test isolated preview API
+        if: github.event_name == 'pull_request'
+        env:
+          CLOZY_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: node scripts/api-smoke.mjs
       - name: Show deployment URL
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
           ALIAS_URL: ${{ steps.deploy.outputs.pages-deployment-alias-url }}
         run: |
           printf '### Cloudflare Pages\n\n- Deployment: %s\n- Stable URL: %s\n' "$DEPLOYMENT_URL" "$ALIAS_URL" >> "$GITHUB_STEP_SUMMARY"
-      - name: Install browser for deployed-site verification
-        run: npx playwright install --with-deps chromium
-      - name: Verify deployed wardrobe in an ephemeral browser
-        run: npm run test:browser
-        env:
-          CLOZY_URL: ${{ steps.deploy.outputs.deployment-url }}
