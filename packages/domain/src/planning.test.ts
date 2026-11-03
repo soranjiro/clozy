@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createClothing, createWearEntry, validateClothing } from './rules';
-import { inSeason, seasonForMonth, suggestOutfit, wardrobeAnalysis, zozoSearchUrl } from './planning';
+import { inferCategory, inSeason, seasonForMonth, suggestOutfit, wardrobeAnalysis, zozoSearchUrl } from './planning';
 import type { Category, ClothingInput } from './model';
 const now = '2026-10-31T00:00:00.000Z';
 function item(n: number, category: Category, extra: Partial<ClothingInput> = {}) {
@@ -67,5 +67,19 @@ describe('wardrobe insights and external search', () => {
     const url = new URL(zozoSearchUrl('シャツ & 白'));
     expect(url.origin).toBe('https://zozo.jp');
     expect(url.searchParams.get('p_keyv')).toBe('シャツ & 白');
+  });
+});
+
+describe('registration category hints', () => {
+  it.each([
+    ['白いシャツ', 'トップス'], ['黒のパンツ', 'ボトムス'],
+    ['スニーカー.jpg', 'シューズ'], ['Ｔシャツワンピース', 'ワンピース'],
+    ['デニムジャケット', 'アウター'], ['トートバッグ', 'バッグ'],
+    ['マフラー', 'アクセサリー'], ['WINTER COAT', 'アウター']
+  ] as const)('classifies %s without image or network access', (name, category) => {
+    expect(inferCategory(name)).toBe(category);
+  });
+  it('keeps the selected category when there is no useful name hint', () => {
+    expect(inferCategory('IMG_0123', 'バッグ')).toBe('バッグ');
   });
 });

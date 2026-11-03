@@ -49,8 +49,8 @@ function Rail({ items, label, kind, service, onPick, onAdd, target }: { items: C
   </section>;
 }
 const localDate = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-export default function ImmersiveCloset({ items, wears, service, busy, onAdd, onBulk, onEdit, onFavorite, onRecord, onWearToday }: {
-  items: Clothing[]; wears: WearEntry[]; service: ClozyService; busy: boolean; onAdd: (category?: Category) => void; onBulk: () => void; onEdit: (item: Clothing) => void; onFavorite: (item: Clothing) => void; onRecord: (items: Clothing[], date: string) => Promise<boolean>; onWearToday: (item: Clothing) => void;
+export default function ImmersiveCloset({ items, wears, service, busy, onAdd, onBulk, onEdit, onFavorite, onRecord, onWearToday, onArchive }: {
+  items: Clothing[]; wears: WearEntry[]; service: ClozyService; busy: boolean; onAdd: (category?: Category) => void; onBulk: () => void; onEdit: (item: Clothing) => void; onFavorite: (item: Clothing) => void; onRecord: (items: Clothing[], date: string) => Promise<boolean>; onWearToday: (item: Clothing) => void; onArchive: (items: Clothing[], archived: boolean) => Promise<boolean>;
 }) {
   const [chatItems, setChatItems] = useState<Clothing[] | null>(null);
   const [panel, setPanel] = useState<'index' | 'outfit' | null>(null);
@@ -63,12 +63,19 @@ export default function ImmersiveCloset({ items, wears, service, busy, onAdd, on
   const [favorite, setFavorite] = useState(false);
   const [sort, setSort] = useState('newest');
   const [page, setPage] = useState(0);
+  const [selecting, setSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [outfit, setOutfit] = useState<string[]>([]);
   const [date, setDate] = useState(localDate);
   const [recording, setRecording] = useState(false);
   const ordered = useMemo(() => [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt) || a.id.localeCompare(b.id)), [items]);
   const results = useMemo(() => filterClothing(items, query, category, favorite).filter(i => (season === 'すべて' || inSeason(i, season as Season)) && (storage === 'すべて' || (storage === '収納中' ? i.archived : !i.archived))).sort((a,b) => sort === 'name' ? a.name.localeCompare(b.name, 'ja') : sort === 'oldest' ? a.createdAt.localeCompare(b.createdAt) : b.createdAt.localeCompare(a.createdAt)), [items, query, category, favorite, season, storage, sort]);
-  useEffect(() => setPage(0), [query, category, favorite, season, storage, sort]);
+  useEffect(() => { setPage(0); setSelectedIds([]); }, [query, category, favorite, season, storage, sort]);
+  const selectedItems = results.filter(item => selectedIds.includes(item.id));
+  async function archiveSelection(archived: boolean) {
+    if (busy || !selectedItems.length) return;
+    if (await onArchive(selectedItems, archived)) setSelectedIds([]);
+  }
   const currentPage = Math.min(page, Math.max(0, Math.ceil(results.length / 36) - 1));
   const selected = items.find(i => i.id === selectedId);
   const outfitItems = outfit.map(id => items.find(i => i.id === id)).filter((i): i is Clothing => Boolean(i));
@@ -91,7 +98,8 @@ export default function ImmersiveCloset({ items, wears, service, busy, onAdd, on
       <label className="search-box"><Icon name="search" /><input aria-label="服を検索" type="search" placeholder="名前・ブランド・カラーで検索" value={query} onChange={e => setQuery(e.target.value)} /></label>
       <div className="closet-filters"><label>種類<select value={category} onChange={e => setCategory(e.target.value as Category | 'すべて')}>{['すべて', ...CATEGORIES].map(c => <option key={c}>{c}</option>)}</select></label><label>季節<select value={season} onChange={e => setSeason(e.target.value)}>{['すべて', ...SEASONS].map(s => <option key={s}>{s}</option>)}</select></label><label>衣替え<select value={storage} onChange={e => setStorage(e.target.value)}>{['すべて', '着用中', '収納中'].map(s => <option key={s}>{s}</option>)}</select></label><label>並べ替え<select value={sort} onChange={e => setSort(e.target.value)}><option value="newest">新しい順</option><option value="oldest">古い順</option><option value="name">名前順</option></select></label></div>
       <div className="closet-index-summary"><button className="button button-outline" aria-pressed={favorite} onClick={() => setFavorite(!favorite)}><Icon name="heart" size={16} />お気に入り</button><span role="status">{results.length} / {items.length}着</span><button className="section-link" onClick={() => { setQuery(''); setCategory('すべて'); setSeason('すべて'); setStorage('すべて'); setFavorite(false); }}>絞り込みを解除</button></div>
-      <div className="closet-index-grid">{results.slice(currentPage * 36, (currentPage + 1) * 36).map(item => <button key={item.id} onClick={() => locate(item)}><GarmentThumb item={item} service={service} /><strong>{item.name}</strong><small>{item.category}{item.archived ? ' · 収納中' : ''}</small></button>)}</div>
+      <div className="closet-index-selection"><button className="button button-outline" disabled={busy} onClick={() => { setSelecting(!selecting); setSelectedIds([]); }}>{selecting ? '衣替えの選択を終了' : 'まとめて衣替え'}</button>{selecting && <><button className="button button-outline" disabled={busy || !results.length} onClick={() => setSelectedIds(results.map(item => item.id))}>表示中の服をすべて選択</button><button className="button button-outline" disabled={busy} onClick={() => setSelectedIds([])}>選択解除</button><span role="status">{results.length}着中 {selectedItems.length}着を選択</span><button className="button button-primary" disabled={busy || !selectedItems.length} onClick={() => void archiveSelection(true)}>選んだ服を収納</button><button className="button button-outline" disabled={busy || !selectedItems.length} onClick={() => void archiveSelection(false)}>選んだ服を戻す</button></>}</div>
+      <div className="closet-index-grid">{results.slice(currentPage * 36, (currentPage + 1) * 36).map(item => <button key={item.id} aria-pressed={selecting ? selectedIds.includes(item.id) : undefined} onClick={() => selecting ? setSelectedIds(ids => ids.includes(item.id) ? ids.filter(id => id !== item.id) : [...ids, item.id]) : locate(item)}><GarmentThumb item={item} service={service} /><strong>{item.name}</strong><small>{item.category}{item.archived ? ' · 収納中' : ''}{selecting && (selectedIds.includes(item.id) ? ' · 選択中' : ' · 選択')}</small></button>)}</div>
       {!results.length && <p className="panel-empty">条件に合う服がありません。検索条件を変更してください。</p>}
       {results.length > 36 && <div className="closet-pagination"><button className="button button-outline" disabled={!currentPage} onClick={() => setPage(currentPage - 1)}>前の36着</button><span>{currentPage + 1} / {Math.ceil(results.length / 36)}</span><button className="button button-outline" disabled={(currentPage + 1) * 36 >= results.length} onClick={() => setPage(currentPage + 1)}>次の36着</button></div>}
       <button className="button button-outline" onClick={() => { setPanel(null); onBulk(); }}>まとめて登録</button>
