@@ -105,3 +105,11 @@
 @media(max-width:650px){.immersive-closet{padding:0 14px}.closet-cabinet{gap:12px}.closet-bay{min-height:330px}.closet-bay-title{padding:20px 16px 16px}.closet-bay.rail:before{top:78px}.closet-rail-track{height:272px}.closet-piece{height:267px}.closet-piece .garment-thumb{height:203px}.closet-rail-controls{padding:0 10px 6px}.shelf .closet-rail-track{height:195px}.shelf .closet-piece{height:190px}.shelf .closet-piece .garment-thumb{height:155px}.zone-long .closet-rail-track{height:360px}.zone-long .closet-piece{height:350px}.zone-long .closet-piece .garment-thumb{height:285px;width:165px}.closet-index-grid .garment-thumb{height:125px}.closet-dialog{padding:18px}.closet-inspect .garment-thumb{height:300px}.closet-inspect{min-height:350px}.closet-bay:has(.closet-empty-hanger){min-height:180px}.closet-empty-hanger{min-height:130px}}
 
 .closet-bay{background-size:auto,auto,cover;background-repeat:no-repeat}.zone-long .closet-bay{background-size:auto,auto,cover}
+
+
+.closet-index-selection{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:12px 0}
+.closet-index-selection button{min-height:40px}
+.closet-index-grid button[aria-pressed="true"]{outline:3px solid #79552f;outline-offset:-3px}
+.outfit-candidate{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.outfit-candidate>.wear-option{flex:1;min-width:210px}
+.registration-shortcuts .category-pills{display:flex;gap:8px;flex-wrap:wrap}
